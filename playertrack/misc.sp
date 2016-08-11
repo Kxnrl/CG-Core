@@ -408,8 +408,8 @@ public void ShowAllFaithBuffToClient(int client)
 	g_fShareLevel[3] = (float(g_Share[3])/float(g_Share[0])-0.24)*100;
 	g_fShareLevel[4] = (float(g_Share[4])/float(g_Share[0])-0.24)*100;
 
-	g_fBoostSpeed = 1.05+g_fShareLevel[1]*0.015;
-	g_fFireRate = 1.0-g_fShareLevel[1]*0.025;
+	g_fBoostSpeed = 1.05+g_fShareLevel[1]*0.01;
+	g_fFireRate = g_fShareLevel[1]*0.01;
 	
 	if(g_fBoostSpeed < 1.0)
 		g_fBoostSpeed = 1.0;
@@ -450,7 +450,7 @@ public void ShowAllFaithBuffToClient(int client)
 	SetMenuTitle(menu, szItem);
 
 	float speed = (g_fBoostSpeed - 1.0)*100;
-	float firerate = (1.0-g_fFireRate)*100;
+	float firerate = g_fFireRate*100;
 	Format(szItem, 256, "[Perfect Purple]  -  [速度+%.2f%% | 射速+%.2f%%] Credits+3\n ", speed, firerate);
 	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
 	

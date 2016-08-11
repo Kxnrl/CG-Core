@@ -3,7 +3,7 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define PLUGIN_VERSION " 5.0.4 - 2016/08/09 15:27 "
+#define PLUGIN_VERSION " 5.0.4 - 2016/08/11 17:27 "
 #define PLUGIN_PREFIX "[\x0EPlaneptune\x01]  "
 #define PLUGIN_PREFIX_SIGN "[\x0EPlaneptune\x01]  "
 
