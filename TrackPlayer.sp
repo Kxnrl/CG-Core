@@ -1,9 +1,9 @@
 #pragma newdecls required //let`s go! new syntax!!!
-//Build 2016/08/08 03:52 hg296
+//Build 312
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define PLUGIN_VERSION " 5.0.4 - 2016/08/11 17:27 "
+#define PLUGIN_VERSION " 5.1.4 - 2016/08/15 00:28 "
 #define PLUGIN_PREFIX "[\x0EPlaneptune\x01]  "
 #define PLUGIN_PREFIX_SIGN "[\x0EPlaneptune\x01]  "
 
@@ -31,6 +31,8 @@ enum Clients
 	iUID,
 	iFaith,
 	iShare,
+	iBuff,
+	iGetShare,
 	iLastSignTime,
 	iConnectTime,
 	iPlayerId,
@@ -44,13 +46,11 @@ enum Clients
 	iExp,
 	iTemp,
 	iUpgrade,
-	iFaithSelect,
 	iVipType,
 	bool:bLoaded,
 	bool:bIsBot,
 	bool:bPrint,
 	bool:bIsVip,
-	bool:bBlacklist,
 	bool:bAllowLogin,
 	bool:bTwiceLogin,
 	bool:LoginProcess,
@@ -99,7 +99,6 @@ char g_szHostName[256];
 char logFile_core[128];
 char logFile_cat[128];
 char g_szOSConVar[OS_Total][64];
-char g_szFlagName[14][20] = {"res", "admin", "kick", "ban", "unban", "slay", "map", "cvars", "cfg", "chat", "vote", "pass", "rcon", "cheat"};
 char g_szGlobal[6][256];
 char g_szServer[6][256];
 
@@ -107,11 +106,13 @@ char g_szServer[6][256];
 //////////////////////////////
 //			MODULES			//
 //////////////////////////////
-#include "playertrack/sqlcallback.sp"
-#include "playertrack/onlinetime.sp"
-#include "playertrack/adminflags.sp"
-#include "playertrack/signsystem.sp"
+#include "playertrack/auth.sp"
+#include "playertrack/faith.sp"
 #include "playertrack/misc.sp"
+#include "playertrack/notice.sp"
+#include "playertrack/sign.sp"
+#include "playertrack/sqlcb.sp"
+#include "playertrack/track.sp"
 
 //////////////////////////////
 //		PLUGIN DEFINITION	//
@@ -130,10 +131,6 @@ public Plugin myinfo =
 //////////////////////////////
 public void OnPluginStart()
 {
-	//Get Server IP
-	int ip = GetConVarInt(FindConVar("hostip"));
-	Format(g_szIP, 64, "%d.%d.%d.%d:%d", ((ip & 0xFF000000) >> 24) & 0xFF, ((ip & 0x00FF0000) >> 16) & 0xFF, ((ip & 0x0000FF00) >>  8) & 0xFF, ((ip & 0x000000FF) >>  0) & 0xFF, GetConVarInt(FindConVar("hostport")));
-	
 	//Create Log Files
 	BuildPath(Path_SM, logFile_core, 128, "logs/Core.log");
 	BuildPath(Path_SM, logFile_cat, 128, "logs/CAT.log");
@@ -201,10 +198,11 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("CG_GetPlayerID", Native_GetPlayerID);
 	CreateNative("CG_GetClientFaith", Native_GetClientFaith);
 	CreateNative("CG_GetClientShare", Native_GetClientShare);
+	CreateNative("CG_GetSecondBuff", Native_GetSecondBuff);
+	CreateNative("CG_GiveClientShare", Native_GiveClientShare);
 	CreateNative("CG_GetSignature", Native_GetSingature);
 	CreateNative("CG_GetDiscuzUID", Native_GetDiscuzUID);
 	CreateNative("CG_GetDiscuzName", Native_GetDiscuzName);
-	CreateNative("CG_IsBlacklist", Native_IsBlacklist);
 	CreateNative("CG_SaveDatabase", Native_SaveDatabase);
 	CreateNative("VIP_IsClientVIP", Native_IsClientVIP);
 	CreateNative("VIP_SetClientVIP", Native_SetClientVIP);
@@ -217,9 +215,13 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	g_CheckedForwared = CreateForward(ET_Ignore, Param_Cell);
 	CreateNative("HookClientVIPChecked", Native_HookClientVIPChecked);
 	
+	//Get Server IP
+	int ip = GetConVarInt(FindConVar("hostip"));
+	Format(g_szIP, 64, "%d.%d.%d.%d:%d", ((ip & 0xFF000000) >> 24) & 0xFF, ((ip & 0x00FF0000) >> 16) & 0xFF, ((ip & 0x0000FF00) >>  8) & 0xFF, ((ip & 0x000000FF) >>  0) & 0xFF, GetConVarInt(FindConVar("hostport")));
+	
 	g_bLateLoad = late;
 
-	RegPluginLibrary("playertrack");
+	RegPluginLibrary("csgogamers");
 
 	return APLRes_Success;
 }
@@ -239,9 +241,9 @@ void OnClientSignSucessed(int client)
 
 void OnClientDataLoaded(int client)
 {
+	CheckClientBuff(client);
 	PrintConsoleInfo(client);
-	OnClientAuthLoaded(client);
-	CreateTimer(5.0, Timer_Notice, GetClientUserId(client), TIMER_REPEAT);
+	CreateTimer(10.0, Timer_Notice, GetClientUserId(client), TIMER_REPEAT);
 
 	Call_StartForward(g_fwdOnClientDataLoaded);
 	Call_PushCell(client);
@@ -292,6 +294,17 @@ public int Native_GetClientShare(Handle plugin, int numParams)
 	return g_eClient[GetNativeCell(1)][iShare];
 }
 
+public int Native_GetSecondBuff(Handle plugin, int numParams)
+{
+	return g_eClient[GetNativeCell(1)][iBuff];
+}
+
+public int Native_GiveClientShare(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	g_eClient[client][iGetShare] = g_eClient[client][iGetShare] + GetNativeCell(2);
+}
+
 public int Native_GetDiscuzUID(Handle plugin, int numParams)
 {
 	return g_eClient[GetNativeCell(1)][iUID];
@@ -311,11 +324,6 @@ public int Native_GetSingature(Handle plugin, int numParams)
 	{
 		ThrowNativeError(SP_ERROR_NATIVE, "Can not return Player Singature.");
 	}
-}
-
-public int Native_IsBlacklist(Handle plugin, int numParams)
-{
-	return g_eClient[GetNativeCell(1)][bBlacklist];
 }
 
 public int Native_IsClientVIP(Handle plugin, int numParams)
@@ -424,7 +432,6 @@ public void OnClientPostAdminCheck(int client)
 
 	//玩家数据初始化
 	g_eClient[client][bLoaded] = false;
-	g_eClient[client][bBlacklist] = false;
 	g_eClient[client][LoginProcess] = false;
 	g_eClient[client][bAllowLogin] = false;
 	g_eClient[client][bTwiceLogin] = false;
@@ -433,7 +440,9 @@ public void OnClientPostAdminCheck(int client)
 	g_eClient[client][iUserId] = GetClientUserId(client);
 	g_eClient[client][iUID] = -1;
 	g_eClient[client][iFaith] = -1;
+	g_eClient[client][iBuff] = 0;
 	g_eClient[client][iShare] = -1;
+	g_eClient[client][iGetShare] = 0;
 	g_eClient[client][iLastSignTime] = 0;
 	g_eClient[client][iConnectTime] = GetTime();
 	g_eClient[client][iPlayerId] = 0;
@@ -442,7 +451,6 @@ public void OnClientPostAdminCheck(int client)
 	g_eClient[client][iDataRetry] = 0;
 	g_eClient[client][iOSQuery] = 0;
 	g_eClient[client][iAnalyticsId] = -1;
-	g_eClient[client][iFaithSelect] = 0;
 	g_eClient[client][iVipType] = 0;
 	g_eClient[client][iGroupId] = 0;
 	g_eClient[client][iLevel] = 0;
@@ -451,13 +459,13 @@ public void OnClientPostAdminCheck(int client)
 	g_eClient[client][iUpgrade] = 0;
 	g_eClient[client][iOS] = OS_Unknown;
 
-	Format(g_eClient[client][szIP], 32, "127.0.0.1");
-	Format(g_eClient[client][szSignature], 256, "数据读取中...");
-	Format(g_eClient[client][szDiscuzName], 256, "未注册");
-	Format(g_eClient[client][szAdminFlags], 64, "Unknown");
-	Format(g_eClient[client][szInsertData], 512, "");
-	Format(g_eClient[client][szUpdateData], 1024, "");
-	Format(g_eClient[client][szGroupName], 64, "未认证");
+	strcopy(g_eClient[client][szIP], 32, "127.0.0.1");
+	strcopy(g_eClient[client][szSignature], 256, "数据读取中...");
+	strcopy(g_eClient[client][szDiscuzName], 256, "未注册");
+	strcopy(g_eClient[client][szAdminFlags], 64, "Unknown");
+	strcopy(g_eClient[client][szInsertData], 512, "");
+	strcopy(g_eClient[client][szUpdateData], 1024, "");
+	strcopy(g_eClient[client][szGroupName], 64, "未认证");
 
 	//从数据库查询初始数据
 	if(g_hDB_csgo != INVALID_HANDLE)
@@ -472,7 +480,7 @@ public void OnClientPostAdminCheck(int client)
 		char steam32[32], m_szQuery[512];
 		GetClientAuthId(client, AuthId_Steam2, steam32, 32, true);
 		
-		Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.number, a.faith, a.share, a.blacklist, a.signature, a.groupid, a.groupname, a.exp, a.level, a.temp, a.notice, b.unixtimestamp FROM playertrack_player AS a LEFT JOIN `playertrack_sign` b ON b.steamid = a.steamid WHERE a.steamid = '%s' ORDER BY a.id ASC LIMIT 1;", steam32);
+		Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.number, a.faith, a.share, a.buff, a.signature, a.groupid, a.groupname, a.exp, a.level, a.temp, a.notice, b.unixtimestamp FROM playertrack_player AS a LEFT JOIN `playertrack_sign` b ON b.steamid = a.steamid WHERE a.steamid = '%s' ORDER BY a.id ASC LIMIT 1;", steam32);
 		SQL_TQuery(g_hDB_csgo, SQLCallback_GetClientStat, m_szQuery, g_eClient[client][iUserId], DBPrio_High);
 	}
 }
@@ -546,7 +554,7 @@ public Action Cmd_Track(int client, int args)
 				
 				GetClientAuthId(i, AuthId_Steam2, szAuth32, 32, true);
 				GetClientAuthId(i, AuthId_SteamID64, szAuth64, 64, true);
-				Format(szItem, 512, " %d    %N    %d    %s    %s    %s    %s", GetClientUserId(i), i, g_eClient[i][iUID], g_eClient[i][szDiscuzName], szAuth32, szAuth64, g_eClient[client][szGroupName]);
+				Format(szItem, 512, " %d    %N    %d    %s    %s    %s    %s", GetClientUserId(i), i, g_eClient[i][iUID], g_eClient[i][szDiscuzName], szAuth32, szAuth64, g_eClient[i][szGroupName]);
 				PrintToConsole(client, szItem);
 			}
 		}
@@ -560,7 +568,7 @@ public Action Cmd_Track(int client, int args)
 
 public Action Cmd_Faith(int client, int args)
 {
-	if(g_eClient[client][iFaith] != 0)
+	if(1 <= g_eClient[client][iFaith] <= 4)
 		ShowFaithMainMenuToClient(client);
 	else
 		ShowFaithFirstMenuToClient(client);
@@ -568,18 +576,29 @@ public Action Cmd_Faith(int client, int args)
 
 public Action Cmd_FHelp(int client, int args)
 {
-	Handle menu = CreateMenu(FaithHelpMenuHandler);
-	char szTmp[64];
-	Format(szTmp, 64, "[Planeptune]   Faith - Help \n -by xQy\n ");
-	SetMenuTitle(menu, szTmp);
-	AddMenuItem(menu, "", "在休闲模式[TTT/MG/HG/ZE/ZR]中", ITEMDRAW_DISABLED);
-	AddMenuItem(menu, "", "有Faith的玩家每局都会获得Buff", ITEMDRAW_DISABLED);
-	AddMenuItem(menu, "", "不同的Faith拥有的Buff效果不同", ITEMDRAW_DISABLED);
-	AddMenuItem(menu, "", "当你和你的FD同处于1个服务器,Buff效果加倍", ITEMDRAW_DISABLED);
-	AddMenuItem(menu, "", "你每在线1分钟即给Faith增加1点Share", ITEMDRAW_DISABLED);
-	AddMenuItem(menu, "", "Share越多,Buff效果越高", ITEMDRAW_DISABLED);
-	SetMenuExitButton(menu, true);
-	DisplayMenu(menu, client, 60);
+	Handle panel = CreatePanel(GetMenuStyleHandle(MenuStyle_Radio));
+	
+	char szItem[64];
+	Format(szItem, 64, "[Planeptune]   Faith - Help \n ");
+
+	DrawPanelText(panel, szItem);
+	DrawPanelText(panel, "Buff:");
+	DrawPanelText(panel, "在休闲模式[TTT/MG/HG/ZE/ZR]中");
+	DrawPanelText(panel, "有Faith的玩家每局都会获得Buff");
+	DrawPanelText(panel, "不同的Faith拥有的Buff效果都不同");
+	DrawPanelText(panel, "主Buff是由Faith决定的");
+	DrawPanelText(panel, "副Buff是由玩家自己选择的");
+	DrawPanelText(panel, "副Buff与你的Faith和Share无关");
+	DrawPanelText(panel, "Share:");
+	DrawPanelText(panel, "Share值是Faith强大的体现所在");
+	DrawPanelText(panel, "Share值越高主Buff就越强大");
+	DrawPanelText(panel, "正确击杀+1(ZE+5)点 | 死亡-3点");
+	DrawPanelText(panel, "在线每分钟将会贡献1点Share");
+	DrawPanelText(panel, "Share值达到1000点才会激活副Buff");
+	DrawPanelItem(panel, " ",ITEMDRAW_SPACER|ITEMDRAW_RAWLINE);
+	DrawPanelItem(panel, "Exit");
+	SendPanelToClient(panel, client, FaithHelpMenuHandler, 30);
+	CloseHandle(panel);
 }
 
 public Action Cmd_Share(int client, int args)
@@ -600,13 +619,13 @@ public Action Cmd_Share(int client, int args)
 public Action Cmd_Set(int client, int args)
 {
 	Handle menu = CreateMenu(AdminMainMenuHandler);
-	char szTmp[64];
-	Format(szTmp, 64, "[玩家认证]   管理员菜单\n -by shAna.xQy");
-	SetMenuTitle(menu, szTmp);
+	char szItem[64];
+	Format(szItem, 64, "[玩家认证]   管理员菜单\n -by shAna.xQy");
+	SetMenuTitle(menu, szItem);
 	AddMenuItem(menu, "9000", "添加临时认证[神烦坑比]");
 	AddMenuItem(menu, "9001", "添加临时认证[小学生]");
 	AddMenuItem(menu, "unban", "解除临时认证");
-	//AddMenuItem(menu, "reload", "重载认证");
+	AddMenuItem(menu, "reload", "重载认证");
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 15);
 }
@@ -631,5 +650,4 @@ public Action Cmd_reloadall(int client, int args)
 public Action Cmd_Notice(int client, int args)
 {
 	ShowPanelToClient(client);
-	return Plugin_Handled;
 }

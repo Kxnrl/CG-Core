@@ -56,13 +56,13 @@ public void SQL_TConnect_Callback_csgo(Handle owner, Handle hndl, const char[] e
 	
 	PrintToServer("[CG-Core] Connection to database 'csgo' successful!");
 
-	char m_szQueryString[256];
+	char m_szQuery[256];
 	
-	Format(m_szQueryString, 256, "SELECT `id`,`servername` FROM playertrack_server WHERE serverip = '%s'", g_szIP);
-	SQL_TQuery(g_hDB_csgo, SQLCallback_GetServerIP, m_szQueryString, _, DBPrio_High);
+	Format(m_szQuery, 256, "SELECT `id`,`servername` FROM playertrack_server WHERE serverip = '%s'", g_szIP);
+	SQL_TQuery(g_hDB_csgo, SQLCallback_GetServerIP, m_szQuery, _, DBPrio_High);
 	
-	Format(m_szQueryString, 256, "UPDATE `playertrack_player` SET groupid = '0', groupname = '未认证', temp = '0' WHERE temp < %d and temp > 0", GetTime());
-	SQL_TQuery(g_hDB_csgo, SQLCallback_OnConnect, m_szQueryString);
+	Format(m_szQuery, 256, "UPDATE `playertrack_player` SET groupid = '0', groupname = '未认证', temp = '0' WHERE temp < %d and temp > 0", GetTime());
+	SQL_TQuery(g_hDB_csgo, SQLCallback_OnConnect, m_szQuery);
 
 	g_iReconnect_csgo = 1;
 }
@@ -197,6 +197,99 @@ public void SQLCallback_GetShare(Handle owner, Handle hndl, const char[] error, 
 }
 
 /**client callbacks**/
+public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] error, any userid)
+{
+	int client = GetClientOfUserId(userid);
+	//如果是BOT, 取消查询
+
+	if(g_eClient[client][bIsBot])
+		return;
+	
+	if(client < 1 || client > MaxClients)
+		return;
+	
+	g_eClient[client][iUserId] = userid;
+
+	//如果操作失败
+	if(hndl == INVALID_HANDLE)
+	{
+		//输出错误日志
+		LogToFileEx(logFile_core, "Query Client Stats Failed! Client:\"%N\" \nError Happen: %s", client, error);
+		char auth[32], m_szQuery[512];
+		GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
+		Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.number, a.faith, a.share, a.buff, a.signature, a.groupid, a.groupname, a.exp, a.level, a.temp, a.notice, b.unixtimestamp FROM playertrack_player AS a LEFT JOIN `playertrack_sign` b ON b.steamid = a.steamid WHERE a.steamid = '%s' ORDER BY a.id ASC LIMIT 1;", auth);
+		SQL_TQuery(g_hDB_csgo, SQLCallback_GetClientStat, m_szQuery, g_eClient[client][iUserId]);
+		return;
+	}
+
+	//执行SQL_FetchRow
+	if(SQL_HasResultSet(hndl) && SQL_FetchRow(hndl))
+	{
+		//客户端数据读取 ID|在线时长|连线次数|签名
+		g_eClient[client][iPlayerId] = SQL_FetchInt(hndl, 0);
+		g_eClient[client][iOnlineTime] = SQL_FetchInt(hndl, 1);
+		g_eClient[client][iConnectCounts] = SQL_FetchInt(hndl, 2);
+		g_eClient[client][iFaith] = SQL_FetchInt(hndl, 3);
+		g_eClient[client][iShare] = SQL_FetchInt(hndl, 4);
+		g_eClient[client][iBuff] = SQL_FetchInt(hndl, 5);
+		SQL_FetchString(hndl, 6, g_eClient[client][szSignature], 256);
+		g_eClient[client][iGroupId] = SQL_FetchInt(hndl, 7);
+		SQL_FetchString(hndl, 8, g_eClient[client][szGroupName], 256);
+		g_eClient[client][iExp] = SQL_FetchInt(hndl, 9);
+		g_eClient[client][iLevel] = SQL_FetchInt(hndl, 10);
+		g_eClient[client][iTemp] = SQL_FetchInt(hndl, 11);
+		g_eClient[client][bPrint] = SQL_FetchInt(hndl, 12) > g_iLatestData ? true : false;
+		
+		g_eClient[client][bLoaded] = true;
+
+		char steam32[32], steamid64[32], m_szQuery[512];
+		GetClientAuthId(client, AuthId_Steam2, steam32, 32, true);
+		GetClientAuthId(client, AuthId_SteamID64, steamid64, 32, true);
+		
+		Format(m_szQuery, 512, "SELECT m.uid, m.username FROM dz_steam_users AS s LEFT JOIN dz_common_member m ON s.uid = m.uid WHERE s.steamID64 = '%s' LIMIT 1", steamid64);
+		SQL_TQuery(g_hDB_discuz, SQLCallback_GetClientDiscuzName, m_szQuery, g_eClient[client][iUserId]);
+		
+		if(g_eClient[client][iFaith] == 0 && g_ServerID != 23 && g_ServerID != 24 && g_ServerID != 11 && g_ServerID != 12 && g_ServerID != 13)
+		{
+			ShowFaithFirstMenuToClient(client);
+		}
+		
+		//签到查询部分
+		if(SQL_IsFieldNull(hndl, 13))
+		{
+			//如果查不到数据
+			char username[128], EscapeName[256];
+			GetClientName(client, username, 128);
+
+			SQL_EscapeString(g_hDB_csgo, username, EscapeName, 256);
+
+			Format(m_szQuery, 512, "INSERT INTO playertrack_sign (username, steamid, timeofsignin, unixtimestamp) VALUES ('%s', '%s', '0', '0')", EscapeName, steam32);
+			SQL_TQuery(g_hDB_csgo, SQLCallback_NothingCallback, m_szQuery, g_eClient[client][iUserId]);
+
+			g_eClient[client][iLastSignTime] = 0;
+			SetClientSignStat(client);
+		}
+		else
+		{
+			g_eClient[client][iLastSignTime] = SQL_FetchInt(hndl, 13);
+			SetClientSignStat(client);
+		}
+		
+		OnClientAuthLoaded(client);
+	}
+	else
+	{
+		//如果查不到数据 INSERT为新的玩家 记录到日志文件
+		//获得客户端数据 steamid|名字|IP|权限
+		char auth[32], username[128], EscapeName[256], m_szQuery[512];
+		GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
+		GetClientName(client, username, 128);
+		SQL_EscapeString(g_hDB_csgo, username, EscapeName, 256);
+		Format(m_szQuery, 512, "INSERT INTO playertrack_player (name, steamid, onlines, lastip, firsttime, lasttime, os, flags, number, signature) VALUES ('%s', '%s', '0', '%s', '%d', '0', 'unknow', 'unknow', '0', DEFAULT)", EscapeName, auth, g_eClient[client][szIP], g_eClient[client][iConnectTime]);
+		SQL_TQuery(g_hDB_csgo, SQLCallback_InsertClientStat, m_szQuery, g_eClient[client][iUserId]);
+	}
+}
+
 public void SQLCallback_GetClientDiscuzName(Handle owner, Handle hndl, const char[] error, any userid)
 {
 	int client = GetClientOfUserId(userid);
@@ -212,7 +305,7 @@ public void SQLCallback_GetClientDiscuzName(Handle owner, Handle hndl, const cha
 		VipChecked(client);
 		OnClientDataLoaded(client);
 		g_eClient[client][iUID] = -1;
-		Format(g_eClient[client][szDiscuzName], 128, "未注册");
+		strcopy(g_eClient[client][szDiscuzName], 128, "未注册");
 		LogToFileEx(logFile_core, "Check '%N' VIP Error happened: %s", client, error);
 		return;
 	}
@@ -233,7 +326,7 @@ public void SQLCallback_GetClientDiscuzName(Handle owner, Handle hndl, const cha
 		VipChecked(client);
 		OnClientDataLoaded(client);
 		g_eClient[client][iUID] = -1;
-		Format(g_eClient[client][szDiscuzName], 128, "未注册");
+		strcopy(g_eClient[client][szDiscuzName], 128, "未注册");
 	}
 }
 
@@ -282,97 +375,6 @@ public void SQLCallback_CheckVIP(Handle owner, Handle hndl, const char[] error, 
 	}
 }
 
-public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] error, any userid)
-{
-	int client = GetClientOfUserId(userid);
-	//如果是BOT, 取消查询
-
-	if(g_eClient[client][bIsBot])
-		return;
-	
-	if(client < 1 || client > MaxClients)
-		return;
-	
-	g_eClient[client][iUserId] = userid;
-
-	//如果操作失败
-	if(hndl == INVALID_HANDLE)
-	{
-		//输出错误日志
-		LogToFileEx(logFile_core, "Query Client Stats Failed! Client:\"%N\" \nError Happen: %s", error);
-		char auth[32], m_szQuery[512];
-		GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
-		Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.number, a.faith, a.share, a.blacklist, a.signature, a.groupid, a.groupname, a.exp, a.level, a.temp, a.notice, b.unixtimestamp FROM playertrack_player AS a LEFT JOIN `playertrack_sign` b ON b.steamid = a.steamid WHERE a.steamid = '%s' ORDER BY a.id ASC LIMIT 1;", auth);
-		SQL_TQuery(g_hDB_csgo, SQLCallback_GetClientStat, m_szQuery, g_eClient[client][iUserId]);
-		return;
-	}
-
-	//执行SQL_FetchRow
-	if(SQL_HasResultSet(hndl) && SQL_FetchRow(hndl))
-	{
-		//客户端数据读取 ID|在线时长|连线次数|签名
-		g_eClient[client][iPlayerId] = SQL_FetchInt(hndl, 0);
-		g_eClient[client][iOnlineTime] = SQL_FetchInt(hndl, 1);
-		g_eClient[client][iConnectCounts] = SQL_FetchInt(hndl, 2);
-		g_eClient[client][iFaith] = SQL_FetchInt(hndl, 3);
-		g_eClient[client][iShare] = SQL_FetchInt(hndl, 4);
-		g_eClient[client][bBlacklist] = SQL_FetchInt(hndl, 5) == 1 ? true : false;
-		SQL_FetchString(hndl, 6, g_eClient[client][szSignature], 256);
-		g_eClient[client][iGroupId] = SQL_FetchInt(hndl, 7);
-		SQL_FetchString(hndl, 8, g_eClient[client][szGroupName], 256);
-		g_eClient[client][iExp] = SQL_FetchInt(hndl, 9);
-		g_eClient[client][iLevel] = SQL_FetchInt(hndl, 10);
-		g_eClient[client][iTemp] = SQL_FetchInt(hndl, 11);
-		g_eClient[client][bPrint] = SQL_FetchInt(hndl, 12) > g_iLatestData ? true : false;
-		
-		g_eClient[client][bLoaded] = true;
-
-		char steam32[32], steamid64[32], m_szQuery[512];
-		GetClientAuthId(client, AuthId_Steam2, steam32, 32, true);
-		GetClientAuthId(client, AuthId_SteamID64, steamid64, 32, true);
-		
-		Format(m_szQuery, 512, "SELECT m.uid, m.username FROM dz_steam_users AS s LEFT JOIN dz_common_member m ON s.uid = m.uid WHERE s.steamID64 = '%s' LIMIT 1", steamid64);
-		SQL_TQuery(g_hDB_discuz, SQLCallback_GetClientDiscuzName, m_szQuery, g_eClient[client][iUserId]);
-		
-		if(g_eClient[client][iFaith] == 0 && g_ServerID != 23 && g_ServerID != 24 && g_ServerID != 11 && g_ServerID != 12 && g_ServerID != 13)
-		{
-			ShowFaithFirstMenuToClient(client);
-		}
-		
-		//签到查询部分
-		if(SQL_IsFieldNull(hndl, 13))
-		{
-			//如果查不到数据
-			char username[128], EscapeName[256];
-			GetClientName(client, username, 128);
-
-			SQL_EscapeString(g_hDB_csgo, username, EscapeName, 256);
-
-			Format(m_szQuery, 512, "INSERT INTO playertrack_sign (username, steamid, timeofsignin, unixtimestamp) VALUES ('%s', '%s', '0', '0')", EscapeName, steam32);
-			SQL_TQuery(g_hDB_csgo, SQLCallback_NothingCallback, m_szQuery, g_eClient[client][iUserId]);
-
-			g_eClient[client][iLastSignTime] = 0;
-			SetClientSignStat(client);
-		}
-		else
-		{
-			g_eClient[client][iLastSignTime] = SQL_FetchInt(hndl, 13);
-			SetClientSignStat(client);
-		}
-	}
-	else
-	{
-		//如果查不到数据 INSERT为新的玩家 记录到日志文件
-		//获得客户端数据 steamid|名字|IP|权限
-		char auth[32], username[128], EscapeName[256], m_szQuery[512];
-		GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
-		GetClientName(client, username, 128);
-		SQL_EscapeString(g_hDB_csgo, username, EscapeName, 256);
-		Format(m_szQuery, 512, "INSERT INTO playertrack_player (name, steamid, onlines, lastip, firsttime, lasttime, os, flags, number, signature) VALUES ('%s', '%s', '0', '%s', '%d', '0', 'unknow', 'unknow', '0', DEFAULT)", EscapeName, auth, g_eClient[client][szIP], g_eClient[client][iConnectTime]);
-		SQL_TQuery(g_hDB_csgo, SQLCallback_InsertClientStat, m_szQuery, g_eClient[client][iUserId]);
-	}
-}
-
 public void SQLCallback_InsertClientStat(Handle owner, Handle hndl, const char[] error, any userid)
 {
 	//定义客户
@@ -389,7 +391,7 @@ public void SQLCallback_InsertClientStat(Handle owner, Handle hndl, const char[]
 		//重试检查  辣鸡阿里云RDS
 		char auth[32], m_szQuery[512];
 		GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
-		Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.number, a.faith, a.share, a.blacklist, a.signature, a.groupid, a.groupname, a.exp, a.level, a.temp, a.notice, b.unixtimestamp FROM playertrack_player AS a LEFT JOIN `playertrack_sign` b ON b.steamid = a.steamid WHERE a.steamid = '%s' ORDER BY a.id ASC LIMIT 1;", auth);
+		Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.number, a.faith, a.share, a.buff, a.signature, a.groupid, a.groupname, a.exp, a.level, a.temp, a.notice, b.unixtimestamp FROM playertrack_player AS a LEFT JOIN `playertrack_sign` b ON b.steamid = a.steamid WHERE a.steamid = '%s' ORDER BY a.id ASC LIMIT 1;", auth);
 		SQL_TQuery(g_hDB_csgo, SQLCallback_GetClientStat, m_szQuery, g_eClient[client][iUserId]);
 	}
 	else
@@ -397,6 +399,7 @@ public void SQLCallback_InsertClientStat(Handle owner, Handle hndl, const char[]
 		//客户获得ID从INSERT ID
 		g_eClient[client][iPlayerId] = SQL_GetInsertId(hndl);
 		Format(g_eClient[client][szSignature], 256, "该玩家未设置签名,请登录论坛设置");
+		OnClientAuthLoaded(client);
 		OnClientDataLoaded(client);
 		g_eClient[client][bLoaded] = true;
 	}
@@ -643,30 +646,35 @@ public void SQLCallback_SetFaith(Handle owner, Handle hndl, const char[] error, 
 		return;
 	}
 	
+	PrintToChat(client, "%s  服务器已更新你的数据,正在刷新...", PLUGIN_PREFIX);
+
 	if(g_eClient[client][iFaith] == 1)
-	{
-		PrintToChat(client, "%s  你的Faith为[%s]", PLUGIN_PREFIX, PURPLE_NAME);
-		PrintToChat(client, "%s  你的FBuff为[\x04+速度\x0A|\x07+射速\x01]", PLUGIN_PREFIX);
-		PrintToChat(client, "%s  你的FaithDominator为[\x0E猫灵\x01] , 当与FD同处于1个服务器,buff效果加倍", PLUGIN_PREFIX);
-	}
+		PrintToChat(client, "[%s - %s] - Buff: 速度  Guardian: 猫灵", szFaith_CNATION[PURPLE], szFaith_CNAME[PURPLE]);
 	else if(g_eClient[client][iFaith] == 2)
-	{
-		PrintToChat(client, "%s  你的Faith为[%s]", PLUGIN_PREFIX, BLACK_NAME);
-		PrintToChat(client, "%s  你的FBuff为[\x04+生命\x0A|\x07+暴击\x01]", PLUGIN_PREFIX);
-		PrintToChat(client, "%s  你的FaithDominator为[\x08曼妥思\x01] , 当与FD同处于1个服务器,buff效果加倍", PLUGIN_PREFIX);
-	}
+		PrintToChat(client, "[%s - %s] - Buff: 暴击  Guardian: 曼妥思", szFaith_CNATION[BLACK], szFaith_CNAME[BLACK]);
 	else if(g_eClient[client][iFaith] == 3)
-	{
-		PrintToChat(client, "%s  你的Faith为[%s]", PLUGIN_PREFIX, GREEN_NAME);
-		PrintToChat(client, "%s  你的FBuff为[\x04+闪避\x0A|\x07+嗜血\x01]", PLUGIN_PREFIX);
-		PrintToChat(client, "%s  你的FaithDominator为[\x04基佬桐\x01] , 当与FD同处于1个服务器,buff效果加倍", PLUGIN_PREFIX);
-	}
+		PrintToChat(client, "[%s - %s] - Buff: 伤害  Guardian: 色拉", szFaith_CNATION[WHITE], szFaith_CNAME[WHITE]);
 	else if(g_eClient[client][iFaith] == 4)
+		PrintToChat(client, "[%s - %s] - Buff: 伤害  Guardian: 基佬铜", szFaith_CNATION[GREEN], szFaith_CNAME[GREEN]);
+	
+	CheckClientBuff(client);
+}
+
+public void SQLCallback_SetBuff(Handle owner, Handle hndl, const char[] error, int userid)
+{
+	int client = GetClientOfUserId(userid);
+	
+	if(!client || !IsClientInGame(client))
+		return;
+
+	if(hndl == INVALID_HANDLE)
 	{
-		PrintToChat(client, "%s  你的Faith为[%s]", PLUGIN_PREFIX, WHITE_NAME);
-		PrintToChat(client, "%s  你的FBuff为[\x04+伤害\x0A|\x07+护甲\x01]", PLUGIN_PREFIX);
-		PrintToChat(client, "%s  你的FaithDominator为[\x01色拉\x01] , 当与FD同处于1个服务器,buff效果加倍", PLUGIN_PREFIX);
+		g_eClient[client][iFaith] = 0;
+		PrintToChat(client, "%s  更新你的Buff失败,请联系服务器管理员", PLUGIN_PREFIX);
+		return;
 	}
+	
+	PrintToChat(client, "%s  服务器已更新你的数据,正在刷新...", PLUGIN_PREFIX);
 }
 
 public void SQLCallback_InsertShare(Handle owner, Handle hndl, const char[] error, int userid)
@@ -723,7 +731,7 @@ public void SQLCallback_GetGroupId(Handle owner, Handle hndl, const char[] error
 
 	if(hndl == INVALID_HANDLE)
 	{
-		LogToFile(logFile_core, "Query player Data Failed! Error:%s", error);
+		LogToFileEx(logFile_core, "Query player Data Failed! Error:%s", error);
 		return;
 	}
 
@@ -744,7 +752,7 @@ public void SQLCallback_SetTemp(Handle owner, Handle hndl, const char[] error, a
 	if(hndl == INVALID_HANDLE)
 	{
 		int client = GetClientOfUserId(userid);
-		LogToFile(logFile_core, "set temp player Failed! Error:%s", error);
+		LogToFileEx(logFile_core, "set temp player Failed! Error:%s", error);
 		PrintToChat(client, "%s \x02添加临时认证失败,SQL错误!", PLUGIN_PREFIX);
 		return;
 	}
@@ -756,7 +764,7 @@ public void SQLCallback_DeleteTemp(Handle owner, Handle hndl, const char[] error
 	
 	if(hndl == INVALID_HANDLE)
 	{
-		LogToFile(logFile_core, "DELETE Tmp Data Failed! Client:%N  Target:%N", client, g_eAdmin[iTarget]);
+		LogToFileEx(logFile_core, "DELETE Tmp Data Failed! Client:%N  Target:%N", client, g_eAdmin[iTarget]);
 		PrintToChat(client, "%s 解除临时认证失败...", PLUGIN_PREFIX);
 		return;
 	}
@@ -769,7 +777,7 @@ public void SQLCallback_OnConnect(Handle owner, Handle hndl, const char[] error,
 {
 	if(hndl == INVALID_HANDLE)
 	{
-		LogToFile(logFile_core, "Delete on start Failed! Error:%s", error);
+		LogToFileEx(logFile_core, "Delete on start Failed! Error:%s", error);
 		return;
 	}
 }
@@ -778,7 +786,7 @@ public void SQLCallback_GetNotice(Handle owner, Handle hndl, const char[] error,
 {
 	if(hndl == INVALID_HANDLE)
 	{
-		LogToFile(logFile_core, "Get Notice Failed! Error: %s", error);
+		LogToFileEx(logFile_core, "Get Notice Failed! Error: %s", error);
 		return;
 	}
 	

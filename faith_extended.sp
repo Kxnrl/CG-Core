@@ -1,9 +1,9 @@
-//#pragma newdecls required
-
 #include <sourcemod>
 #include <sdktools>
 #include <cg_core>
 #include <store>
+
+#pragma newdecls required
 
 #define PREFIX "[\x0EPlaneptune\x01]  "
 
@@ -16,20 +16,17 @@ public Plugin myinfo =
 	name = " [CG] Faith Extended ",
 	author = "xQy",
 	description = "",
-	version = "1.4",
+	version = "1.5",
 	url = "http://steamcommunity.com/id/_xQy_/"
 };
 
 public void OnPluginStart()
 {
-	RegConsoleCmd("sm_freset", Cmd_FaithReset);
+	RegConsoleCmd("sm_freset", Cmd_BuffReset);
 	RegConsoleCmd("sm_fcharge", Cmd_FaithRecharge);
 	RegConsoleCmd("sm_qianming", Cmd_Signature);
 	RegConsoleCmd("sm_qm", Cmd_Signature);
 	RegConsoleCmd("qm", Cmd_Signature);
-	RegConsoleCmd("signature", Cmd_Signature);
-	RegConsoleCmd("sm_signature", Cmd_Signature);
-	RegConsoleCmd("say", HookSay);
 }
 
 public void OnClientPostAdminCheck(int client)
@@ -48,49 +45,64 @@ public void OnClientDisconnect(int client)
 	}
 }
 
-public Action Cmd_FaithReset(int client, int args)
+public Action Cmd_BuffReset(int client, int args)
 {
 	if(client == 0)
 		return Plugin_Handled;
 	
 	if(CG_GetClientFaith(client) == 0)
 	{
-		PrintToChat(client, "%s  你当前没有Faith,不需要重置Faith", PREFIX);
+		PrintToChat(client, "%s  你当前没有Faith,怎么重置Buff", PREFIX);
 		return Plugin_Handled;
 	}
 	
-	if(Store_GetClientCredits(client) < 20000)
+	int buff = CG_GetSecondBuff(client);
+	
+	if(buff == 0)
+	{
+		PrintToChat(client, "%s  你当前没有Buff,不需要重置", PREFIX);
+		return Plugin_Handled;
+	}
+	
+	if(Store_GetClientCredits(client) < 5000)
 	{
 		PrintToChat(client, "%s  \x04Credits\x07余额不足,请先到论坛氪金再来进行Faith重置", PREFIX);
 		return Plugin_Handled;
 	}
 	
-	if(9999 > PA_GetGroupID(client) > 9990)
-	{
-		PrintToChat(client, "%s  \x07Faith Dominator 不被允许重置/更改Faith", PREFIX);
-		return Plugin_Handled;
-	}
-	
-	Handle menu = CreateMenu(ResetFaithConfirmMenuHandler);
+	Handle menu = CreateMenu(ResetBuffConfirmMenuHandler);
 	char szItem[256];
-	Format(szItem, 256, "[Planeptune]   Faith Reset \n \n ");
+	Format(szItem, 256, "[Planeptune]   Faith - Reset Second Buff\n \n ");
 	SetMenuTitle(menu, szItem);
 
 	Format(szItem, 256, "你当前的Faith为[%s] - %s \n ", szFaith_NAME[CG_GetClientFaith(client)], szFaith_NATION[CG_GetClientFaith(client)]);
+	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
+	
+	if(buff == 1)
+		Format(szItem, 256, "你当前的Buff为[射速]\n 提升除了手雷/匕首之外所有武器5%%的射速\n ");
+	else if(buff == 2)
+		Format(szItem, 256, "你当前的Buff为[嗜血]\n 你每造成40点(ZE模式为800点)伤害就能恢复2点HP\n ");
+	else if(buff == 3)
+		Format(szItem, 256, "你当前的Buff为[生命]\n 出生时提升血量和血量上限8%%(僵尸无效)\n ");
+	else if(buff == 4)
+		Format(szItem, 256, "你当前的Buff为[护甲]\n 出生时有8%%几率获得重甲|护甲低于10自动补到10\n ");
+	else if(buff == 5)
+		Format(szItem, 256, "你当前的Buff为[基因]\n 跳跃高度|跳跃距离都提升8%%(不受重力影响)\n ");
+	else if(buff == 6)
+		Format(szItem, 256, "你当前的Buff为[子弹]\n 你每射出8发(ZE为20)子弹将会往你主弹夹填充2发子弹\n ");
 	
 	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
 	
-	Format(szItem, 256, "你已经为%s贡献了%d点Share", szFaith_NAME[CG_GetClientFaith(client)], CG_GetClientShare(client));
+	Format(szItem, 256, "重置Buff会消耗5000Credits且清空Share[%d点]\n ", CG_GetClientShare(client));
 	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
 	
-	Format(szItem, 256, "重置Faith会消耗20,000Credits且清空你的Share贡献值\n ", CG_GetClientShare(client));
+	Format(szItem, 256, "你确定要重置你的Buff吗 ;)");
 	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
 	
-	Format(szItem, 256, "你确定要重置你的Faith吗 :)", CG_GetClientShare(client));
-	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
+	AddMenuItem(menu, "1000", "我确定要更换且清空Share");
 	
-	AddMenuItem(menu, "no", "我拒绝");
-	AddMenuItem(menu, "yes", "我确定");
+	Format(szItem, 256, "我要更换且花费%dCredits来保留我的Share", CG_GetClientShare(client)*10);
+	AddMenuItem(menu, "9999", szItem);
 	
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 0);
@@ -98,22 +110,32 @@ public Action Cmd_FaithReset(int client, int args)
 	return Plugin_Handled;
 }
 
-public int ResetFaithConfirmMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 
+public int ResetBuffConfirmMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 
 {
 	if(action == MenuAction_Select) 
 	{
 		char info[32];
 		GetMenuItem(menu, itemNum, info, 32);
 		
-		if(StrEqual(info, "yes"))
+		if(StrEqual(info, "1000"))
 		{
-			PrintToChat(client, "%s  已提交你重置Faith的请求", PREFIX);
+			PrintToChat(client, "%s  已提交你重置Buff的请求", PREFIX);
 			LogMessage("玩家 [%N] 提交了 重置Faith 的请求", client);
 			char m_szQuery[256], auth[32];
 			GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
-			Format(m_szQuery, 256, "UPDATE `playertrack_player` SET faith = 0, share = 0 WHERE id = '%d' AND steamid = '%s'", CG_GetPlayerID(client), auth);
+			Format(m_szQuery, 256, "UPDATE `playertrack_player` SET share = 0, buff = 0 WHERE id = '%d' AND steamid = '%s'", CG_GetPlayerID(client), auth);
 			CG_SaveDatabase(m_szQuery);
-			Store_SetClientCredits(client, Store_GetClientCredits(client)-20000, "Faith重置");
+			Store_SetClientCredits(client, Store_GetClientCredits(client)-5000, "Buff重置");
+		}
+		if(StrEqual(info, "9999"))
+		{
+			PrintToChat(client, "%s  已提交你重置Buff的请求", PREFIX);
+			LogMessage("玩家 [%N] 提交了 重置Faith 的请求", client);
+			char m_szQuery[256], auth[32];
+			GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
+			Format(m_szQuery, 256, "UPDATE `playertrack_player` SET buff = 0 WHERE id = '%d' AND steamid = '%s'", CG_GetPlayerID(client), auth);
+			CG_SaveDatabase(m_szQuery);
+			Store_SetClientCredits(client, Store_GetClientCredits(client)-5000, "Buff重置");
 		}
 	}
 	else if(action == MenuAction_End)
@@ -186,12 +208,20 @@ public int FaithChargeMenuHandler(Handle menu, MenuAction action, int client, in
 		
 		int ishare = StringToInt(info);
 		int icredits = ishare*20;
+		
+		if(Store_GetClientCredits(client) < icredits)
+		{
+			PrintToChat(client, "%s  \x04Credits\x07余额不足,请先到论坛氪金", PREFIX);
+			return;
+		}
 
 		char m_szQuery[256], auth[32];
 		GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
-		Format(m_szQuery, 256, "UPDATE `playertrack_player` SET share = share+%d WHERE id = '%d' AND steamid = '%s'", ishare, CG_GetPlayerID(client), auth);
+		CG_GiveClientShare(client, ishare);
+		Format(m_szQuery, 256, "UPDATE store_players SET `credits`=`credits`-%d WHERE `authid`='%s'", icredits, auth[8]);
 		CG_SaveDatabase(m_szQuery);
-		Store_SetClientCredits(client, Store_GetClientCredits(client)-icredits, "充值信仰");
+		Format(m_szQuery, 256, "INSERT INTO store_logs (player_id, credits, reason, date) VALUES((SELECT id FROM store_players WHERE `authid`='%s'), %d, '充值信仰', %d)", auth[8], icredits, GetTime());
+		CG_SaveDatabase(m_szQuery);
 		PrintToChat(client, "[%s]  \x04已收到你充值的信仰\x0C %d \x04点", szFaith_CNAME[CG_GetClientFaith(client)], ishare);
 	}
 	else if(action == MenuAction_End)
@@ -343,18 +373,14 @@ public int ListenerMenuHandler(Handle menu, MenuAction action, int client, int i
 	}
 }
 
-public Action HookSay(int client, int args)
+public Action OnClientSayCommand(int client, const char[] command, const char[] sArgs)
 {
 	if(!g_bListener[client])
 		return Plugin_Continue;
-
-	char message[256];
-	GetCmdArgString(message, 256);
-	StripQuotes(message);
 	
-	Format(g_szSignature[client], 256, "%s", message);
+	Format(g_szSignature[client], 256, "%s", sArgs);
 	
-	PrintToChat(client, "您输入了: %s", message);
+	PrintToChat(client, "您输入了: %s", sArgs);
 	
 	g_bListener[client] = false;
 	if(g_hTimerListner[client] != INVALID_HANDLE)

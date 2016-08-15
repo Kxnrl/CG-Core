@@ -69,7 +69,7 @@ public Action Timer_HandleConnect(Handle timer, any userid)
 	
 	//获得 客户OS|当前地图|当前日期|客户权限
 	char date[64], map[128], os[64];
-	FormatTime(date, 64, "%Y-%m-%d");
+	FormatTime(date, 64, "%Y/%m/%d %H:%M:%S", GetTime());
 
 	GetCurrentMap(map, 128);
 	if(g_eClient[client][iOS] == OS_Windows)
@@ -80,13 +80,8 @@ public Action Timer_HandleConnect(Handle timer, any userid)
 		strcopy(os, 64, "Linux");
 	
 	GetClientFlags(client);
-	
-	//开始SQL查询操作
-	char sBuffer[2][128];
-	SQL_EscapeString(g_hDB_csgo, g_eClient[client][szAdminFlags], sBuffer[0], 256);
-	SQL_EscapeString(g_hDB_csgo, os, sBuffer[1], 256);
-	//Format(g_eClient[client][szInsertData], 512, "INSERT INTO `playertrack_analytics` SET playerid = %d, connect_time = %d, connect_date = '%s', serverid = %d, map = '%s', flags = %s, ip = '%s', os = %s", g_eClient[client][iPlayerId], g_eClient[client][iConnectTime], date, g_ServerID, map, sBuffer[0], g_eClient[client][szIP], sBuffer[1]);
-	Format(g_eClient[client][szInsertData], 512, "INSERT INTO `playertrack_analytics` (`playerid`, `connect_time`, `connect_date`, `serverid`, `map`, `flags`, `ip`, `os`) VALUES ('%d', '%d', '%s', '%d', '%s', '%s', '%s', '%s')", g_eClient[client][iPlayerId], g_eClient[client][iConnectTime], date, g_ServerID, map, sBuffer[0], g_eClient[client][szIP], sBuffer[1]);
+
+	Format(g_eClient[client][szInsertData], 512, "INSERT INTO `playertrack_analytics` (`playerid`, `connect_time`, `connect_date`, `serverid`, `map`, `flags`, `ip`, `os`) VALUES ('%d', '%d', '%s', '%d', '%s', '%s', '%s', '%s')", g_eClient[client][iPlayerId], g_eClient[client][iConnectTime], date, g_ServerID, map, g_eClient[client][szAdminFlags], g_eClient[client][szIP], os);
 	SQL_TQuery(g_hDB_csgo, SQLCallback_InsertPlayerStat, g_eClient[client][szInsertData], g_eClient[client][iUserId]);
 
 	return Plugin_Stop;
@@ -98,16 +93,14 @@ void SaveClient(int client)
 		return;
 	
 	//获得统计结果
-	int duration = -1, share = -1;
+	int duration = -1;
 	if(g_eClient[client][iConnectTime] < (GetTime()-86400))
 		duration = 0;
 	else
 		duration = GetTime() - g_eClient[client][iConnectTime];
 	
-	if(g_eClient[client][iFaith] > 0)
-		share = duration/60;
-	else
-		share = 0;
+	//处理Share值
+	int share = duration/60 + g_eClient[client][iGetShare];
 	
 	char os[64];
 	if(g_eClient[client][iOS] == OS_Windows) 
@@ -143,9 +136,7 @@ void SaveClient(int client)
 	{
 		char steamid[32], m_szQueryString[256];
 		GetClientAuthId(client, AuthId_Steam2, steamid, 32, true);
-		ReplaceString(steamid, 32, "STEAM_0:", "", false);
-		ReplaceString(steamid, 32, "STEAM_1:", "", false);
-		Format(m_szQueryString, 256, "UPDATE sb_admins SET onlines=onlines+%d,lastseen=%d,today=today+%d WHERE (authid=\"STEAM_1:%s\" OR authid=\"STEAM_0:%s\")", duration, GetTime(), duration, steamid, steamid);
+		Format(m_szQueryString, 256, "UPDATE sb_admins SET onlines=onlines+%d,lastseen=%d,today=today+%d WHERE (authid=\"STEAM_1:%s\" OR authid=\"STEAM_0:%s\")", duration, GetTime(), duration, steamid[8], steamid[8]);
 		SQL_TQuery(g_hDB_csgo, SQLCallBack_SaveAdminOnlines, m_szQueryString, GetClientUserId(client));
 	}
 }
