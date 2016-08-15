@@ -93,7 +93,7 @@ public Action Cmd_BuffReset(int client, int args)
 	
 	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
 	
-	Format(szItem, 256, "重置Buff会消耗5000Credits且清空Share[%d点]\n ", CG_GetClientShare(client));
+	Format(szItem, 256, "重置Buff会消耗2000Credits且清空Share[%d点]\n ", CG_GetClientShare(client));
 	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
 	
 	Format(szItem, 256, "你确定要重置你的Buff吗 ;)");
@@ -101,7 +101,7 @@ public Action Cmd_BuffReset(int client, int args)
 	
 	AddMenuItem(menu, "1000", "我确定要更换且清空Share");
 	
-	Format(szItem, 256, "我要更换且花费%dCredits来保留我的Share", CG_GetClientShare(client)*10);
+	Format(szItem, 256, "我要更换且花费%dCredits来保留我的Share", (CG_GetClientShare(client)*10+2000));
 	AddMenuItem(menu, "9999", szItem);
 	
 	SetMenuExitButton(menu, true);
@@ -120,22 +120,22 @@ public int ResetBuffConfirmMenuHandler(Handle menu, MenuAction action, int clien
 		if(StrEqual(info, "1000"))
 		{
 			PrintToChat(client, "%s  已提交你重置Buff的请求", PREFIX);
-			LogMessage("玩家 [%N] 提交了 重置Faith 的请求", client);
+			LogMessage("玩家 [%N] 提交了 重置Buff 的请求", client);
 			char m_szQuery[256], auth[32];
 			GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
 			Format(m_szQuery, 256, "UPDATE `playertrack_player` SET share = 0, buff = 0 WHERE id = '%d' AND steamid = '%s'", CG_GetPlayerID(client), auth);
 			CG_SaveDatabase(m_szQuery);
-			Store_SetClientCredits(client, Store_GetClientCredits(client)-5000, "Buff重置");
+			Store_SetClientCredits(client, Store_GetClientCredits(client)-2000, "Buff重置");
 		}
 		if(StrEqual(info, "9999"))
 		{
 			PrintToChat(client, "%s  已提交你重置Buff的请求", PREFIX);
-			LogMessage("玩家 [%N] 提交了 重置Faith 的请求", client);
+			LogMessage("玩家 [%N] 提交了 重置Buff 的请求", client);
 			char m_szQuery[256], auth[32];
 			GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
 			Format(m_szQuery, 256, "UPDATE `playertrack_player` SET buff = 0 WHERE id = '%d' AND steamid = '%s'", CG_GetPlayerID(client), auth);
 			CG_SaveDatabase(m_szQuery);
-			Store_SetClientCredits(client, Store_GetClientCredits(client)-5000, "Buff重置");
+			Store_SetClientCredits(client, Store_GetClientCredits(client)-(CG_GetClientShare(client)*10+2000), "Buff重置");
 		}
 	}
 	else if(action == MenuAction_End)
@@ -237,7 +237,7 @@ public Action Cmd_Signature(int client, int args)
 	
 	if(StrContains(szSignature, "该玩家未设置签名") != -1)
 	{
-		PrintToChat(client, "%s   %s大赦天下,首次设置签名免费!", PREFIX, szFaith_CNAME[PURPLE]);
+		PrintToChat(client, "%s   %s大赦天下,首次设置签名免费!", PREFIX, szFaith_CNATION[PURPLE]);
 		ShowListenerMenu(client);
 		return Plugin_Handled;
 	}

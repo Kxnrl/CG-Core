@@ -130,10 +130,10 @@ public void SQLCallback_GetServerIP(Handle owner, Handle hndl, const char[] erro
 	if(SQL_FetchRow(hndl))
 	{
 		//ServerID获取
-		g_ServerID = SQL_FetchInt(hndl, 0);
+		g_iServerId = SQL_FetchInt(hndl, 0);
 		SQL_FetchString(hndl, 1, g_szHostName, 256);
 		SetConVarString(FindConVar("hostname"), g_szHostName, false, false);
-		LogToFileEx(logFile_core, "ServerID is \"%d\"  ServerName is \"%s\" ", g_ServerID, g_szHostName);
+		LogToFileEx(logFile_core, "ServerID is \"%d\"  ServerName is \"%s\" ", g_iServerId, g_szHostName);
 		SettingAdver();
 		
 		char m_szQuery[256];
@@ -173,7 +173,7 @@ public void SQLCallback_InsertServerIP(Handle owner, Handle hndl, const char[] e
 	}
 	
 	//从INSERT ID获得ServerID 变量g_ServerID
-	g_ServerID = SQL_GetInsertId(hndl);
+	g_iServerId = SQL_GetInsertId(hndl);
 }
 
 public void SQLCallback_GetShare(Handle owner, Handle hndl, const char[] error, any data)
@@ -249,7 +249,7 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 		Format(m_szQuery, 512, "SELECT m.uid, m.username FROM dz_steam_users AS s LEFT JOIN dz_common_member m ON s.uid = m.uid WHERE s.steamID64 = '%s' LIMIT 1", steamid64);
 		SQL_TQuery(g_hDB_discuz, SQLCallback_GetClientDiscuzName, m_szQuery, g_eClient[client][iUserId]);
 		
-		if(g_eClient[client][iFaith] == 0 && g_ServerID != 23 && g_ServerID != 24 && g_ServerID != 11 && g_ServerID != 12 && g_ServerID != 13)
+		if(g_eClient[client][iFaith] == 0 && g_iServerId != 23 && g_iServerId != 24 && g_iServerId != 11 && g_iServerId != 12 && g_iServerId != 13)
 		{
 			ShowFaithFirstMenuToClient(client);
 		}
@@ -805,7 +805,7 @@ public void SQLCallback_GetNotice(Handle owner, Handle hndl, const char[] error,
 				SQL_FetchString(hndl, 8, g_szGlobal[5], 256);
 				global = SQL_FetchInt(hndl, 9);
 			}
-			if(SQL_FetchInt(hndl, 0) == g_ServerID)
+			if(SQL_FetchInt(hndl, 0) == g_iServerId)
 			{
 				SQL_FetchString(hndl, 3, g_szServer[0], 256);
 				SQL_FetchString(hndl, 4, g_szServer[1], 256);

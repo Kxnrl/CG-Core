@@ -151,10 +151,13 @@ public void ShowFaithMainMenuToClient(int client)
 	Format(szItem, 256, "Share排行");
 	AddMenuItem(menu, "query_rank_", szItem);
 	
-	Format(szItem, 256, "重选副Buff");
+	if(g_eClient[client][iBuff] <= 0)
+		Format(szItem, 256, "设置副Buff");
+	else
+		Format(szItem, 256, "重选副Buff");
 	AddMenuItem(menu, "reset_faith", szItem);
 	
-	Format(szItem, 256, "充值信仰[test]");
+	Format(szItem, 256, "充值信仰");
 	AddMenuItem(menu, "charge_____", szItem);
 
 	SetMenuExitButton(menu, true);
@@ -177,7 +180,12 @@ public int FaithMainMenuHandler(Handle menu, MenuAction action, int client, int 
 		else if(StrEqual(info, "query_offer"))
 			ShowFaithOfferToClient(client);
 		else if(StrEqual(info, "reset_faith"))
-			FakeClientCommandEx(client, "sm_freset");
+		{
+			if(g_eClient[client][iBuff] <= 0)
+				CheckClientBuff(client);
+			else
+				FakeClientCommandEx(client, "sm_freset");
+		}		
 		else if(StrEqual(info, "charge_____"))
 			FakeClientCommandEx(client, "sm_fcharge");
 		else if(StrEqual(info, "query_rank_"))

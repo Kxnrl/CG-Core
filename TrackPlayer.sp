@@ -1,9 +1,9 @@
 #pragma newdecls required //let`s go! new syntax!!!
-//Build 312
+//Build 313
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define PLUGIN_VERSION " 5.1.4 - 2016/08/15 00:28 "
+#define PLUGIN_VERSION " 5.1.5 - 2016/08/16 04:05 "
 #define PLUGIN_PREFIX "[\x0EPlaneptune\x01]  "
 #define PLUGIN_PREFIX_SIGN "[\x0EPlaneptune\x01]  "
 
@@ -79,7 +79,7 @@ enum eAdmins
 Handle g_hDB_csgo;
 Handle g_hDB_discuz;
 Handle g_hOSGamedata;
-Handle g_fwdOnGetServerHostName;
+Handle g_fwdOnServerLoaded;
 Handle g_fwdOnClientDailySign;
 Handle g_fwdOnClientDataLoaded;
 Handle g_fwdOnClientAuthLoaded;
@@ -89,7 +89,7 @@ Handle g_hCVAR;
 Clients g_eClient[MAXPLAYERS+1][Clients];
 eAdmins g_eAdmin[eAdmins];
 
-int g_ServerID = -1;
+int g_iServerId = -1;
 int g_iReconnect_csgo;
 int g_iReconnect_discuz;
 int g_iLatestData;
@@ -174,7 +174,7 @@ public void OnPluginStart()
 	RegAdminCmd("pareloadall", Cmd_reloadall, ADMFLAG_ROOT);
 	
 	//Create Forward
-	g_fwdOnGetServerHostName = CreateGlobalForward("CG_OnServerLoaded", ET_Ignore, Param_Cell);
+	g_fwdOnServerLoaded = CreateGlobalForward("CG_OnServerLoaded", ET_Ignore, Param_Cell);
 	g_fwdOnClientDailySign = CreateGlobalForward("CG_OnClientDailySign", ET_Ignore, Param_Cell);
 	g_fwdOnClientDataLoaded = CreateGlobalForward("CG_OnClientLoaded", ET_Ignore, Param_Cell);
 	g_fwdOnClientAuthLoaded = CreateGlobalForward("PA_OnClientLoaded", ET_Ignore, Param_Cell);
@@ -228,7 +228,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 void OnServerLoadSuccess()
 {
-	Call_StartForward(g_fwdOnGetServerHostName);
+	Call_StartForward(g_fwdOnServerLoaded);
 	Call_Finish();
 }
 
@@ -266,7 +266,7 @@ void VipChecked(int client)
 
 public int Native_GetServerID(Handle plugin, int numParams)
 {
-	return g_ServerID;
+	return g_iServerId;
 }
 
 public int Native_GetShare(Handle plugin, int numParams)
@@ -402,13 +402,13 @@ public void OnSettingChanged(Handle convar, const char[] oldValue, const char[] 
 
 public void OnMapStart()
 {
-	if(g_ServerID != 0 && g_hDB_csgo != INVALID_HANDLE)
+	if(g_iServerId != 0 && g_hDB_csgo != INVALID_HANDLE)
 	{
 		char m_szQuery[256];
 		Format(m_szQuery, 256, "SELECT faith,SUM(share) FROM playertrack_player GROUP BY faith");
 		SQL_TQuery(g_hDB_csgo, SQLCallback_GetShare, m_szQuery);
 		
-		Format(m_szQuery, 256, "SELECT * FROM playertrack_server WHERE id = 0 or id = %d order by id asc;", g_ServerID);
+		Format(m_szQuery, 256, "SELECT * FROM playertrack_server WHERE id = 0 or id = %d order by id asc;", g_iServerId);
 		SQL_TQuery(g_hDB_csgo, SQLCallback_GetNotice, m_szQuery);
 
 		SettingAdver();

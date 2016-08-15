@@ -8,7 +8,7 @@ public Action Timer_Notice(Handle timer, int userid)
 	if(!IsClientInGame(client))
 		return Plugin_Stop;
 
-	if(g_ServerID == 23 && g_ServerID == 24 && g_ServerID == 11 && g_ServerID == 12 && g_ServerID == 13)
+	if(g_iServerId == 23 || g_iServerId == 24 || g_iServerId == 11 || g_iServerId == 12 || g_iServerId == 13)
 		return Plugin_Stop;
 	
 	if(g_eClient[client][bPrint])
@@ -26,8 +26,7 @@ void ShowPanelToClient(int client)
 {
 	g_eClient[client][bPrint] = true;
 	FakeClientCommandEx(client, "sm_bgm");
-	PrintToChat(client, "[\x0EPlaneptune\x01]   输入\x07!notice\x01可以重新打开公告板,阅读完全后下次进入将不再提示");
-	
+	PrintToChat(client, "[\x0EPlaneptune\x01]   输入\x07!notice\x01可以重新打开公告板,完全阅读后将不再提示");
 	BuiltPanelToClient(client);
 }
 

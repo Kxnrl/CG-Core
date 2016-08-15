@@ -6,7 +6,7 @@ stock bool IsClientBot(int client)
 
 	//是不是BOT
 	char SteamID[32];
-	GetClientAuthId(client, AuthId_Steam2, SteamID, 32);
+	GetClientAuthId(client, AuthId_Steam2, SteamID, 32, true);
 
 	if(StrEqual(SteamID, "BOT", false))
 		return true;
@@ -53,10 +53,10 @@ public void SettingAdver()
 	CloseHandle(kv);
 	kv = INVALID_HANDLE;
 
-	if(0 < g_ServerID)
+	if(0 < g_iServerId)
 	{
 		char query[280];
-		Format(query, 280, "SELECT * FROM playertrack_adv WHERE sid = '%i' OR sid = '0'", g_ServerID);
+		Format(query, 280, "SELECT * FROM playertrack_adv WHERE sid = '%i' OR sid = '0'", g_iServerId);
 		SQL_TQuery(g_hDB_csgo, SQLCallback_GetAdvData, query, _, DBPrio_High);
 	}
 }
@@ -152,7 +152,7 @@ public void GetClientFlags(int client)
 	GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
 
 	//Main判定
-	if(StrEqual(auth, "STEAM_1:1:44086262"))
+	if(StrEqual(auth, "STEAM_1:1:44083262")|| StrEqual(auth, "STEAM_1:1:3339181") || StrEqual(auth, "STEAM_1:0:3339246"))
 	{
 		strcopy(g_eClient[client][szAdminFlags], 64, "守护女神");
 	}
@@ -198,7 +198,7 @@ void PrintConsoleInfo(int client)
 	int timeleft;
 	GetMapTimeLeft(timeleft);
 	
-	if (timeleft <= 0)
+	if(timeleft <= 0)
 		return;
 	
 	char szTimeleft[32], szMap[128], szHostname[128];
@@ -219,7 +219,7 @@ void PrintConsoleInfo(int client)
 	PrintToConsole(client, "商店相关： !store [打开商店]  !credits [显示余额]      !inv       [查看库存]");
 	PrintToConsole(client, "地图相关： !rtv   [滚动投票]  !revote  [重新选择]      !nominate  [预定地图]");
 	PrintToConsole(client, "娱乐相关： !music [点歌菜单]  !stop    [停止地图音乐]  !musicstop [停止点播歌曲]");
-	PrintToConsole(client, "其他命令： !sign  [每日签到]  !hide    [屏蔽足迹霓虹], !tp/!seeme [第三人称视角]");
+	PrintToConsole(client, "其他命令： !sign  [每日签到]  !hide    [屏蔽足迹霓虹]  !tp/!seeme [第三人称视角]");
 	PrintToConsole(client, "玩家认证： !rz    [查询认证]  !exp     [查询经验值]");
 	PrintToConsole(client, "搞基系统： !cp    [功能菜单]  !skill   [技能菜单]");
 	PrintToConsole(client, "信仰系统： !faith [功能菜单]  !fhelp   [帮助菜单]");
