@@ -199,7 +199,7 @@ void DoUnbanTempPA(int client)
 	int target = g_eAdmin[iTarget]; 
 
 	char szQuery[256], auth[32];
-	
+
 	GetClientAuthId(target, AuthId_Steam2, auth, 32);
 
 	Format(szQuery, 256, "UPDATE `playertrack_player` SET groupid = '0', groupname = '未认证', temp = '0' WHERE id = '%d' and steamid = '%s'", g_eClient[target][iPlayerId], auth);

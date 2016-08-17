@@ -24,9 +24,7 @@ public void OnPluginStart()
 {
 	RegConsoleCmd("sm_freset", Cmd_BuffReset);
 	RegConsoleCmd("sm_fcharge", Cmd_FaithRecharge);
-	RegConsoleCmd("sm_qianming", Cmd_Signature);
 	RegConsoleCmd("sm_qm", Cmd_Signature);
-	RegConsoleCmd("qm", Cmd_Signature);
 }
 
 public void OnClientPostAdminCheck(int client)
@@ -119,7 +117,7 @@ public int ResetBuffConfirmMenuHandler(Handle menu, MenuAction action, int clien
 		
 		if(StrEqual(info, "1000"))
 		{
-			PrintToChat(client, "%s  已提交你重置Buff的请求", PREFIX);
+			PrintToChat(client, "%s  已提交你重置Buff的请求,你需要重进服务器", PREFIX);
 			LogMessage("玩家 [%N] 提交了 重置Buff 的请求", client);
 			char m_szQuery[256], auth[32];
 			GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
@@ -129,7 +127,7 @@ public int ResetBuffConfirmMenuHandler(Handle menu, MenuAction action, int clien
 		}
 		if(StrEqual(info, "9999"))
 		{
-			PrintToChat(client, "%s  已提交你重置Buff的请求", PREFIX);
+			PrintToChat(client, "%s  已提交你重置Buff的请求,你需要重进服务器", PREFIX);
 			LogMessage("玩家 [%N] 提交了 重置Buff 的请求", client);
 			char m_szQuery[256], auth[32];
 			GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
@@ -215,14 +213,9 @@ public int FaithChargeMenuHandler(Handle menu, MenuAction action, int client, in
 			return;
 		}
 
-		char m_szQuery[256], auth[32];
-		GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
-		CG_GiveClientShare(client, ishare);
-		Format(m_szQuery, 256, "UPDATE store_players SET `credits`=`credits`-%d WHERE `authid`='%s'", icredits, auth[8]);
-		CG_SaveDatabase(m_szQuery);
-		Format(m_szQuery, 256, "INSERT INTO store_logs (player_id, credits, reason, date) VALUES((SELECT id FROM store_players WHERE `authid`='%s'), %d, '充值信仰', %d)", auth[8], icredits, GetTime());
-		CG_SaveDatabase(m_szQuery);
-		PrintToChat(client, "[%s]  \x04已收到你充值的信仰\x0C %d \x04点", szFaith_CNAME[CG_GetClientFaith(client)], ishare);
+		CG_GiveClientShare(client, ishare, "充值信仰");
+		Store_SetClientCredits(client, Store_GetClientCredits(client)-icredits, "充值信仰");
+		PrintToChat(client, "[%s]  \x04已收到你充值的信仰\x0C %d \x04点[立即生效]", szFaith_CNAME[CG_GetClientFaith(client)], ishare);
 	}
 	else if(action == MenuAction_End)
 	{
@@ -378,11 +371,12 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 	if(!g_bListener[client])
 		return Plugin_Continue;
 	
-	Format(g_szSignature[client], 256, "%s", sArgs);
+	strcopy(g_szSignature[client], 256, sArgs);
 	
 	PrintToChat(client, "您输入了: %s", sArgs);
-	
+
 	g_bListener[client] = false;
+
 	if(g_hTimerListner[client] != INVALID_HANDLE)
 	{
 		KillTimer(g_hTimerListner[client]);

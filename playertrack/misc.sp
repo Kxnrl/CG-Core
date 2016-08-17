@@ -156,11 +156,6 @@ public void GetClientFlags(int client)
 	{
 		strcopy(g_eClient[client][szAdminFlags], 64, "守护女神");
 	}
-	//没flags就是普通玩家
-	else if(flags == 0)
-	{
-		strcopy(g_eClient[client][szAdminFlags], 64, "普通玩家");
-	}
 	//狗管理权限为 CVAR
 	else if(flags & ADMFLAG_CONVARS)
 	{

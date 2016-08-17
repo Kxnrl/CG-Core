@@ -56,9 +56,9 @@ public Action Cmd_Login(int client, int args)
 	char steamid[32];
 	GetClientAuthId(client, AuthId_Steam2, steamid, 32, true);
 
-	char query3[500];
-	Format(query3, sizeof(query3), "SELECT timeofsignin,unixtimestamp FROM playertrack_sign WHERE steamid = '%s' ", steamid);
-	SQL_TQuery(g_hDB_csgo, SQLCallback_GetSigninStat, query3, g_eClient[client][iUserId]);
+	char m_szQuery[500];
+	Format(m_szQuery, 256, "SELECT timeofsignin,unixtimestamp FROM playertrack_sign WHERE steamid = '%s' ", steamid);
+	SQL_TQuery(g_hDB_csgo, SQLCallback_GetSigninStat, m_szQuery, g_eClient[client][iUserId]);
 	
 	g_eClient[client][LoginProcess] = true;
 	

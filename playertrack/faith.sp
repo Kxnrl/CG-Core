@@ -295,7 +295,7 @@ void CreateTopMenu(int client, Handle pack)
 		ReadPackString(pack, sName, 128);
 		int ishare = ReadPackCell(pack);
 		float vol = (float(ishare)/float(g_Share[g_eClient[client][iFaith]]))*100;
-		FormatEx(szItem, 128, "#%d   %s  %d[%.2f%% of %d - %s]", i+1, sName, ishare, vol, g_Share[g_eClient[client][iFaith]], szFaith_NATION[g_eClient[client][iFaith]]);
+		Format(szItem, 128, "#%d   %s  %d[%.2f%% of %d - %s]", i+1, sName, ishare, vol, g_Share[g_eClient[client][iFaith]], szFaith_NATION[g_eClient[client][iFaith]]);
 		AddMenuItem(hMenu, "", szItem, ITEMDRAW_DISABLED);
 	}
 
@@ -464,7 +464,7 @@ void SetClientBuff(int client, int buff)
 	}
 	
 	g_eClient[client][iBuff] = buff;
-	
+
 	char m_szQuery[256];
 	Format(m_szQuery, 256, "UPDATE `playertrack_player` SET buff = '%d' WHERE id = '%d'", buff, g_eClient[client][iPlayerId]);
 	SQL_TQuery(g_hDB_csgo, SQLCallback_SetBuff, m_szQuery, GetClientUserId(client));

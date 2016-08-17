@@ -60,12 +60,12 @@ public Action Timer_HandleConnect(Handle timer, any userid)
 		g_eClient[client][iConnectTime] = GetTime();
 		return Plugin_Continue;
 	}
-	
-	if(g_eClient[client][iPlayerId] == 0)
-		return Plugin_Continue;
 
 	if(g_eClient[client][hOSTimer] != INVALID_HANDLE || !g_eClient[client][bLoaded])
 		return Plugin_Continue;
+	
+	if(g_eClient[client][iPlayerId] == 0)
+		return Plugin_Stop;
 	
 	//获得 客户OS|当前地图|当前日期|客户权限
 	char date[64], map[128], os[64];
