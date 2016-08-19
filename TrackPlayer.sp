@@ -1,9 +1,9 @@
 #pragma newdecls required //let`s go! new syntax!!!
-//Build 314
+//Build 315
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define PLUGIN_VERSION " 5.2 - 2016/08/18 02:58 "
+#define PLUGIN_VERSION " 5.2.1 - 2016/08/19 06:34 "
 #define PLUGIN_PREFIX "[\x0EPlaneptune\x01]  "
 #define PLUGIN_PREFIX_SIGN "[\x0EPlaneptune\x01]  "
 
@@ -307,7 +307,7 @@ public int Native_GiveClientShare(Handle plugin, int numParams)
 	GetNativeString(3, m_szReason, 512);
 	g_eClient[client][iGetShare] = g_eClient[client][iGetShare] + ishare;
 	g_eClient[client][iShare] = g_eClient[client][iShare] + ishare;
-	PrintToConsole(client, "[Planeptune]  你获得了%d点Share,当前总计%d点! 来自: %s", g_eClient[client][iShare], ishare, m_szReason);
+	PrintToConsole(client, "[Planeptune]  你获得了%d点Share,当前总计%d点! 来自: %s", ishare, g_eClient[client][iShare], m_szReason);
 }
 
 public int Native_GetDiscuzUID(Handle plugin, int numParams)
@@ -393,7 +393,7 @@ public int Native_GivePlayerExp(Handle plugin, int numParams)
 	
 	if(IsClientInGame(client) && g_eClient[client][iTemp] == -1)
 	{
-		PrintToChat(client,"%s  你获得了\x04%d\x01点认证Exp!  来自: %s", PLUGIN_PREFIX, Exp, m_szReason);
+		PrintToConsole(client,"%s  你获得了%d点认证Exp!  来自: %s", PLUGIN_PREFIX, Exp, m_szReason);
 		g_eClient[client][iExp] += Exp;
 	}
 }
