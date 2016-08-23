@@ -33,12 +33,12 @@ public void SQL_TConnect_Callback_csgo(Handle owner, Handle hndl, const char[] e
 	{
 		g_iReconnect_csgo++;
 		
-		LogToFileEx(logFile_core, "Connection to SQL database 'csgo' has failed, Try %d, Reason: %s", g_iReconnect_csgo, error);
+		LogToFileEx(LogFile, "Connection to SQL database 'csgo' has failed, Try %d, Reason: %s", g_iReconnect_csgo, error);
 		
 		if(g_iReconnect_csgo >= 100) 
 		{
 			SetFailState("PLUGIN STOPPED - Reason: can not connect to database 'csgo', retry 100! - PLUGIN STOPPED");
-			LogToFileEx(logFile_core, " Too much errors. Restart your server for a new try. ");
+			LogToFileEx(LogFile, " Too much errors. Restart your server for a new try. ");
 		}
 		else if(g_iReconnect_csgo > 5) 
 			CreateTimer(5.0, Timer_ReConnect_csgo);
@@ -73,12 +73,12 @@ public void SQL_TConnect_Callback_discuz(Handle owner, Handle hndl, const char[]
 	{
 		g_iReconnect_discuz++;
 		
-		LogToFileEx(logFile_core, "Connection to SQL database 'discuz' has failed, Try %d, Reason: %s", g_iReconnect_discuz, error);
+		LogToFileEx(LogFile, "Connection to SQL database 'discuz' has failed, Try %d, Reason: %s", g_iReconnect_discuz, error);
 		
 		if(g_iReconnect_discuz >= 100) 
 		{
 			SetFailState("PLUGIN STOPPED - Reason: can not connect to database 'discuz', retry 100! - PLUGIN STOPPED");
-			LogToFileEx(logFile_core, " Too much errors. Restart your server for a new try. ");
+			LogToFileEx(LogFile, " Too much errors. Restart your server for a new try. ");
 		}
 		else if(g_iReconnect_discuz > 5) 
 			CreateTimer(5.0, Timer_ReConnect_discuz);
@@ -122,7 +122,7 @@ public void SQLCallback_GetServerIP(Handle owner, Handle hndl, const char[] erro
 	if(hndl == INVALID_HANDLE) 
 	{
 		//输出错误日志
-		LogToFileEx(logFile_core, "Query server ID Failed! Reason: %s", error);
+		LogToFileEx(LogFile, "Query server ID Failed! Reason: %s", error);
 		return;
 	}
 	
@@ -133,7 +133,7 @@ public void SQLCallback_GetServerIP(Handle owner, Handle hndl, const char[] erro
 		g_iServerId = SQL_FetchInt(hndl, 0);
 		SQL_FetchString(hndl, 1, g_szHostName, 256);
 		SetConVarString(FindConVar("hostname"), g_szHostName, false, false);
-		LogToFileEx(logFile_core, "ServerID is \"%d\"  ServerName is \"%s\" ", g_iServerId, g_szHostName);
+		LogToFileEx(LogFile, "ServerID is \"%d\"  ServerName is \"%s\" ", g_iServerId, g_szHostName);
 		SettingAdver();
 		
 		char m_szQuery[256];
@@ -146,7 +146,7 @@ public void SQLCallback_GetServerIP(Handle owner, Handle hndl, const char[] erro
 		char m_szQuery[256];
 		Format(m_szQuery, 256, "INSERT INTO playertrack_server (servername, serverip) VALUES ('NewServer', '%s')", g_szIP);
 		Format(g_szHostName, 128, "☞[CG社区]NewServer!");
-		LogToFileEx(logFile_core, "Not Found this server in playertrack_server , now Register this!  %s", m_szQuery);
+		LogToFileEx(LogFile, "Not Found this server in playertrack_server , now Register this!  %s", m_szQuery);
 		SQL_TQuery(g_hDB_csgo, SQLCallback_InsertServerIP, m_szQuery, _, DBPrio_High);
 	}
 	
@@ -168,7 +168,7 @@ public void SQLCallback_InsertServerIP(Handle owner, Handle hndl, const char[] e
 	if(hndl == INVALID_HANDLE)
 	{
 		//输出错误日志
-		LogToFileEx(logFile_core, "INSERT server ID Failed! Reason: %s", error);
+		LogToFileEx(LogFile, "INSERT server ID Failed! Reason: %s", error);
 		return;
 	}
 	
@@ -183,7 +183,7 @@ public void SQLCallback_GetShare(Handle owner, Handle hndl, const char[] error, 
 		char m_szQuery[256];
 		Format(m_szQuery, 256, "SELECT faith,SUM(share) FROM playertrack_player GROUP BY faith");
 		SQL_TQuery(g_hDB_csgo, SQLCallback_GetShare, m_szQuery);
-		LogToFileEx(logFile_core, "Get Share Failed! Reason: %s", error);
+		LogToFileEx(LogFile, "Get Share Failed! Reason: %s", error);
 		return;
 	}
 	
@@ -197,7 +197,7 @@ public void SQLCallback_GetShare(Handle owner, Handle hndl, const char[] error, 
 }
 
 /**client callbacks**/
-public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] error, any userid)
+public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] error, int userid)
 {
 	int client = GetClientOfUserId(userid);
 	//如果是BOT, 取消查询
@@ -214,10 +214,10 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 	if(hndl == INVALID_HANDLE)
 	{
 		//输出错误日志
-		LogToFileEx(logFile_core, "Query Client Stats Failed! Client:\"%N\" \nError Happen: %s", client, error);
+		LogToFileEx(LogFile, "Query Client Stats Failed! Client:\"%N\" \nError Happen: %s", client, error);
 		char auth[32], m_szQuery[512];
 		GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
-		Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.number, a.faith, a.share, a.buff, a.signature, a.groupid, a.groupname, a.exp, a.level, a.temp, a.notice, b.unixtimestamp FROM playertrack_player AS a LEFT JOIN `playertrack_sign` b ON b.steamid = a.steamid WHERE a.steamid = '%s' ORDER BY a.id ASC LIMIT 1;", auth);
+		Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.number, a.faith, a.share, a.buff, a.signature, a.groupid, a.groupname, a.exp, a.level, a.temp, a.notice, a.reqid, a.reqterm, a.reqrate, b.unixtimestamp FROM playertrack_player AS a LEFT JOIN `playertrack_sign` b ON b.steamid = a.steamid WHERE a.steamid = '%s' ORDER BY a.id ASC LIMIT 1;", auth);
 		SQL_TQuery(g_hDB_csgo, SQLCallback_GetClientStat, m_szQuery, g_eClient[client][iUserId]);
 		return;
 	}
@@ -239,6 +239,9 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 		g_eClient[client][iLevel] = SQL_FetchInt(hndl, 10);
 		g_eClient[client][iTemp] = SQL_FetchInt(hndl, 11);
 		g_eClient[client][bPrint] = SQL_FetchInt(hndl, 12) > g_iLatestData ? true : false;
+		g_eClient[client][iReqId] = SQL_FetchInt(hndl, 13);
+		g_eClient[client][iReqTerm] = SQL_FetchInt(hndl, 14);
+		g_eClient[client][iReqRate] = SQL_FetchInt(hndl, 15);
 		
 		g_eClient[client][bLoaded] = true;
 
@@ -255,7 +258,7 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 		}
 		
 		//签到查询部分
-		if(SQL_IsFieldNull(hndl, 13))
+		if(SQL_IsFieldNull(hndl, 16))
 		{
 			//如果查不到数据
 			char username[128], EscapeName[256];
@@ -271,7 +274,7 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 		}
 		else
 		{
-			g_eClient[client][iLastSignTime] = SQL_FetchInt(hndl, 13);
+			g_eClient[client][iLastSignTime] = SQL_FetchInt(hndl, 16);
 			SetClientSignStat(client);
 		}
 		
@@ -290,7 +293,7 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 	}
 }
 
-public void SQLCallback_GetClientDiscuzName(Handle owner, Handle hndl, const char[] error, any userid)
+public void SQLCallback_GetClientDiscuzName(Handle owner, Handle hndl, const char[] error, int userid)
 {
 	int client = GetClientOfUserId(userid);
 	
@@ -306,7 +309,7 @@ public void SQLCallback_GetClientDiscuzName(Handle owner, Handle hndl, const cha
 		OnClientDataLoaded(client);
 		g_eClient[client][iUID] = -1;
 		strcopy(g_eClient[client][szDiscuzName], 128, "未注册");
-		LogToFileEx(logFile_core, "Check '%N' VIP Error happened: %s", client, error);
+		LogToFileEx(LogFile, "Check '%N' VIP Error happened: %s", client, error);
 		return;
 	}
 
@@ -330,7 +333,7 @@ public void SQLCallback_GetClientDiscuzName(Handle owner, Handle hndl, const cha
 	}
 }
 
-public void SQLCallback_CheckVIP(Handle owner, Handle hndl, const char[] error, any userid)
+public void SQLCallback_CheckVIP(Handle owner, Handle hndl, const char[] error, int userid)
 {
 	int client = GetClientOfUserId(userid);
 	
@@ -343,7 +346,7 @@ public void SQLCallback_CheckVIP(Handle owner, Handle hndl, const char[] error, 
 	{
 		RunAdminCacheChecks(client);
 		VipChecked(client);
-		LogToFileEx(logFile_core, "Check '%N' VIP Error happened: %s", client, error);
+		LogToFileEx(LogFile, "Check '%N' VIP Error happened: %s", client, error);
 		return;
 	}
 
@@ -375,7 +378,7 @@ public void SQLCallback_CheckVIP(Handle owner, Handle hndl, const char[] error, 
 	}
 }
 
-public void SQLCallback_InsertClientStat(Handle owner, Handle hndl, const char[] error, any userid)
+public void SQLCallback_InsertClientStat(Handle owner, Handle hndl, const char[] error, int userid)
 {
 	//定义客户
 	int client = GetClientOfUserId(userid);
@@ -386,12 +389,12 @@ public void SQLCallback_InsertClientStat(Handle owner, Handle hndl, const char[]
 	if(hndl == INVALID_HANDLE)
 	{
 		//记录客户信息 写入到错误日志
-		LogToFileEx(logFile_core, "INSERT playertrack_player Failed! Client:\"%N\" \nError Happen: %s", client, error);
+		LogToFileEx(LogFile, "INSERT playertrack_player Failed! Client:\"%N\" \nError Happen: %s", client, error);
 		
 		//重试检查  辣鸡阿里云RDS
 		char auth[32], m_szQuery[512];
 		GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
-		Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.number, a.faith, a.share, a.buff, a.signature, a.groupid, a.groupname, a.exp, a.level, a.temp, a.notice, b.unixtimestamp FROM playertrack_player AS a LEFT JOIN `playertrack_sign` b ON b.steamid = a.steamid WHERE a.steamid = '%s' ORDER BY a.id ASC LIMIT 1;", auth);
+		Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.number, a.faith, a.share, a.buff, a.signature, a.groupid, a.groupname, a.exp, a.level, a.temp, a.notice, a.reqid, a.reqterm, a.reqrate, b.unixtimestamp FROM playertrack_player AS a LEFT JOIN `playertrack_sign` b ON b.steamid = a.steamid WHERE a.steamid = '%s' ORDER BY a.id ASC LIMIT 1;", auth);
 		SQL_TQuery(g_hDB_csgo, SQLCallback_GetClientStat, m_szQuery, g_eClient[client][iUserId]);
 	}
 	else
@@ -405,7 +408,7 @@ public void SQLCallback_InsertClientStat(Handle owner, Handle hndl, const char[]
 	}
 }
 
-public void SQLCallback_SaveClientStat(Handle owner, Handle hndl, const char[] error, any userid)
+public void SQLCallback_SaveClientStat(Handle owner, Handle hndl, const char[] error, int userid)
 {
 	int client = GetClientOfUserId(userid);	
 
@@ -419,17 +422,17 @@ public void SQLCallback_SaveClientStat(Handle owner, Handle hndl, const char[] e
 		{
 			g_eClient[client][iDataRetry]++;
 			SQL_TQuery(g_hDB_csgo, SQLCallback_SaveClientStat, g_eClient[client][szUpdateData], g_eClient[client][iUserId]);
-			LogToFileEx(logFile_core, "UPDATE Client Data Failed!   Times:%d Player:\"%N\" \nError Happen:%s", g_eClient[client][iDataRetry], client, error);
+			LogToFileEx(LogFile, "UPDATE Client Data Failed!   Times:%d Player:\"%N\" \nError Happen:%s", g_eClient[client][iDataRetry], client, error);
 		}
 		else
 		{
-			LogToFileEx(logFile_core, "UPDATE Client Data Failed!   Times:(Times out) Player:\"%N\" \nError Happen:%s", client, error);
+			LogToFileEx(LogFile, "UPDATE Client Data Failed!   Times:(Times out) Player:\"%N\" \nError Happen:%s", client, error);
 			g_eClient[client][iDataRetry] = 0;
 		}
 	}
 }
 
-public void SQLCallback_InsertPlayerStat(Handle owner, Handle hndl, const char[] error, any userid)
+public void SQLCallback_InsertPlayerStat(Handle owner, Handle hndl, const char[] error, int userid)
 {
 	//定义客户
 	int client = GetClientOfUserId(userid);
@@ -441,7 +444,7 @@ public void SQLCallback_InsertPlayerStat(Handle owner, Handle hndl, const char[]
 	if(hndl == INVALID_HANDLE)
 	{
 		//记录客户信息 写入到错误日志
-		LogToFileEx(logFile_core, "INSERT playertrack_analytics Failed!   Player:\"%N\" \nError Happen:%s", client, error);
+		LogToFileEx(LogFile, "INSERT playertrack_analytics Failed!   Player:\"%N\" \nError Happen:%s", client, error);
 		char m_szQuery[256];
 		Format(m_szQuery, 256, "SELECT * FROM `playertrack_analytics` WHERE (connect_time = %d AND ip = '%s' AND playerid = %d) order by id desc limit 1;", g_eClient[client][iConnectTime], g_eClient[client][szIP], g_eClient[client][iPlayerId]);
 		SQL_TQuery(g_hDB_csgo, SQLCallback_InsertPlayerStatFailed, m_szQuery, g_eClient[client][iUserId]);
@@ -454,7 +457,7 @@ public void SQLCallback_InsertPlayerStat(Handle owner, Handle hndl, const char[]
 	}
 }
 
-public void SQLCallback_InsertPlayerStatFailed(Handle owner, Handle hndl, const char[] error, any userid)
+public void SQLCallback_InsertPlayerStatFailed(Handle owner, Handle hndl, const char[] error, int userid)
 {
 	int client = GetClientOfUserId(userid);
 
@@ -464,7 +467,7 @@ public void SQLCallback_InsertPlayerStatFailed(Handle owner, Handle hndl, const 
 	if(hndl == INVALID_HANDLE)
 	{
 		//输出错误日志
-		LogToFileEx(logFile_core, "Confirm Insert Failed! Client:\"%N\" \nError Happen: %s", error);
+		LogToFileEx(LogFile, "Confirm Insert Failed! Client:\"%N\" \nError Happen: %s", error);
 		char m_szQuery[256];
 		Format(m_szQuery, 256, "SELECT * FROM `playertrack_analytics` WHERE (connect_time = %d AND ip = '%s' AND playerid = %d) order by id desc limit 1;", g_eClient[client][iConnectTime], g_eClient[client][szIP], g_eClient[client][iPlayerId]);
 		SQL_TQuery(g_hDB_csgo, SQLCallback_InsertPlayerStatFailed, m_szQuery, g_eClient[client][iUserId]);
@@ -478,7 +481,7 @@ public void SQLCallback_InsertPlayerStatFailed(Handle owner, Handle hndl, const 
 	}
 }
 
-public void SQLCallback_GetSigninStat(Handle owner, Handle hndl, const char[] error, any userid)
+public void SQLCallback_GetSigninStat(Handle owner, Handle hndl, const char[] error, int userid)
 {
 	int client = GetClientOfUserId(userid);
 
@@ -534,7 +537,7 @@ public void SQLCallback_SignCallback(Handle owner, Handle hndl, const char[] err
 	{
 		PrintToChat(client, "%s \x02未知错误!", PLUGIN_PREFIX_SIGN);
 		g_eClient[client][LoginProcess] = false;
-		LogToFileEx(logFile_core, "UPDATE Client Sign Failed! Client:%N Query:%s", client, error);
+		LogToFileEx(LogFile, "UPDATE Client Sign Failed! Client:%N Query:%s", client, error);
 		return;
 	}
 	
@@ -556,7 +559,7 @@ public void SQLCallback_GetAdvData(Handle owner, Handle hndl, const char[] error
 			char FILE_PATH[256];
 			BuildPath(Path_SM, FILE_PATH, 256, "configs/ServerAdvertisement.cfg");
 			FileToKeyValues(kv, FILE_PATH);
-			//LogToFileEx(logFile_core, "Set New Advertisement");
+			//LogToFileEx(LogFile, "Set New Advertisement");
 			KvDeleteKey(kv, "Messages");
 			int Count = 0;
 			while(SQL_FetchRow(hndl))
@@ -573,7 +576,7 @@ public void SQLCallback_GetAdvData(Handle owner, Handle hndl, const char[] error
 						KvSetString(kv, "default", sText);
 						KvSetString(kv, "type", sType);
 						KvRewind(kv);
-						//LogToFileEx(logFile_core, "New Adv: \"%s\"   \"%s\" ", sCount, sText);
+						//LogToFileEx(LogFile, "New Adv: \"%s\"   \"%s\" ", sCount, sText);
 					}
 				}
 			}
@@ -586,12 +589,12 @@ public void SQLCallback_GetAdvData(Handle owner, Handle hndl, const char[] error
 	}
 }
 
-public void SQLCallback_NothingCallback(Handle owner, Handle hndl, const char[] error, any userid)
+public void SQLCallback_NothingCallback(Handle owner, Handle hndl, const char[] error, int userid)
 {
 	if(hndl == INVALID_HANDLE)
 	{
 		int client = GetClientOfUserId(userid);
-		LogToFileEx(logFile_core, "INSERT Failed: client:%N ERROR:%s", client, error);
+		LogToFileEx(LogFile, "INSERT Failed: client:%N ERROR:%s", client, error);
 		return;
 	}
 	
@@ -611,10 +614,10 @@ public void SQLCallBack_SaveAdminOnlines(Handle owner, Handle hndl, const char[]
 
 	if(hndl == INVALID_HANDLE)
 	{
-		LogToFileEx(logFile_cat, "==========================================================");
-		LogToFileEx(logFile_cat, "Save \"%N\" Admin stats Failed: %s", client, error);
-		LogToFileEx(logFile_cat, " \"%N\" AdminId: %d  Connect: %d  Disconnect: %d  Duration: %d", client, g_eClient[client][iConnectTime], GetTime(), GetTime()-g_eClient[client][iConnectTime]);
-		LogToFileEx(logFile_cat, "==========================================================");
+		LogToFileEx(LogFile, "==========================================================");
+		LogToFileEx(LogFile, "Save \"%N\" Admin stats Failed: %s", client, error);
+		LogToFileEx(LogFile, " \"%N\" AdminId: %d  Connect: %d  Disconnect: %d  Duration: %d", client, g_eClient[client][iConnectTime], GetTime(), GetTime()-g_eClient[client][iConnectTime]);
+		LogToFileEx(LogFile, "==========================================================");
 	}
 }
 
@@ -624,10 +627,10 @@ public void SQLCallback_SaveDatabase(Handle owner, Handle hndl, const char[] err
 	{
 		char m_szQuery[512];
 		ReadPackString(data, m_szQuery, 512);
-		LogToFileEx(logFile_core, "==========================================================");
-		LogToFileEx(logFile_core, "Native SaveDatabase.  Error: %s", error);
-		LogToFileEx(logFile_core, "Query: %s", m_szQuery);
-		LogToFileEx(logFile_core, "==========================================================");
+		LogToFileEx(LogFile, "==========================================================");
+		LogToFileEx(LogFile, "Native SaveDatabase.  Error: %s", error);
+		LogToFileEx(LogFile, "Query: %s", m_szQuery);
+		LogToFileEx(LogFile, "==========================================================");
 	}
 	CloseHandle(data);
 }
@@ -681,7 +684,7 @@ public void SQLCallback_InsertShare(Handle owner, Handle hndl, const char[] erro
 {
 	if(hndl == INVALID_HANDLE)
 	{
-		LogToFileEx(logFile_core, "Save Client Share Failed!  Error: %s", error);
+		LogToFileEx(LogFile, "Save Client Share Failed!  Error: %s", error);
 		return;
 	}
 }
@@ -690,7 +693,7 @@ public void SQLCallback_FaithShareRank(Handle owner, Handle hndl, const char[] e
 {
 	if(hndl == INVALID_HANDLE)
 	{
-		LogToFileEx(logFile_core, "Get Faith Share Rank Failed!  Error: %s", error);
+		LogToFileEx(LogFile, "Get Faith Share Rank Failed!  Error: %s", error);
 		return;
 	}
 	
@@ -722,7 +725,7 @@ public void SQLCallback_FaithShareRank(Handle owner, Handle hndl, const char[] e
 	}
 }
 
-public void SQLCallback_GetGroupId(Handle owner, Handle hndl, const char[] error, any userid)
+public void SQLCallback_GetGroupId(Handle owner, Handle hndl, const char[] error, int userid)
 {
 	int client = GetClientOfUserId(userid);
 
@@ -731,7 +734,7 @@ public void SQLCallback_GetGroupId(Handle owner, Handle hndl, const char[] error
 
 	if(hndl == INVALID_HANDLE)
 	{
-		LogToFileEx(logFile_core, "Query player Data Failed! Error:%s", error);
+		LogToFileEx(LogFile, "Query player Data Failed! Error:%s", error);
 		return;
 	}
 
@@ -747,24 +750,24 @@ public void SQLCallback_GetGroupId(Handle owner, Handle hndl, const char[] error
 	OnClientAuthLoaded(client);
 }
 
-public void SQLCallback_SetTemp(Handle owner, Handle hndl, const char[] error, any userid)
+public void SQLCallback_SetTemp(Handle owner, Handle hndl, const char[] error, int userid)
 {
 	if(hndl == INVALID_HANDLE)
 	{
 		int client = GetClientOfUserId(userid);
-		LogToFileEx(logFile_core, "set temp player Failed! Error:%s", error);
+		LogToFileEx(LogFile, "set temp player Failed! Error:%s", error);
 		PrintToChat(client, "%s \x02添加临时认证失败,SQL错误!", PLUGIN_PREFIX);
 		return;
 	}
 }
 
-public void SQLCallback_DeleteTemp(Handle owner, Handle hndl, const char[] error, any userid)
+public void SQLCallback_DeleteTemp(Handle owner, Handle hndl, const char[] error, int userid)
 { 
 	int client = GetClientOfUserId(userid);
 	
 	if(hndl == INVALID_HANDLE)
 	{
-		LogToFileEx(logFile_core, "DELETE Tmp Data Failed! Client:%N  Target:%N", client, g_eAdmin[iTarget]);
+		LogToFileEx(LogFile, "DELETE Tmp Data Failed! Client:%N  Target:%N", client, g_eAdmin[iTarget]);
 		PrintToChat(client, "%s 解除临时认证失败...", PLUGIN_PREFIX);
 		return;
 	}
@@ -773,11 +776,11 @@ public void SQLCallback_DeleteTemp(Handle owner, Handle hndl, const char[] error
 	LoadAuthorized(target);
 }
 
-public void SQLCallback_OnConnect(Handle owner, Handle hndl, const char[] error, any userid)
+public void SQLCallback_OnConnect(Handle owner, Handle hndl, const char[] error, int userid)
 {
 	if(hndl == INVALID_HANDLE)
 	{
-		LogToFileEx(logFile_core, "Delete on start Failed! Error:%s", error);
+		LogToFileEx(LogFile, "Delete on start Failed! Error:%s", error);
 		return;
 	}
 }
@@ -786,7 +789,7 @@ public void SQLCallback_GetNotice(Handle owner, Handle hndl, const char[] error,
 {
 	if(hndl == INVALID_HANDLE)
 	{
-		LogToFileEx(logFile_core, "Get Notice Failed! Error: %s", error);
+		LogToFileEx(LogFile, "Get Notice Failed! Error: %s", error);
 		return;
 	}
 	
@@ -822,4 +825,20 @@ public void SQLCallback_GetNotice(Handle owner, Handle hndl, const char[] error,
 		else
 			g_iLatestData = server;
 	}
+}
+
+public void SQLCallback_ResetReq(Handle owner, Handle hndl, const char[] error, int userid)
+{ 
+	int client = GetClientOfUserId(userid);
+	
+	if(hndl == INVALID_HANDLE)
+		LogToFileEx(LogFile, "Reset Client Req Failed! [%N]  %s", client, error);
+}
+
+public void SQLCallback_SaveReq(Handle owner, Handle hndl, const char[] error, int userid)
+{ 
+	int client = GetClientOfUserId(userid);
+	
+	if(hndl == INVALID_HANDLE)
+		LogToFileEx(LogFile, "Save Client Req Failed! [%N]  %s", client, error);
 }

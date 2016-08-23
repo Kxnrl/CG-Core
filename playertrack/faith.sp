@@ -172,7 +172,7 @@ public int FaithMainMenuHandler(Handle menu, MenuAction action, int client, int 
 		GetMenuItem(menu, itemNum, info, 32);
 		
 		if(StrEqual(info, "query_fhelp"))
-			Cmd_FHelp(client, 0);
+			Command_FHelp(client, 0);
 		else if(StrEqual(info, "query_share"))
 			ShowAllFaithShareToClient(client);
 		else if(StrEqual(info, "query_buff_"))

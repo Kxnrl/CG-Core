@@ -159,6 +159,13 @@ public Action Cmd_FaithRecharge(int client, int args)
 		return Plugin_Handled;
 	}
 	
+	if(1 <= CG_GetClientFaith(client) <= 4)
+	{
+		PrintToChat(client, "%s  服务器已关闭充值信仰功能,请使用!guild来增加Share", PREFIX);
+		return Plugin_Handled;
+	}
+
+	
 	Handle menu = CreateMenu(FaithChargeMenuHandler);
 	char szItem[256];
 	Format(szItem, 256, "[Planeptune]   充值信仰 \n 你已经为%s贡献了%d点Share\n ", szFaith_NAME[CG_GetClientFaith(client)], CG_GetClientShare(client));

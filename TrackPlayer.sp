@@ -3,7 +3,7 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define PLUGIN_VERSION " 5.2.1 - 2016/08/19 06:34 "
+#define PLUGIN_VERSION " 5.2.2 - 2016/08/23 08:40 "
 #define PLUGIN_PREFIX "[\x0EPlaneptune\x01]  "
 #define PLUGIN_PREFIX_SIGN "[\x0EPlaneptune\x01]  "
 
@@ -47,6 +47,9 @@ enum Clients
 	iTemp,
 	iUpgrade,
 	iVipType,
+	iReqId,
+	iReqTerm,
+	iReqRate,
 	bool:bLoaded,
 	bool:bIsBot,
 	bool:bPrint,
@@ -83,6 +86,7 @@ Handle g_fwdOnServerLoaded;
 Handle g_fwdOnClientDailySign;
 Handle g_fwdOnClientDataLoaded;
 Handle g_fwdOnClientAuthLoaded;
+Handle g_fwdOnClientCompleteReq;
 Handle g_CheckedForwared;
 Handle g_hCVAR;
 
@@ -96,8 +100,7 @@ int g_iLatestData;
 bool g_bLateLoad;
 char g_szIP[64];
 char g_szHostName[256];
-char logFile_core[128];
-char logFile_cat[128];
+char LogFile[128];
 char g_szOSConVar[OS_Total][64];
 char g_szGlobal[6][256];
 char g_szServer[6][256];
@@ -132,9 +135,8 @@ public Plugin myinfo =
 public void OnPluginStart()
 {
 	//Create Log Files
-	BuildPath(Path_SM, logFile_core, 128, "logs/Core.log");
-	BuildPath(Path_SM, logFile_cat, 128, "logs/CAT.log");
-	
+	BuildPath(Path_SM, LogFile, 128, "logs/Core.log");
+
 	//Hook ConVar
 	g_hCVAR = FindConVar("sv_hibernate_when_empty");
 	SetConVarInt(g_hCVAR, 0);
@@ -158,26 +160,27 @@ public void OnPluginStart()
 	}
 
 	//Register Command
-	RegConsoleCmd("sm_sign", Cmd_Login);
-	RegConsoleCmd("sm_qiandao", Cmd_Login);
-	RegConsoleCmd("sm_online", Cmd_Online);
-	RegConsoleCmd("sm_onlines", Cmd_Online);
-	RegConsoleCmd("sm_track", Cmd_Track);
-	RegConsoleCmd("sm_rz", Cmd_Track)
-	RegConsoleCmd("sm_faith", Cmd_Faith);
-	RegConsoleCmd("sm_fhelp", Cmd_FHelp);
-	RegConsoleCmd("sm_share", Cmd_Share);
-	RegConsoleCmd("sm_exp", Cmd_Exp);
-	RegConsoleCmd("sm_notice", Cmd_Notice);
-	RegAdminCmd("sm_pa", Cmd_Set, ADMFLAG_BAN);
-	RegAdminCmd("sm_reloadadv", Cmd_ReloadAdv, ADMFLAG_BAN);
-	RegAdminCmd("pareloadall", Cmd_reloadall, ADMFLAG_ROOT);
-	
+	RegConsoleCmd("sm_sign", Command_Login);
+	RegConsoleCmd("sm_qiandao", Command_Login);
+	RegConsoleCmd("sm_online", Command_Online);
+	RegConsoleCmd("sm_onlines", Command_Online);
+	RegConsoleCmd("sm_track", Command_Track);
+	RegConsoleCmd("sm_rz", Command_Track)
+	RegConsoleCmd("sm_faith", Command_Faith);
+	RegConsoleCmd("sm_fhelp", Command_FHelp);
+	RegConsoleCmd("sm_share", Command_Share);
+	RegConsoleCmd("sm_exp", Command_Exp);
+	RegConsoleCmd("sm_notice", Command_Notice);
+	RegAdminCmd("sm_pa", Command_Set, ADMFLAG_BAN);
+	RegAdminCmd("sm_reloadadv", Command_ReloadAdv, ADMFLAG_BAN);
+	RegAdminCmd("pareloadall", Command_reloadall, ADMFLAG_ROOT);
+
 	//Create Forward
 	g_fwdOnServerLoaded = CreateGlobalForward("CG_OnServerLoaded", ET_Ignore, Param_Cell);
 	g_fwdOnClientDailySign = CreateGlobalForward("CG_OnClientDailySign", ET_Ignore, Param_Cell);
 	g_fwdOnClientDataLoaded = CreateGlobalForward("CG_OnClientLoaded", ET_Ignore, Param_Cell);
 	g_fwdOnClientAuthLoaded = CreateGlobalForward("PA_OnClientLoaded", ET_Ignore, Param_Cell);
+	g_fwdOnClientCompleteReq = CreateGlobalForward("CG_OnClientCompleteReq", ET_Ignore, Param_Cell, Param_Cell);
 }
 
 public void OnPluginEnd()
@@ -204,6 +207,15 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("CG_GetDiscuzUID", Native_GetDiscuzUID);
 	CreateNative("CG_GetDiscuzName", Native_GetDiscuzName);
 	CreateNative("CG_SaveDatabase", Native_SaveDatabase);
+	CreateNative("CG_GetReqID", Native_GetReqID);
+	CreateNative("CG_GetReqTerm", Native_GetReqTerm);
+	CreateNative("CG_GetReqRate", Native_GetReqRate);
+	CreateNative("CG_SetReqID", Native_SetReqID);
+	CreateNative("CG_SetReqTerm", Native_SetReqTerm);
+	CreateNative("CG_SetReqRate", Native_SetReqRate);
+	CreateNative("CG_ResetReq", Native_ResetReq);
+	CreateNative("CG_SaveReq", Native_SaveReq);
+	CreateNative("CG_CheckReq", Native_CheckReq);
 	CreateNative("VIP_IsClientVIP", Native_IsClientVIP);
 	CreateNative("VIP_SetClientVIP", Native_SetClientVIP);
 	CreateNative("VIP_GetVipType", Native_GetVipType);
@@ -304,7 +316,7 @@ public int Native_GiveClientShare(Handle plugin, int numParams)
 	char m_szReason[128];
 	int client = GetNativeCell(1);
 	int ishare = GetNativeCell(2);
-	GetNativeString(3, m_szReason, 512);
+	GetNativeString(3, m_szReason, 128);
 	g_eClient[client][iGetShare] = g_eClient[client][iGetShare] + ishare;
 	g_eClient[client][iShare] = g_eClient[client][iShare] + ishare;
 	PrintToConsole(client, "[Planeptune]  你获得了%d点Share,当前总计%d点! 来自: %s", ishare, g_eClient[client][iShare], m_szReason);
@@ -398,6 +410,80 @@ public int Native_GivePlayerExp(Handle plugin, int numParams)
 	}
 }
 
+public int Native_GetReqID(Handle plugin, int numParams)
+{
+	return g_eClient[GetNativeCell(1)][iReqId];
+}
+
+public int Native_GetReqTerm(Handle plugin, int numParams)
+{
+	return g_eClient[GetNativeCell(1)][iReqTerm];
+}
+
+public int Native_GetReqRate(Handle plugin, int numParams)
+{
+	return g_eClient[GetNativeCell(1)][iReqRate];
+}
+
+public int Native_SetReqID(Handle plugin, int numParams)
+{
+	g_eClient[GetNativeCell(1)][iReqId] = GetNativeCell(2);
+}
+
+public int Native_SetReqTerm(Handle plugin, int numParams)
+{
+	g_eClient[GetNativeCell(1)][iReqTerm] = GetNativeCell(2);
+}
+
+public int Native_SetReqRate(Handle plugin, int numParams)
+{
+	g_eClient[GetNativeCell(1)][iReqRate] = GetNativeCell(2);
+}
+
+public int Native_ResetReq(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	if(g_eClient[client][bLoaded])
+	{
+		char m_szQuery[256];
+		Format(m_szQuery, 256, "UPDATE `playertrack_player` SET reqid = 0, reqterm = 0, reqrate = 0 WHERE id = %d", g_eClient[client][iPlayerId]);
+		SQL_TQuery(g_hDB_csgo, SQLCallback_ResetReq, m_szQuery, GetClientUserId(client));
+		
+		g_eClient[client][iReqId] = 0;
+		g_eClient[client][iReqTerm] = 0;
+		g_eClient[client][iReqRate] = 0;
+	}
+}
+
+public int Native_SaveReq(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	if(g_eClient[client][bLoaded])
+	{
+		char m_szQuery[256];
+		Format(m_szQuery, 256, "UPDATE `playertrack_player` SET reqid = %d, reqterm = %d, reqrate = %d WHERE id = %d", g_eClient[client][iReqId], g_eClient[client][iReqTerm], g_eClient[client][iReqRate], g_eClient[client][iPlayerId]);
+		SQL_TQuery(g_hDB_csgo, SQLCallback_SaveReq, m_szQuery, GetClientUserId(client));
+	}
+}
+
+public int Native_CheckReq(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	if(g_eClient[client][bLoaded])
+	{
+		if(g_eClient[client][iReqId] != 0)
+		{
+			if(g_eClient[client][iReqRate] >= g_eClient[client][iReqTerm])
+			{
+				Call_StartForward(g_fwdOnClientCompleteReq);
+				Call_PushCell(client);
+				Call_PushCell(g_eClient[client][iReqId]);
+				Call_Finish();
+			}
+		}
+	}
+}
+
 //////////////////////////////
 //			HOOK CONVAR		//
 //////////////////////////////
@@ -464,6 +550,9 @@ public void OnClientPostAdminCheck(int client)
 	g_eClient[client][iExp] = 0;
 	g_eClient[client][iTemp] = 0;
 	g_eClient[client][iUpgrade] = 0;
+	g_eClient[client][iReqId] = 0;
+	g_eClient[client][iReqTerm] = 0;
+	g_eClient[client][iReqRate] = 0;
 	g_eClient[client][iOS] = OS_Unknown;
 
 	strcopy(g_eClient[client][szIP], 32, "127.0.0.1");
@@ -487,7 +576,7 @@ public void OnClientPostAdminCheck(int client)
 		char steam32[32], m_szQuery[512];
 		GetClientAuthId(client, AuthId_Steam2, steam32, 32, true);
 		
-		Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.number, a.faith, a.share, a.buff, a.signature, a.groupid, a.groupname, a.exp, a.level, a.temp, a.notice, b.unixtimestamp FROM playertrack_player AS a LEFT JOIN `playertrack_sign` b ON b.steamid = a.steamid WHERE a.steamid = '%s' ORDER BY a.id ASC LIMIT 1;", steam32);
+		Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.number, a.faith, a.share, a.buff, a.signature, a.groupid, a.groupname, a.exp, a.level, a.temp, a.notice, a.reqid, a.reqterm, a.reqrate, b.unixtimestamp FROM playertrack_player AS a LEFT JOIN `playertrack_sign` b ON b.steamid = a.steamid WHERE a.steamid = '%s' ORDER BY a.id ASC LIMIT 1;", steam32);
 		SQL_TQuery(g_hDB_csgo, SQLCallback_GetClientStat, m_szQuery, g_eClient[client][iUserId], DBPrio_High);
 	}
 }
@@ -522,12 +611,12 @@ public void OnClientDisconnect(int client)
 //////////////////////////////
 //		CLIENT COMMAND		//
 //////////////////////////////
-public Action Cmd_ReloadAdv(int client, int args)
+public Action Command_ReloadAdv(int client, int args)
 {
 	SettingAdver();
 }
 
-public Action Cmd_Online(int client, int args)
+public Action Command_Online(int client, int args)
 {
 	int m_iHours = g_eClient[client][iOnlineTime]/3600;
 	int m_iMins = g_eClient[client][iOnlineTime]/60 - m_iHours*60;
@@ -535,7 +624,7 @@ public Action Cmd_Online(int client, int args)
 	PrintToChat(client, "%s 尊贵的CG玩家\x04%N\x01,你已经在CG社区进行了\x0C%d\x01小时\x0C%d\x01分钟的游戏(\x07%d\x01次连线),本次游戏时长\x0C%d\x01分钟", PLUGIN_PREFIX, client, m_iHours, m_iMins, g_eClient[client][iConnectCounts], t_iMins);
 }
 
-public Action Cmd_Track(int client, int args)
+public Action Command_Track(int client, int args)
 {
 	if(client == 0)
 		return Plugin_Handled;
@@ -573,7 +662,7 @@ public Action Cmd_Track(int client, int args)
 	return Plugin_Handled;
 }
 
-public Action Cmd_Faith(int client, int args)
+public Action Command_Faith(int client, int args)
 {
 	if(1 <= g_eClient[client][iFaith] <= 4)
 		ShowFaithMainMenuToClient(client);
@@ -581,7 +670,7 @@ public Action Cmd_Faith(int client, int args)
 		ShowFaithFirstMenuToClient(client);
 }
 
-public Action Cmd_FHelp(int client, int args)
+public Action Command_FHelp(int client, int args)
 {
 	Handle panel = CreatePanel(GetMenuStyleHandle(MenuStyle_Radio));
 	
@@ -608,7 +697,7 @@ public Action Cmd_FHelp(int client, int args)
 	CloseHandle(panel);
 }
 
-public Action Cmd_Share(int client, int args)
+public Action Command_Share(int client, int args)
 {
 	float share[5];
 	share[0] = float(g_Share[1]+g_Share[2]+g_Share[3]+g_Share[4]);
@@ -623,7 +712,7 @@ public Action Cmd_Share(int client, int args)
 	PrintToChat(client, "[%s] Share [\x0F%.2f%%\x01 of \x05%d\x01]", szFaith_CNAME[1], share[1], RoundToFloor(share[0]));
 }
 
-public Action Cmd_Set(int client, int args)
+public Action Command_Set(int client, int args)
 {
 	Handle menu = CreateMenu(AdminMainMenuHandler);
 	char szItem[64];
@@ -637,7 +726,7 @@ public Action Cmd_Set(int client, int args)
 	DisplayMenu(menu, client, 15);
 }
 
-public Action Cmd_Exp(int client, int args)
+public Action Command_Exp(int client, int args)
 {
 	if(g_eClient[client][iGroupId] > 0 && g_eClient[client][iTemp] == -1)
 		PrintToChat(client, "%s \x04你当前经验值为: %i ,等级为: %i", PLUGIN_PREFIX, g_eClient[client][iExp], g_eClient[client][iLevel]);
@@ -645,7 +734,7 @@ public Action Cmd_Exp(int client, int args)
 		PrintToChat(client, "%s 你没有认证,凑啥热闹?登陆论坛可以申请认证", PLUGIN_PREFIX);
 }
 
-public Action Cmd_reloadall(int client, int args)
+public Action Command_reloadall(int client, int args)
 {
 	for(int i = 1; i <= MaxClients; ++i)
 	{
@@ -654,7 +743,7 @@ public Action Cmd_reloadall(int client, int args)
 	}
 }
 
-public Action Cmd_Notice(int client, int args)
+public Action Command_Notice(int client, int args)
 {
 	ShowPanelToClient(client);
 }

@@ -4,7 +4,7 @@
 #include <clientprefs>
 #include <store>
 
-#define PLUGIN_AUTHOR 	"maoling ( shAna.xQy )"
+#define PLUGIN_AUTHOR 	"maoling ( xQy )"
 #define PLUGIN_VERSION 	"1.00"
 #define PLUGIN_TAG		"[\x0C小喇叭\x01] "
 #define PLAYER_GAGED 	1

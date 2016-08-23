@@ -31,7 +31,7 @@ public Action AllowToLogin(Handle timer, any userid)
 	g_eClient[client][hSignTimer] = INVALID_HANDLE;
 }
 
-public Action Cmd_Login(int client, int args) 
+public Action Command_Login(int client, int args) 
 {
 	if(g_eClient[client][bTwiceLogin])
 	{

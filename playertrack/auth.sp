@@ -174,7 +174,7 @@ void DoAddTempPA(int client)
 	if(GroupIndex == 9000)
 	{
 		PrintToChatAll("%s 管理员\x10%N\x01给\x02%N\x01添加了临时认证[\x02神烦坑比\x01]", PLUGIN_PREFIX, client, target);
-		LogToFileEx(logFile_core, " %N 给 %N 加上了临时认证[神烦坑比]!", client, target);
+		LogToFileEx(LogFile, " %N 给 %N 加上了临时认证[神烦坑比]!", client, target);
 		LogAction(client, target, "\"%L\" 给 \"%L\" 加上了临时认证[神烦坑比]", client, target);
 		Format(sName, 32, "神烦坑比");
 	}
@@ -182,7 +182,7 @@ void DoAddTempPA(int client)
 	if(GroupIndex == 9001)
 	{
 		PrintToChatAll("%s 管理员\x10%N\x01给\x02%N\x01添加了临时认证[\x02我是小学生\x01]", PLUGIN_PREFIX, client, target);
-		LogToFileEx(logFile_core, " %N 给 %N 加上了临时认证[神烦坑比]!", client, target);
+		LogToFileEx(LogFile, " %N 给 %N 加上了临时认证[神烦坑比]!", client, target);
 		LogAction(client, target, "\"%L\" 给 \"%L\" 加上了临时认证[我是小学生]", client, target);
 		Format(sName, 32, "小学生");
 	}
