@@ -145,8 +145,8 @@ public void ShowFaithMainMenuToClient(int client)
 	Format(szItem, 256, "查看Buff");
 	AddMenuItem(menu, "query_buff_", szItem);
 	
-	Format(szItem, 256, "我的Share");
-	AddMenuItem(menu, "query_offer", szItem);
+	Format(szItem, 256, "增加Sahre");
+	AddMenuItem(menu, "gotoguild__", szItem);
 	
 	Format(szItem, 256, "Share排行");
 	AddMenuItem(menu, "query_rank_", szItem);
@@ -177,8 +177,8 @@ public int FaithMainMenuHandler(Handle menu, MenuAction action, int client, int 
 			ShowAllFaithShareToClient(client);
 		else if(StrEqual(info, "query_buff_"))
 			ShowAllFaithBuffToClient(client);
-		else if(StrEqual(info, "query_offer"))
-			ShowFaithOfferToClient(client);
+		else if(StrEqual(info, "gotoguild__"))
+			FakeClientCommandEx(client, "sm_guild");
 		else if(StrEqual(info, "reset_faith"))
 		{
 			if(g_eClient[client][iBuff] <= 0)
@@ -225,6 +225,8 @@ public void ShowAllFaithShareToClient(int client)
 	
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 60);
+	
+	ShowFaithOfferToClient(client);
 }
 
 public int ShowAllFaithShareMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 

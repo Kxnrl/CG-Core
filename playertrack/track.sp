@@ -100,7 +100,7 @@ void SaveClient(int client)
 		duration = GetTime() - g_eClient[client][iConnectTime];
 	
 	//处理Share值
-	int share = duration/60 + g_eClient[client][iGetShare];
+	int share = duration/180 + g_eClient[client][iGetShare];
 	
 	char os[64];
 	if(g_eClient[client][iOS] == OS_Windows) 
