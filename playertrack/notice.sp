@@ -25,7 +25,7 @@ public Action Timer_Notice(Handle timer, int userid)
 void ShowPanelToClient(int client)
 {
 	g_eClient[client][bPrint] = true;
-	FakeClientCommandEx(client, "sm_bgm");
+	//FakeClientCommandEx(client, "sm_bgm");
 	PrintToChat(client, "[\x0EPlaneptune\x01]   输入\x07!notice\x01可以重新打开公告板,完全阅读后将不再提示");
 	BuiltPanelToClient(client);
 }
@@ -66,8 +66,8 @@ void BuiltPanelToClient(int client)
 		AddMenuItem(menu, "update", szItem, ITEMDRAW_DISABLED);
 	}
 	
-	Format(szItem, 256, "关闭BGM");
-	AddMenuItem(menu, "bgmstp", szItem);
+	//Format(szItem, 256, "关闭BGM");
+	//AddMenuItem(menu, "bgmstp", szItem);
 
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 20);
@@ -183,10 +183,11 @@ public int MenuHandler_Confirm(Handle menu, MenuAction action, int client, int i
 		char info[32];
 		GetMenuItem(menu, itemNum, info, 32);
 		
-		if(StrEqual(info, "bgmstp"))
-		{
-			FakeClientCommandEx(client, "sm_bgmstop");
-		}
+		//if(StrEqual(info, "bgmstp"))
+		//{
+		//	FakeClientCommandEx(client, "sm_bgmstop");
+		//}
+		return;
 	}
 	else if(action == MenuAction_End)
 	{

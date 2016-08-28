@@ -44,6 +44,7 @@ native void VIP_SetClientVIP(int client);
 native void CG_GiveClientShare(int client, int Share, const char[] Reason);
 native void PA_GivePlayerExp(int client, int Exp, const char[] Reason);
 native void CG_SaveDatabase(char[] QueryString);
+native void CG_SaveForumData(char[] QueryString);
 native void CG_GetSignature(int client, char[] buffer, int maxLen);
 native void CG_GetDiscuzName(int client, char[] buffer, int maxLen);
 native void PA_GetGroupName(int client, char[] buffer, int maxLen);

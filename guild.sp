@@ -31,7 +31,7 @@ public Plugin myinfo =
 	name = " [CG] Guild Center ",
 	author = "xQy",
 	description = "",
-	version = "1.0",
+	version = "1.2",
 	url = "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -47,18 +47,18 @@ public void OnClientDisconnect(int client)
 	if(g_hTrackTimer[client] != INVALID_HANDLE)
 	{
 		KillTimer(g_hTrackTimer[client]);
-		g_hTrackTimer[client] = INVALID_HANDLE;
 	}
 
-	g_iTrackTime[client] = 2147483646;
+	g_hTrackTimer[client] = INVALID_HANDLE;
+	g_iTrackTime[client] = -1;
 }
 
 public void CG_OnClientLoaded(int client)
 {
 	if(CG_GetReqID(client) == 999)
 	{
-		g_iTrackTime[client] = GetTime()+1800;
-		g_hTrackTimer[client] = CreateTimer(1800.0, Timer_TrackClient, GetClientUserId(client));
+		g_iTrackTime[client] = GetTime()+1500;
+		g_hTrackTimer[client] = CreateTimer(1500.0, Timer_TrackClient, GetClientUserId(client));
 	}
 }
 
@@ -77,14 +77,17 @@ public Action Timer_TrackClient(Handle timer, int userid)
 	int client = GetClientOfUserId(userid);
 	if(client && IsClientInGame(client))
 	{
-		CG_SetReqRate(client, 1800);
+		CG_SetReqRate(client, 1500);
 		CG_CheckReq(client);
 	}
+
+	g_hTrackTimer[client] = INVALID_HANDLE;
 }
 
 public Action Command_Guild(int client, int args)
 {
 	int reqid = CG_GetReqID(client);
+	
 	if(reqid == 0)
 		ShowMainGuild(client);
 	else
@@ -101,7 +104,7 @@ void ShowMainGuild(int client)
 	
 	Handle menu = CreateMenu(MenuHandler_MainGuild);
 	char szItem[256];
-	Format(szItem, 256, "[Planeptune]   Faith - Guild Center[beta][beta]\n 你当前有 %d 点 Share\n 当前你没有进行中的任务\n ", ishare);
+	Format(szItem, 256, "[Planeptune]   Faith - Guild Center\n 你当前有 %d 点 Share\n 当前你没有进行中的任务\n ", ishare);
 	SetMenuTitle(menu, szItem);
 	
 	AddMenuItem(menu, "0", "承接S级任务", ishare >= 3000 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
@@ -136,14 +139,14 @@ void ShowRateMenu(int client, int reqid)
 	
 	Handle menu = CreateMenu(MenuHandler_RateGuild);
 	char szItem[256];
-	Format(szItem, 256, "[Planeptune]   Faith - Guild Center[beta][beta]\n 你当前有 %d 点 Share\n ", ishare);
+	Format(szItem, 256, "[Planeptune]   Faith - Guild Center\n 你当前有 %d 点 Share\n ", ishare);
 	SetMenuTitle(menu, szItem);
 	
 	if(CG_GetReqID(client) == 999)
 	{
-		int rate = 1800 - (g_iTrackTime[client] - GetTime());
-		float vol = (float(rate)/1800.0)*100;
-		Format(szItem, 256, "[%s - %s]   完成度%.2f%%[%d/1800]\n ", g_eReqs[reqid][szLvls], g_eReqs[reqid][szName], vol, rate);
+		int rate = 1500 - (g_iTrackTime[client] - GetTime());
+		float vol = (float(rate)/1500.0)*100;
+		Format(szItem, 256, "[%s - %s]   完成度%.2f%%[%d/1500]\n ", g_eReqs[reqid][szLvls], g_eReqs[reqid][szName], vol, rate);
 	}
 	else
 	{
@@ -194,7 +197,7 @@ void SelectReqMenu(int client, int level)
 	
 	Handle menu = CreateMenu(MenuHandler_SelectReq);
 	char szItem[256], szId[4];
-	Format(szItem, 256, "[Planeptune]   Faith - Guild Center[beta][beta]\n 你当前有 %d 点 Share\n  ", ishare);
+	Format(szItem, 256, "[Planeptune]   Faith - Guild Center\n 你当前有 %d 点 Share\n  ", ishare);
 	SetMenuTitle(menu, szItem);
 	
 	int count;
@@ -239,7 +242,7 @@ void ConfirmRateMenu(int client, int type)
 	
 	Handle menu = CreateMenu(MenuHandler_ConfirmRate);
 	char szItem[256];
-	Format(szItem, 256, "[Planeptune]   Faith - Guild Center[beta][beta]\n 你当前有 %d 点 Share\n ", ishare);
+	Format(szItem, 256, "[Planeptune]   Faith - Guild Center[beta]\n 你当前有 %d 点 Share\n ", ishare);
 	SetMenuTitle(menu, szItem);
 	
 	if(type == 0)
@@ -302,7 +305,7 @@ void ConfirmReqMenu(int client, int id)
 	
 	Handle menu = CreateMenu(MenuHandler_ConfirmReq);
 	char szItem[256];
-	Format(szItem, 256, "[Planeptune]   Faith - Guild Center[beta][beta]\n 你当前有 %d 点 Share\n ", ishare);
+	Format(szItem, 256, "[Planeptune]   Faith - Guild Center\n 你当前有 %d 点 Share\n ", ishare);
 	SetMenuTitle(menu, szItem);
 	
 	Format(szItem, 256, "你要承接[%s]吗?", g_eReqs[id][szName]);
@@ -341,7 +344,13 @@ public int MenuHandler_ConfirmReq(Handle menu, MenuAction action, int client, in
 			CG_SetReqRate(client, 0);
 			CG_SaveReq(client);
 			
-			PrintToChat(client, "%s  你已经承接任务[%s]", PREFIX, g_eReqs[id][szName]);
+			PrintToChat(client, "%s  你已经承接任务[\x04%s\x01]", PREFIX, g_eReqs[id][szName]);
+			
+			if(id == 999)
+			{
+				OnClientDisconnect(client);
+				CG_OnClientLoaded(client);
+			}
 		}
 	}
 	else if(action == MenuAction_End)
@@ -362,108 +371,108 @@ public void InitializingRedDatabase()
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 5;
 			g_eReqs[i][iTerm] = 10;
-			g_eReqs[i][iAwdShare] = 20;
+			g_eReqs[i][iAwdShare] = 40;
 			g_eReqs[i][iAwdCredit] = 30;
 			strcopy(g_eReqs[i][szLvls], 16, "E级");
 			strcopy(g_eReqs[i][szName], 32, "初来乍到");
 			strcopy(g_eReqs[i][szDesc], 64, "在僵尸逃跑服务器进行10局游戏");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+20|Credits+30");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+40|Credits+30");
 		}
 		if(i == 2)
 		{
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 5;
 			g_eReqs[i][iTerm] = 200000;
-			g_eReqs[i][iAwdShare] = 20;
+			g_eReqs[i][iAwdShare] = 40;
 			g_eReqs[i][iAwdCredit] = 30;
 			strcopy(g_eReqs[i][szLvls], 16, "E级");
 			strcopy(g_eReqs[i][szName], 32, "火力填充");
 			strcopy(g_eReqs[i][szDesc], 64, "在僵尸逃跑服务器造成20万点伤害");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+20|Credits+30");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+40|Credits+30");
 		}
 		if(i == 11)
 		{
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 4;
 			g_eReqs[i][iTerm] = 10;
-			g_eReqs[i][iAwdShare] = 30;
+			g_eReqs[i][iAwdShare] = 60;
 			g_eReqs[i][iAwdCredit] = 50;
 			strcopy(g_eReqs[i][szLvls], 16, "D级");
 			strcopy(g_eReqs[i][szName], 32, "刷他妈的");
 			strcopy(g_eReqs[i][szDesc], 64, "在僵尸逃跑服务器击杀10只僵尸");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+30|Credits+50");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+60|Credits+50");
 		}
 		if(i == 12)
 		{
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 4;
 			g_eReqs[i][iTerm] = 100;
-			g_eReqs[i][iAwdShare] = 30;
+			g_eReqs[i][iAwdShare] = 60;
 			g_eReqs[i][iAwdCredit] = 50;
 			strcopy(g_eReqs[i][szLvls], 16, "D级");
 			strcopy(g_eReqs[i][szName], 32, "瞎眼神器");
 			strcopy(g_eReqs[i][szDesc], 64, "在僵尸逃跑服务器使用人类神器100次");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+30|Credits+50");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+60|Credits+50");
 		}
 		if(i == 21)
 		{
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 3;
 			g_eReqs[i][iTerm] = 10;
-			g_eReqs[i][iAwdShare] = 50;
+			g_eReqs[i][iAwdShare] = 100;
 			g_eReqs[i][iAwdCredit] = 80;
 			strcopy(g_eReqs[i][szLvls], 16, "C级");
 			strcopy(g_eReqs[i][szName], 32, "渐行渐远");
 			strcopy(g_eReqs[i][szDesc], 64, "在僵尸逃跑服务器神图人类获胜10局");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+50|Credits+80");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+100|Credits+80");
 		}
 		if(i == 22)
 		{
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 3;
 			g_eReqs[i][iTerm] = 15;
-			g_eReqs[i][iAwdShare] = 50;
+			g_eReqs[i][iAwdShare] = 100;
 			g_eReqs[i][iAwdCredit] = 80;
 			strcopy(g_eReqs[i][szLvls], 16, "C级");
 			strcopy(g_eReqs[i][szName], 32, "你头真大");
 			strcopy(g_eReqs[i][szDesc], 64, "在僵尸逃跑服务器爆头击杀15只僵尸");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+50|Credits+80");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+100|Credits+80");
 		}
 		if(i == 31)
 		{
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 2;
 			g_eReqs[i][iTerm] = 30;
-			g_eReqs[i][iAwdShare] = 80;
+			g_eReqs[i][iAwdShare] = 160;
 			g_eReqs[i][iAwdCredit] = 120;
 			strcopy(g_eReqs[i][szLvls], 16, "B级");
 			strcopy(g_eReqs[i][szName], 32, "瓦哥之怒");
 			strcopy(g_eReqs[i][szDesc], 64, "在僵尸逃跑服务器终结者击杀30只僵尸");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+80|Credits+120");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+160|Credits+120");
 		}
 		if(i == 41)
 		{
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 1;
 			g_eReqs[i][iTerm] = 5;
-			g_eReqs[i][iAwdShare] = 100;
+			g_eReqs[i][iAwdShare] = 200;
 			g_eReqs[i][iAwdCredit] = 500;
 			strcopy(g_eReqs[i][szLvls], 16, "A级");
 			strcopy(g_eReqs[i][szName], 32, "都听我的");
 			strcopy(g_eReqs[i][szDesc], 64, "在僵尸逃跑服务器神图指挥官指挥通关5次");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+100|Credits+500");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+200|Credits+500");
 		}
 		if(i == 51)
 		{
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 0;
 			g_eReqs[i][iTerm] = 1;
-			g_eReqs[i][iAwdShare] = 200;
+			g_eReqs[i][iAwdShare] = 400;
 			g_eReqs[i][iAwdCredit] = 1000;
 			strcopy(g_eReqs[i][szLvls], 16, "S级");
 			strcopy(g_eReqs[i][szName], 32, "神勇无敌");
 			strcopy(g_eReqs[i][szDesc], 64, "在僵尸逃跑服务器使用终结者SOLO Win通关1次");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+200|Credits+1000");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+400|Credits+1000");
 		}
 		
 		//for TTT
@@ -472,72 +481,72 @@ public void InitializingRedDatabase()
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 5;
 			g_eReqs[i][iTerm] = 20;
-			g_eReqs[i][iAwdShare] = 20;
+			g_eReqs[i][iAwdShare] = 40;
 			g_eReqs[i][iAwdCredit] = 30;
 			strcopy(g_eReqs[i][szLvls], 16, "E级");
 			strcopy(g_eReqs[i][szName], 32, "影帝之路");
 			strcopy(g_eReqs[i][szDesc], 64, "在匪镇谍影服务器进行20局游戏");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+20|Credits+30");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+40|Credits+30");
 		}
 		if(i == 111)
 		{
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 4;
 			g_eReqs[i][iTerm] = 20;
-			g_eReqs[i][iAwdShare] = 30;
+			g_eReqs[i][iAwdShare] = 60;
 			g_eReqs[i][iAwdCredit] = 50;
 			strcopy(g_eReqs[i][szLvls], 16, "D级");
 			strcopy(g_eReqs[i][szName], 32, "干死侦探");
 			strcopy(g_eReqs[i][szDesc], 64, "在匪镇谍影服务器击杀20名侦探");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+30|Credits+50");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+60|Credits+50");
 		}
 		if(i == 121)
 		{
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 3;
 			g_eReqs[i][iTerm] = 50;
-			g_eReqs[i][iAwdShare] = 50;
+			g_eReqs[i][iAwdShare] = 100;
 			g_eReqs[i][iAwdCredit] = 80;
 			strcopy(g_eReqs[i][szLvls], 16, "C级");
 			strcopy(g_eReqs[i][szName], 32, "我是影帝");
 			strcopy(g_eReqs[i][szDesc], 64, "在匪镇谍影服务器击杀50个平民");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+50|Credits+80");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+100|Credits+80");
 		}
 		if(i == 131)
 		{
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 2;
 			g_eReqs[i][iTerm] = 30;
-			g_eReqs[i][iAwdShare] = 80;
+			g_eReqs[i][iAwdShare] = 160;
 			g_eReqs[i][iAwdCredit] = 120;
 			strcopy(g_eReqs[i][szLvls], 16, "B级");
 			strcopy(g_eReqs[i][szName], 32, "你太鶸了");
 			strcopy(g_eReqs[i][szDesc], 64, "在匪镇谍影服务器击杀30名叛徒");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+80|Credits+120");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+160|Credits+120");
 		}
 		if(i == 141)
 		{
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 1;
 			g_eReqs[i][iTerm] = 12;
-			g_eReqs[i][iAwdShare] = 100;
+			g_eReqs[i][iAwdShare] = 200;
 			g_eReqs[i][iAwdCredit] = 500;
 			strcopy(g_eReqs[i][szLvls], 16, "A级");
 			strcopy(g_eReqs[i][szName], 32, "神挡杀神");
 			strcopy(g_eReqs[i][szDesc], 64, "在匪镇谍影服务器一局正确击杀12名玩家");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+100|Credits+500");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+200|Credits+500");
 		}
 		if(i == 151)
 		{
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 0;
 			g_eReqs[i][iTerm] = 18;
-			g_eReqs[i][iAwdShare] = 200;
+			g_eReqs[i][iAwdShare] = 400;
 			g_eReqs[i][iAwdCredit] = 1000;
 			strcopy(g_eReqs[i][szLvls], 16, "S级");
 			strcopy(g_eReqs[i][szName], 32, "佛挡杀佛");
 			strcopy(g_eReqs[i][szDesc], 64, "在匪镇谍影服务器一局正确击杀18名玩家");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+200|Credits+1000");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+400|Credits+1000");
 		}
 		
 		//for MiniGame
@@ -546,72 +555,72 @@ public void InitializingRedDatabase()
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 5;
 			g_eReqs[i][iTerm] = 20;
-			g_eReqs[i][iAwdShare] = 20;
+			g_eReqs[i][iAwdShare] = 40;
 			g_eReqs[i][iAwdCredit] = 30;
 			strcopy(g_eReqs[i][szLvls], 16, "E级");
 			strcopy(g_eReqs[i][szName], 32, "无证驾驶");
 			strcopy(g_eReqs[i][szDesc], 64, "在娱乐休闲服务器进行20局游戏");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+20|Credits+30");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+40|Credits+30");
 		}
 		if(i == 211)
 		{
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 4;
 			g_eReqs[i][iTerm] = 10;
-			g_eReqs[i][iAwdShare] = 30;
+			g_eReqs[i][iAwdShare] = 60;
 			g_eReqs[i][iAwdCredit] = 50;
 			strcopy(g_eReqs[i][szLvls], 16, "D级");
 			strcopy(g_eReqs[i][szName], 32, "一刀见血");
 			strcopy(g_eReqs[i][szDesc], 64, "在娱乐休闲服务器使用匕首背刺击杀10个玩家");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+30|Credits+50");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+60|Credits+50");
 		}
 		if(i == 221)
 		{
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 3;
 			g_eReqs[i][iTerm] = 10;
-			g_eReqs[i][iAwdShare] = 50;
+			g_eReqs[i][iAwdShare] = 100;
 			g_eReqs[i][iAwdCredit] = 80;
 			strcopy(g_eReqs[i][szLvls], 16, "C级");
 			strcopy(g_eReqs[i][szName], 32, "我要电鸡");
 			strcopy(g_eReqs[i][szDesc], 64, "在娱乐休闲服务器使用电击枪击杀10个玩家");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+50|Credits+80");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+100|Credits+80");
 		}
 		if(i == 231)
 		{
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 2;
 			g_eReqs[i][iTerm] = 10;
-			g_eReqs[i][iAwdShare] = 80;
+			g_eReqs[i][iAwdShare] = 160;
 			g_eReqs[i][iAwdCredit] = 120;
 			strcopy(g_eReqs[i][szLvls], 16, "B级");
 			strcopy(g_eReqs[i][szName], 32, "武神附体");
 			strcopy(g_eReqs[i][szDesc], 64, "在娱乐休闲服务器非刷分图一局击杀10个玩家");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+80|Credits+120");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+160|Credits+120");
 		}
 		if(i == 241)
 		{
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 1;
 			g_eReqs[i][iTerm] = 12;
-			g_eReqs[i][iAwdShare] = 100;
+			g_eReqs[i][iAwdShare] = 200;
 			g_eReqs[i][iAwdCredit] = 500;
 			strcopy(g_eReqs[i][szLvls], 16, "A级");
 			strcopy(g_eReqs[i][szName], 32, "小李飞刀");
 			strcopy(g_eReqs[i][szDesc], 64, "在娱乐休闲服务器使用匕首一局内刀杀10名玩家");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+100|Credits+500");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+200|Credits+500");
 		}
 		if(i == 251)
 		{
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 0;
 			g_eReqs[i][iTerm] = 18;
-			g_eReqs[i][iAwdShare] = 200;
+			g_eReqs[i][iAwdShare] = 400;
 			g_eReqs[i][iAwdCredit] = 1000;
 			strcopy(g_eReqs[i][szLvls], 16, "S级");
 			strcopy(g_eReqs[i][szName], 32, "女神之光");
 			strcopy(g_eReqs[i][szDesc], 64, "在娱乐休闲服务器非刷分图ACE");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+200|Credits+1000");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+400|Credits+1000");
 		}
 		
 		//for MISC
@@ -619,13 +628,13 @@ public void InitializingRedDatabase()
 		{
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 5;
-			g_eReqs[i][iTerm] = 1800;
-			g_eReqs[i][iAwdShare] = 50;
+			g_eReqs[i][iTerm] = 1500;
+			g_eReqs[i][iAwdShare] = 60;
 			g_eReqs[i][iAwdCredit] = 50;
 			strcopy(g_eReqs[i][szLvls], 16, "E级");
 			strcopy(g_eReqs[i][szName], 32, "我要挂机");
-			strcopy(g_eReqs[i][szDesc], 64, "在任意服务器内持续在线30分钟");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+20|Credits+30");
+			strcopy(g_eReqs[i][szDesc], 64, "在任意服务器内持续在线25分钟");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+60|Credits+50");
 		}
 	}
 }

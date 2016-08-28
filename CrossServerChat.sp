@@ -2,10 +2,11 @@
 #include <sdktools>
 #include <socket>
 #include <clientprefs>
+#include <cg_core>
 #include <store>
 
 #define PLUGIN_AUTHOR 	"maoling ( xQy )"
-#define PLUGIN_VERSION 	"1.00"
+#define PLUGIN_VERSION 	"1.2"
 #define PLUGIN_TAG		"[\x0C小喇叭\x01] "
 #define PLAYER_GAGED 	1
 #define PLAYER_UNGAGED 	0
@@ -18,7 +19,6 @@
 #define port			"2001"
 
 Handle globalClientSocket;
-Handle COOKIE_ClientGaged;
 
 int gagState[MAXPLAYERS+1];
 
@@ -35,29 +35,14 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
-	RegAdminCmd("sm_cscgag", CMD_GagFromCrossServer, ADMFLAG_CHAT, "Ban/Unban a player from using the cross server chat functionality.");
 	RegConsoleCmd("sm_msg", CMD_SendMessage1, "Send a message to all server.");
 	RegConsoleCmd("sm_xlb", CMD_SendMessage1, "Send a message to all server.");
 	RegConsoleCmd("sm_dlb", CMD_SendMessage2, "Send a message to all server.");
 	RegAdminCmd("sm_servermsg", CMD_ServerMessage, ADMFLAG_ROOT, "Send a message to all server.");
-
-	COOKIE_ClientGaged = RegClientCookie("sm_csc_client_gaged", "Store the gag state of the player.", CookieAccess_Private);
-	
-	for(new i = MaxClients; i > 0; --i)
-	{
-		if(!AreClientCookiesCached(i))
-			continue;
-		
-		OnClientCookiesCached(i);
-	}
-
-	AutoExecConfig(true, "CrossServerChat");
 }
 
-//When the plugin is unloaded / reloaded
 public void OnPluginEnd()
 {
-	//If the client is connected (and is not the master chat server (MCS)) send the qui messsage to MCS
 	if(connected)
 	{
 		DisconnectFromMasterServer();
@@ -66,16 +51,7 @@ public void OnPluginEnd()
 
 public void OnConfigsExecuted()
 {
-	ConnecToMasterServer(); //This server is a client server and want to connect to the MCS
-}
-
-//Load data from cookies
-public OnClientCookiesCached(int client)
-{
-	//Get value of cookie and store it inside gagState[]
-	char cookieValue[10];
-	GetClientCookie(client, COOKIE_ClientGaged, cookieValue, sizeof(cookieValue));
-	gagState[client] = StringToInt(cookieValue);
+	ConnecToMasterServer();
 }
 
 public Action CMD_SendMessage1(client, args)
@@ -128,63 +104,53 @@ public Action CMD_SendMessage1(client, args)
 
 	char finalMessage[999];
 	
-	if(gagState[client] == PLAYER_GAGED)
-	{
-		Handle pack;
-		char text[200];
-		CreateDataTimer(0.5, PrintMessageOnChatMessage, pack);
-		WritePackCell(pack, client);
-		Format(text, sizeof(text), "%s You have been banned from using this command.", PLUGIN_TAG);
-		WritePackString(pack, text);
-	}
+	char m_szServerName[64], m_szServerTag[32];
+	GetConVarString(FindConVar("hostname"), m_szServerName, 64);
+	if(StrContains(m_szServerName, "逃跑", false ) != -1)
+		Format(m_szServerTag, 32, "僵尸逃跑");
+	else if(StrContains(m_szServerName, "TTT", false ) != -1)
+		Format(m_szServerTag, 32, "匪镇碟影");
+	else if(StrContains(m_szServerName, "MiniGames", false ) != -1)
+		Format(m_szServerTag, 32, "娱乐休闲");
+	else if(StrContains(m_szServerName, "JailBreak", false ) != -1)
+		Format(m_szServerTag, 32, "越狱搞基");
+	else if(StrContains(m_szServerName, "KreedZ", false ) != -1)
+		Format(m_szServerTag, 32, "Kz跳跃");
+	else if(StrContains(m_szServerName, "DeathRun", false ) != -1)
+		Format(m_szServerTag, 32, "死亡奔跑");
+	else if(StrContains(m_szServerName, "战役", false ) != -1)
+		Format(m_szServerTag, 32, "求生战役");
+	else if(StrContains(m_szServerName, "对抗", false ) != -1)
+		Format(m_szServerTag, 32, "求生对抗");
+	else if(StrContains(m_szServerName, "HG", false ) != -1)
+		Format(m_szServerTag, 32, "饥饿游戏");
+	else if(StrContains(m_szServerName, "死斗", false ) != -1)
+		Format(m_szServerTag, 32, "纯净死斗");
+	else if(StrContains(m_szServerName, "纯净死亡", false ) != -1)
+		Format(m_szServerTag, 32, "纯净死亡");
+	else if(StrContains(m_szServerName, "Riot", false ) != -1)
+		Format(m_szServerTag, 32, "僵尸暴动");
+	else if(StrContains(m_szServerName, "Ninja", false ) != -1)
+		Format(m_szServerTag, 32, "忍者行动");
+	else if(StrContains(m_szServerName, "BHop", false ) != -1)
+		Format(m_szServerTag, 32, "BHop连跳");
+	else if(StrContains(m_szServerName, "满十", false ) != -1)
+		Format(m_szServerTag, 32, "满十比赛");
 	else
-	{	
-		char m_szServerName[64], m_szServerTag[32];
-		GetConVarString(FindConVar("hostname"), m_szServerName, 64);
-		if(StrContains(m_szServerName, "逃跑", false ) != -1)
-			Format(m_szServerTag, 32, "僵尸逃跑");
-		else if(StrContains(m_szServerName, "TTT", false ) != -1)
-			Format(m_szServerTag, 32, "匪镇碟影");
-		else if(StrContains(m_szServerName, "MiniGames", false ) != -1)
-			Format(m_szServerTag, 32, "娱乐休闲");
-		else if(StrContains(m_szServerName, "JailBreak", false ) != -1)
-			Format(m_szServerTag, 32, "越狱搞基");
-		else if(StrContains(m_szServerName, "KreedZ", false ) != -1)
-			Format(m_szServerTag, 32, "Kz跳跃");
-		else if(StrContains(m_szServerName, "DeathRun", false ) != -1)
-			Format(m_szServerTag, 32, "死亡奔跑");
-		else if(StrContains(m_szServerName, "战役", false ) != -1)
-			Format(m_szServerTag, 32, "求生战役");
-		else if(StrContains(m_szServerName, "对抗", false ) != -1)
-			Format(m_szServerTag, 32, "求生对抗");
-		else if(StrContains(m_szServerName, "HG", false ) != -1)
-			Format(m_szServerTag, 32, "饥饿游戏");
-		else if(StrContains(m_szServerName, "死斗", false ) != -1)
-			Format(m_szServerTag, 32, "纯净死斗");
-		else if(StrContains(m_szServerName, "纯净死亡", false ) != -1)
-			Format(m_szServerTag, 32, "纯净死亡");
-		else if(StrContains(m_szServerName, "Riot", false ) != -1)
-			Format(m_szServerTag, 32, "僵尸暴动");
-		else if(StrContains(m_szServerName, "Ninja", false ) != -1)
-			Format(m_szServerTag, 32, "忍者行动");
-		else if(StrContains(m_szServerName, "BHop", false ) != -1)
-			Format(m_szServerTag, 32, "BHop连跳");
-		else if(StrContains(m_szServerName, "满十", false ) != -1)
-			Format(m_szServerTag, 32, "满十比赛");
-		else
-			Format(m_szServerTag, 32, "论坛");
-		
-		Format(finalMessage, sizeof(finalMessage), "[\x02小\x04喇\x0C叭\x01] [\x0E%s\x01]  \x04%N\x01 :   \x07%s", m_szServerTag, client, message);
-		
-		Store_SetClientCredits(client, Store_GetClientCredits(client)-500, "发送小喇叭");
-		PrintToChat(client, "\x01 \x04[Store]  \x01你花费\x04500Credits\x01发送了一条小喇叭");
+		Format(m_szServerTag, 32, "论坛");
+	
+	Format(finalMessage, sizeof(finalMessage), "[\x02小\x04喇\x0C叭\x01] [\x0E%s\x01]  \x04%N\x01 :   \x07%s", m_szServerTag, client, message);
+	
+	if(!UpdateMessageToDiscuz(client, message))
+		return Plugin_Handled;
+	
+	Store_SetClientCredits(client, Store_GetClientCredits(client)-500, "发送小喇叭");
+	PrintToChat(client, "\x01 \x04[Store]  \x01你花费\x04500Credits\x01发送了一条小喇叭");
 
-		PrintToChatAll(finalMessage);
+	PrintToChatAll(finalMessage);
 
-		Format(finalMessage, sizeof(finalMessage), "%s%s", key, finalMessage);
-		LogMessage("Send message: %s", finalMessage);
-		SocketSend(globalClientSocket, finalMessage, sizeof(finalMessage));
-	}
+	Format(finalMessage, sizeof(finalMessage), "%s%s", key, finalMessage);
+	SocketSend(globalClientSocket, finalMessage, sizeof(finalMessage));
 
 	return Plugin_Handled;
 }
@@ -299,90 +265,30 @@ public Action CMD_SendMessage2(client, args)
 
 	char finalMessage[999];
 	
-	if(gagState[client] == PLAYER_GAGED)
-	{
-		Handle pack;
-		char text[200];
-		CreateDataTimer(0.5, PrintMessageOnChatMessage, pack);
-		WritePackCell(pack, client);
-		Format(text, sizeof(text), "%s You have been banned from using this command.", PLUGIN_TAG);
-		WritePackString(pack, text);
-	}
-	else
-	{
-		Format(finalMessage, sizeof(finalMessage), "[\x02大\x04喇\x0C叭\x01]  \x04%N\x01 :   \x07%s", client, message);
-		
-		Store_SetClientCredits(client, Store_GetClientCredits(client)-5000, "发送大喇叭");
-		PrintToChat(client, "\x01 \x04[Store]  \x01你花费\x045000Credits\x01发送了一条小喇叭");
+	if(!UpdateMessageToDiscuz(client, message))
+		return Plugin_Handled;
 
-		PrintToMenuAll(finalMessage);
+	Format(finalMessage, sizeof(finalMessage), "[\x02大\x04喇\x0C叭\x01]  \x04%N\x01 :   \x07%s", client, message);
+	
+	Store_SetClientCredits(client, Store_GetClientCredits(client)-5000, "发送大喇叭");
+	PrintToChat(client, "\x01 \x04[Store]  \x01你花费\x045000Credits\x01发送了一条小喇叭");
 
-		Format(finalMessage, sizeof(finalMessage), "%s%s", key, finalMessage);
-		LogMessage("Send message: %s", finalMessage);
-		SocketSend(globalClientSocket, finalMessage, sizeof(finalMessage));
-	}
+	PrintToMenuAll(finalMessage);
+
+	Format(finalMessage, sizeof(finalMessage), "%s%s", key, finalMessage);
+	LogMessage("Send message: %s", finalMessage);
+	SocketSend(globalClientSocket, finalMessage, sizeof(finalMessage));
+
 
 	return Plugin_Handled;
 }
 
-
-//I don't think commenting this block is needed.
-public Action CMD_GagFromCrossServer(client, args)
-{
-	if(!IsValidClient(client))
-		return Plugin_Handled;
-		
-	if(args != 1)
-	{
-		PrintToChat(client, "%s Usage : sm_cscgag [TARGET]", PLUGIN_TAG);
-		return Plugin_Handled;
-	}
-		
-	char arg1[20];
-	char tmp[10];
-	char cookieValue[10];
-	GetCmdArg(1, arg1, sizeof(arg1));
-	GetClientCookie(client, COOKIE_ClientGaged, cookieValue, sizeof(cookieValue));
-	gagState[client] = StringToInt(cookieValue);
-	
-	int target = FindTarget(client, arg1, true);
-	
-	if(gagState[target] == PLAYER_GAGED)
-	{
-		PrintToChat(client, "%s %N is now \x04ungaged\x01 !", PLUGIN_TAG, target);	
-		gagState[target] = PLAYER_UNGAGED;
-	}
-	else if(gagState[target] == PLAYER_UNGAGED)
-	{
-		PrintToChat(client, "%s %N is now \x02gaged\x01 !", PLUGIN_TAG, target);	
-		gagState[target] = PLAYER_GAGED;
-	}
-	
-	IntToString(gagState[client], tmp, sizeof(tmp));
-	SetClientCookie(client, COOKIE_ClientGaged, tmp);
-		
-	return Plugin_Continue;		
-}
    
 //In case a client get disconnected, reconnect him every X seconds
 public Action TimerReconnect(Handle tmr, any arg)
 {
 	PrintToServer("Trying to reconnect to the master server...");
 	ConnecToMasterServer();
-}
-
-//Allow you to print messages when OnChatMessage hook delayed by a timer
-public Action PrintMessageOnChatMessage(Handle timer, Handle pack)
-{
-	char text[128];
-	int client;
- 
-	ResetPack(pack);
-	client = ReadPackCell(pack);
-	ReadPackString(pack, text, sizeof(text));
-	//Restoring pack has finished, go abive and print message.
- 
-	PrintToChat(client, "%s", text);
 }
 
 //stocks
@@ -527,4 +433,34 @@ stock void PrintToMenuAll(char[] message)
 public Handler_DoNothing(Menu menu, MenuAction action, int param1, int param2)
 {
 	/* Do nothing */
+}
+
+public bool UpdateMessageToDiscuz(int client, const char[] message)
+{
+	char Error[256];
+	Handle database = SQL_Connect("csgo", true, Error, 256);
+	
+	if(database == INVALID_HANDLE)
+	{
+		PrintToChat(client, "[\x0EPlaneptune\x01]  服务器当前未准备就绪");
+		return false;
+	}
+	
+	char EscapeString[512];
+	SQL_EscapeString(database, message, EscapeString, 512);
+	
+	if(CG_GetDiscuzUID(client) < 1)
+	{
+		PrintToChat(client, "[\x0EPlaneptune\x01]  未注册论坛不能发送喇叭");
+		return false;
+	}
+	
+	char m_szName[64];
+	CG_GetDiscuzName(client, m_szName, 64);
+	
+	char m_szQuery[1024];
+	Format(m_szQuery, 1024, "INSERT INTO `dz_plugin_ahome_laba` (`username`, `tousername`, `level`, `lid`, `dateline`, `content`, `color`, `url`) VALUES ('%s', '', 'game', 0, '%d', '%s', '', '')", m_szName, GetTime(), EscapeString);
+	CG_SaveForumData(m_szQuery);
+	
+	return true;
 }

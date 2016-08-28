@@ -842,3 +842,11 @@ public void SQLCallback_SaveReq(Handle owner, Handle hndl, const char[] error, i
 	if(hndl == INVALID_HANDLE)
 		LogToFileEx(LogFile, "Save Client Req Failed! [%N]  %s", client, error);
 }
+
+public void SQLCallback_InsertGuild(Handle owner, Handle hndl, const char[] error, int userid)
+{
+	int client = GetClientOfUserId(userid);
+	
+	if(hndl == INVALID_HANDLE)
+		LogToFileEx(LogFile, "Insert Client Req Conpelete Failed! [%N](%d)  %s", client, g_eClient[client][iReqId], error);
+}

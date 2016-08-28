@@ -3,7 +3,7 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define PLUGIN_VERSION " 5.2.3 - 2016/08/24 06:55 "
+#define PLUGIN_VERSION " 5.2.5 - 2016/08/28 06:09 "
 #define PLUGIN_PREFIX "[\x0EPlaneptune\x01]  "
 #define PLUGIN_PREFIX_SIGN "[\x0EPlaneptune\x01]  "
 
@@ -207,6 +207,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("CG_GetDiscuzUID", Native_GetDiscuzUID);
 	CreateNative("CG_GetDiscuzName", Native_GetDiscuzName);
 	CreateNative("CG_SaveDatabase", Native_SaveDatabase);
+	CreateNative("CG_SaveForumData", Native_SaveForumData);
 	CreateNative("CG_GetReqID", Native_GetReqID);
 	CreateNative("CG_GetReqTerm", Native_GetReqTerm);
 	CreateNative("CG_GetReqRate", Native_GetReqRate);
@@ -317,9 +318,19 @@ public int Native_GiveClientShare(Handle plugin, int numParams)
 	int client = GetNativeCell(1);
 	int ishare = GetNativeCell(2);
 	GetNativeString(3, m_szReason, 128);
-	g_eClient[client][iGetShare] = g_eClient[client][iGetShare] + ishare;
-	g_eClient[client][iShare] = g_eClient[client][iShare] + ishare;
-	PrintToConsole(client, "[Planeptune]  你获得了%d点Share,当前总计%d点! 来自: %s", ishare, g_eClient[client][iShare], m_szReason);
+	if(ishare > 0)
+	{
+		g_eClient[client][iGetShare] = g_eClient[client][iGetShare] + ishare;
+		g_eClient[client][iShare] = g_eClient[client][iShare] + ishare;
+		PrintToConsole(client, "[Planeptune]  你获得了%d点Share,当前总计%d点!  来自: %s", ishare, g_eClient[client][iShare], m_szReason);
+	}
+	else
+	{
+		ishare *= -1;
+		g_eClient[client][iGetShare] = g_eClient[client][iGetShare] - ishare;
+		g_eClient[client][iShare] = g_eClient[client][iShare] - ishare;
+		PrintToConsole(client, "[Planeptune]  你失去了%d点Share,当前总计%d点!  原因: %s", ishare, g_eClient[client][iShare], m_szReason);
+	}
 }
 
 public int Native_GetDiscuzUID(Handle plugin, int numParams)
@@ -374,6 +385,21 @@ public int Native_SaveDatabase(Handle plugin, int numParams)
 			WritePackString(data, m_szQuery);
 			ResetPack(data);
 			SQL_TQuery(g_hDB_csgo, SQLCallback_SaveDatabase, m_szQuery, data);
+		}
+	}
+}
+
+public int Native_SaveForumData(Handle plugin, int numParams)
+{
+	if(g_hDB_discuz != INVALID_HANDLE)
+	{
+		char m_szQuery[512];
+		if(GetNativeString(1, m_szQuery, 512) == SP_ERROR_NONE)
+		{
+			Handle data = CreateDataPack();
+			WritePackString(data, m_szQuery);
+			ResetPack(data);
+			SQL_TQuery(g_hDB_discuz, SQLCallback_SaveDatabase, m_szQuery, data);
 		}
 	}
 }
@@ -475,6 +501,10 @@ public int Native_CheckReq(Handle plugin, int numParams)
 		{
 			if(g_eClient[client][iReqRate] >= g_eClient[client][iReqTerm])
 			{
+				char m_szQuery[256];
+				Format(m_szQuery, 256, "INSERT INTO `playertrack_guild` VALUES (DEFAULT, %d, %d, %d)", g_eClient[client][iPlayerId], g_eClient[client][iReqRate], GetTime());
+				SQL_TQuery(g_hDB_csgo, SQLCallback_InsertGuild, m_szQuery, GetClientUserId(client));
+				
 				Call_StartForward(g_fwdOnClientCompleteReq);
 				Call_PushCell(client);
 				Call_PushCell(g_eClient[client][iReqId]);

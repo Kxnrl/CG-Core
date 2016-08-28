@@ -404,7 +404,7 @@ void ConfirmSecondBuff(int client, int buff)
 	else if(buff == 3)
 	{
 		AddMenuItem(menu, "", "你选择的Buff是: 生命", ITEMDRAW_DISABLED);
-		AddMenuItem(menu, "", "出生时提升血量和血量上限8%(僵尸无效)", ITEMDRAW_DISABLED);
+		AddMenuItem(menu, "", "出生时提升血量和血量上限8%", ITEMDRAW_DISABLED);
 	}
 	else if(buff == 4)
 	{

@@ -81,7 +81,7 @@ public Action Cmd_BuffReset(int client, int args)
 	else if(buff == 2)
 		Format(szItem, 256, "你当前的Buff为[嗜血]\n 你每造成40点(ZE模式为800点)伤害就能恢复2点HP\n ");
 	else if(buff == 3)
-		Format(szItem, 256, "你当前的Buff为[生命]\n 出生时提升血量和血量上限8%%(僵尸无效)\n ");
+		Format(szItem, 256, "你当前的Buff为[生命]\n 出生时提升血量和血量上限8%%\n ");
 	else if(buff == 4)
 		Format(szItem, 256, "你当前的Buff为[护甲]\n 出生时有8%%几率获得重甲|护甲低于10自动补到10\n ");
 	else if(buff == 5)
