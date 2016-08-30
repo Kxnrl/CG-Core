@@ -1,9 +1,9 @@
 #pragma newdecls required //let`s go! new syntax!!!
-//Build 315
+//Build 318
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define PLUGIN_VERSION " 5.2.5 - 2016/08/28 06:09 "
+#define PLUGIN_VERSION " 5.2.5 - 2016/08/30 08:43 "
 #define PLUGIN_PREFIX "[\x0EPlaneptune\x01]  "
 #define PLUGIN_PREFIX_SIGN "[\x0EPlaneptune\x01]  "
 
@@ -549,6 +549,7 @@ public void OnClientPostAdminCheck(int client)
 	{
 		g_eClient[client][bIsBot] = true;
 		OnClientDataLoaded(client);
+		OnClientAuthLoaded(client);
 		VipChecked(client);
 		return;
 	}
@@ -594,7 +595,7 @@ public void OnClientPostAdminCheck(int client)
 	strcopy(g_eClient[client][szGroupName], 64, "未认证");
 
 	//从数据库查询初始数据
-	if(g_hDB_csgo != INVALID_HANDLE)
+	if(g_hDB_csgo != INVALID_HANDLE && g_hDB_discuz != INVALID_HANDLE)
 	{
 		for(int i = 0; i < view_as<int>(OS_Total); i++)
 			QueryClientConVar(client, g_szOSConVar[i], OnOSQueried);
@@ -608,6 +609,13 @@ public void OnClientPostAdminCheck(int client)
 		
 		Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.number, a.faith, a.share, a.buff, a.signature, a.groupid, a.groupname, a.exp, a.level, a.temp, a.notice, a.reqid, a.reqterm, a.reqrate, b.unixtimestamp FROM playertrack_player AS a LEFT JOIN `playertrack_sign` b ON b.steamid = a.steamid WHERE a.steamid = '%s' ORDER BY a.id ASC LIMIT 1;", steam32);
 		SQL_TQuery(g_hDB_csgo, SQLCallback_GetClientStat, m_szQuery, g_eClient[client][iUserId], DBPrio_High);
+	}
+	else
+	{
+		OnClientAuthLoaded(client);
+		OnClientDataLoaded(client);
+		VipChecked(client);
+		LogToFile(LogFile, "Query Client[%N] Failed:  Database is not avaliable!", client);
 	}
 }
 

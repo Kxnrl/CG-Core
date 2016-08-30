@@ -62,12 +62,6 @@ public Action Cmd_BuffReset(int client, int args)
 		return Plugin_Handled;
 	}
 	
-	if(Store_GetClientCredits(client) < 5000)
-	{
-		PrintToChat(client, "%s  \x04Credits\x07余额不足,请先到论坛氪金再来进行Faith重置", PREFIX);
-		return Plugin_Handled;
-	}
-	
 	Handle menu = CreateMenu(ResetBuffConfirmMenuHandler);
 	char szItem[256];
 	Format(szItem, 256, "[Planeptune]   Faith - Reset Second Buff\n \n ");
@@ -91,16 +85,18 @@ public Action Cmd_BuffReset(int client, int args)
 	
 	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
 	
-	Format(szItem, 256, "重置Buff会消耗2000Credits且清空Share[%d点]\n ", CG_GetClientShare(client));
+	int ishare = CG_GetClientShare(client);
+	
+	Format(szItem, 256, "重置Buff会消耗2000Credits且清空Share[%d点]\n ", ishare);
 	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
 	
 	Format(szItem, 256, "你确定要重置你的Buff吗 ;)");
 	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
 	
-	AddMenuItem(menu, "1000", "我确定要更换且清空Share");
+	AddMenuItem(menu, "1000", "我确定要更换且清空Share", (Store_GetClientCredits(client) >= 2000) ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 	
-	Format(szItem, 256, "我要更换且花费%dCredits来保留我的Share", (CG_GetClientShare(client)*10+2000));
-	AddMenuItem(menu, "9999", szItem);
+	Format(szItem, 256, "我要更换且花费%dCredits来保留我的Share", (ishare*10+2000));
+	AddMenuItem(menu, "9999", szItem, (Store_GetClientCredits(client) >= (ishare*10+2000)) ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 	
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 0);
@@ -350,7 +346,7 @@ public int ListenerMenuHandler(Handle menu, MenuAction action, int client, int i
 			CloseHandle(database);
 			PrintToChat(client, "%s  已成功设置您的签名,花费了\x04500Credits", PREFIX);
 			char szPreview[256];
-			szPreview = g_szSignature[client];
+			strcopy(szPreview, 256, g_szSignature[client]);
 			ReplaceString(szPreview, 512, "{白}", "\x01");
 			ReplaceString(szPreview, 512, "{红}", "\x02");
 			ReplaceString(szPreview, 512, "{粉}", "\x03");

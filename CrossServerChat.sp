@@ -107,37 +107,37 @@ public Action CMD_SendMessage1(client, args)
 	char m_szServerName[64], m_szServerTag[32];
 	GetConVarString(FindConVar("hostname"), m_szServerName, 64);
 	if(StrContains(m_szServerName, "逃跑", false ) != -1)
-		Format(m_szServerTag, 32, "僵尸逃跑");
+		strcopy(m_szServerTag, 32, "僵尸逃跑");
 	else if(StrContains(m_szServerName, "TTT", false ) != -1)
-		Format(m_szServerTag, 32, "匪镇碟影");
+		strcopy(m_szServerTag, 32, "匪镇碟影");
 	else if(StrContains(m_szServerName, "MiniGames", false ) != -1)
-		Format(m_szServerTag, 32, "娱乐休闲");
+		strcopy(m_szServerTag, 32, "娱乐休闲");
 	else if(StrContains(m_szServerName, "JailBreak", false ) != -1)
-		Format(m_szServerTag, 32, "越狱搞基");
+		strcopy(m_szServerTag, 32, "越狱搞基");
 	else if(StrContains(m_szServerName, "KreedZ", false ) != -1)
-		Format(m_szServerTag, 32, "Kz跳跃");
+		strcopy(m_szServerTag, 32, "Kz跳跃");
 	else if(StrContains(m_szServerName, "DeathRun", false ) != -1)
-		Format(m_szServerTag, 32, "死亡奔跑");
+		strcopy(m_szServerTag, 32, "死亡奔跑");
 	else if(StrContains(m_szServerName, "战役", false ) != -1)
-		Format(m_szServerTag, 32, "求生战役");
+		strcopy(m_szServerTag, 32, "求生战役");
 	else if(StrContains(m_szServerName, "对抗", false ) != -1)
-		Format(m_szServerTag, 32, "求生对抗");
+		strcopy(m_szServerTag, 32, "求生对抗");
 	else if(StrContains(m_szServerName, "HG", false ) != -1)
-		Format(m_szServerTag, 32, "饥饿游戏");
+		strcopy(m_szServerTag, 32, "饥饿游戏");
 	else if(StrContains(m_szServerName, "死斗", false ) != -1)
-		Format(m_szServerTag, 32, "纯净死斗");
+		strcopy(m_szServerTag, 32, "纯净死斗");
 	else if(StrContains(m_szServerName, "纯净死亡", false ) != -1)
-		Format(m_szServerTag, 32, "纯净死亡");
+		strcopy(m_szServerTag, 32, "纯净死亡");
 	else if(StrContains(m_szServerName, "Riot", false ) != -1)
-		Format(m_szServerTag, 32, "僵尸暴动");
+		strcopy(m_szServerTag, 32, "僵尸暴动");
 	else if(StrContains(m_szServerName, "Ninja", false ) != -1)
-		Format(m_szServerTag, 32, "忍者行动");
+		strcopy(m_szServerTag, 32, "忍者行动");
 	else if(StrContains(m_szServerName, "BHop", false ) != -1)
-		Format(m_szServerTag, 32, "BHop连跳");
+		strcopy(m_szServerTag, 32, "BHop连跳");
 	else if(StrContains(m_szServerName, "满十", false ) != -1)
-		Format(m_szServerTag, 32, "满十比赛");
+		strcopy(m_szServerTag, 32, "满十比赛");
 	else
-		Format(m_szServerTag, 32, "论坛");
+		strcopy(m_szServerTag, 32, "论坛");
 	
 	Format(finalMessage, sizeof(finalMessage), "[\x02小\x04喇\x0C叭\x01] [\x0E%s\x01]  \x04%N\x01 :   \x07%s", m_szServerTag, client, message);
 	
@@ -170,37 +170,37 @@ public Action CMD_ServerMessage(client, args)
 		char m_szServerName[64], m_szServerTag[32];
 		GetConVarString(FindConVar("hostname"), m_szServerName, 64);
 		if(StrContains(m_szServerName, "逃跑", false ) != -1)
-			Format(m_szServerTag, 32, "僵尸逃跑");
+			strcopy(m_szServerTag, 32, "僵尸逃跑");
 		else if(StrContains(m_szServerName, "TTT", false ) != -1)
-			Format(m_szServerTag, 32, "匪镇碟影");
+			strcopy(m_szServerTag, 32, "匪镇碟影");
 		else if(StrContains(m_szServerName, "MiniGames", false ) != -1)
-			Format(m_szServerTag, 32, "娱乐休闲");
+			strcopy(m_szServerTag, 32, "娱乐休闲");
 		else if(StrContains(m_szServerName, "JaliBreak", false ) != -1)
-			Format(m_szServerTag, 32, "越狱搞基");
+			strcopy(m_szServerTag, 32, "越狱搞基");
 		else if(StrContains(m_szServerName, "KreedZ", false ) != -1)
-			Format(m_szServerTag, 32, "Kz跳跃");
+			strcopy(m_szServerTag, 32, "Kz跳跃");
 		else if(StrContains(m_szServerName, "DeathRun", false ) != -1)
-			Format(m_szServerTag, 32, "死亡奔跑");
+			strcopy(m_szServerTag, 32, "死亡奔跑");
 		else if(StrContains(m_szServerName, "战役", false ) != -1)
-			Format(m_szServerTag, 32, "求生战役");
+			strcopy(m_szServerTag, 32, "求生战役");
 		else if(StrContains(m_szServerName, "对抗", false ) != -1)
-			Format(m_szServerTag, 32, "求生对抗");
+			strcopy(m_szServerTag, 32, "求生对抗");
 		else if(StrContains(m_szServerName, "HG", false ) != -1)
-			Format(m_szServerTag, 32, "饥饿游戏");
+			strcopy(m_szServerTag, 32, "饥饿游戏");
 		else if(StrContains(m_szServerName, "死斗", false ) != -1)
-			Format(m_szServerTag, 32, "纯净死斗");
+			strcopy(m_szServerTag, 32, "纯净死斗");
 		else if(StrContains(m_szServerName, "纯净死亡", false ) != -1)
-			Format(m_szServerTag, 32, "纯净死亡");
+			strcopy(m_szServerTag, 32, "纯净死亡");
 		else if(StrContains(m_szServerName, "Riot", false ) != -1)
-			Format(m_szServerTag, 32, "僵尸暴动");
+			strcopy(m_szServerTag, 32, "僵尸暴动");
 		else if(StrContains(m_szServerName, "Ninja", false ) != -1)
-			Format(m_szServerTag, 32, "忍者行动");
+			strcopy(m_szServerTag, 32, "忍者行动");
 		else if(StrContains(m_szServerName, "BHop", false ) != -1)
-			Format(m_szServerTag, 32, "BHop连跳");
+			strcopy(m_szServerTag, 32, "BHop连跳");
 		else if(StrContains(m_szServerName, "满十", false ) != -1)
-			Format(m_szServerTag, 32, "满十比赛");
+			strcopy(m_szServerTag, 32, "满十比赛");
 		else
-			Format(m_szServerTag, 32, "论坛");
+			strcopy(m_szServerTag, 32, "论坛");
 		
 		Format(finalMessage, sizeof(finalMessage), "[\x02小\x04喇\x0C叭\x01] [\x0E%s\x01]  \x04服务器消息\x01 :   \x07%s", m_szServerTag, message);
 
@@ -379,7 +379,7 @@ stock void ConnecToMasterServer()
 		return;
 	
 	connected = false;
-	globalClientSocket = SocketCreate(SOCKET_TCP, OnClientSocketError);
+	globalClientSocket = SocketCreate(SOCKET_UDP, OnClientSocketError);
 	PrintToServer("Attempt to connect to %s:%s ...", MasterServer, port);
 	SocketConnect(globalClientSocket, OnClientSocketConnected, OnChildSocketReceive, OnChildSocketDisconnected, MasterServer, StringToInt(port));
 	LogMessage("Attempt to connect to %s:%s ...", MasterServer, port);
@@ -411,7 +411,7 @@ stock void PrintToMenuAll(char[] message)
 	
 	Panel mSayPanel = CreatePanel();
 	mSayPanel.SetTitle(title);
-	
+
 	DrawPanelItem(mSayPanel, "", ITEMDRAW_SPACER);
 	DrawPanelText(mSayPanel, message);
 	DrawPanelItem(mSayPanel, "", ITEMDRAW_SPACER);
@@ -448,6 +448,7 @@ public bool UpdateMessageToDiscuz(int client, const char[] message)
 	
 	char EscapeString[512];
 	SQL_EscapeString(database, message, EscapeString, 512);
+	CloseHandle(database);
 	
 	if(CG_GetDiscuzUID(client) < 1)
 	{

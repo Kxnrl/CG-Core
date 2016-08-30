@@ -25,7 +25,7 @@ public void ShowFaithFirstMenuToClient(int client)
 	Format(szItem, 256, "[%s - %s] - Buff: 速度  Guardian: 猫灵", szFaith_NATION[PURPLE], szFaith_NAME[PURPLE]);
 	AddMenuItem(menu, "purple", szItem);
 	
-	Format(szItem, 256, "[%s - %s] - Buff: 生命  Guardian: 曼妥思", szFaith_NATION[BLACK], szFaith_NAME[BLACK]);
+	Format(szItem, 256, "[%s - %s] - Buff: 暴击  Guardian: 曼妥思", szFaith_NATION[BLACK], szFaith_NAME[BLACK]);
 	AddMenuItem(menu, "black", szItem);
 	
 	Format(szItem, 256, "[%s - %s] - Buff: 伤害  Guardian: 色拉", szFaith_NATION[WHITE], szFaith_NAME[WHITE]);
