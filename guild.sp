@@ -31,7 +31,7 @@ public Plugin myinfo =
 	name = " [CG] Guild Center ",
 	author = "xQy",
 	description = "",
-	version = "1.2",
+	version = "1.2.1",
 	url = "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -51,15 +51,6 @@ public void OnClientDisconnect(int client)
 
 	g_hTrackTimer[client] = INVALID_HANDLE;
 	g_iTrackTime[client] = -1;
-}
-
-public void CG_OnClientLoaded(int client)
-{
-	if(CG_GetReqID(client) == 999)
-	{
-		g_iTrackTime[client] = GetTime()+1500;
-		g_hTrackTimer[client] = CreateTimer(1500.0, Timer_TrackClient, GetClientUserId(client));
-	}
 }
 
 public void CG_OnClientCompleteReq(int client, int ReqId)
@@ -142,19 +133,10 @@ void ShowRateMenu(int client, int reqid)
 	Format(szItem, 256, "[Planeptune]   Faith - Guild Center\n 你当前有 %d 点 Share\n ", ishare);
 	SetMenuTitle(menu, szItem);
 	
-	if(CG_GetReqID(client) == 999)
-	{
-		int rate = 1500 - (g_iTrackTime[client] - GetTime());
-		float vol = (float(rate)/1500.0)*100;
-		Format(szItem, 256, "[%s - %s]   完成度%.2f%%[%d/1500]\n ", g_eReqs[reqid][szLvls], g_eReqs[reqid][szName], vol, rate);
-	}
-	else
-	{
-		int rate = CG_GetReqRate(client);
-		int term = CG_GetReqTerm(client);
-		float vol = (float(rate)/float(term))*100;
-		Format(szItem, 256, "[%s - %s]   完成度%.2f%%[%d/%d]\n ", g_eReqs[reqid][szLvls], g_eReqs[reqid][szName], vol, rate, term);
-	}
+	int rate = CG_GetReqRate(client);
+	int term = CG_GetReqTerm(client);
+	float vol = (float(rate)/float(term))*100;
+	Format(szItem, 256, "[%s - %s]   完成度%.2f%%[%d/%d]\n ", g_eReqs[reqid][szLvls], g_eReqs[reqid][szName], vol, rate, term);
 	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
 	
 	Format(szItem, 256, "任务说明: %s\n ", g_eReqs[reqid][szDesc]);
@@ -345,12 +327,6 @@ public int MenuHandler_ConfirmReq(Handle menu, MenuAction action, int client, in
 			CG_SaveReq(client);
 			
 			PrintToChat(client, "%s  你已经承接任务[\x04%s\x01]", PREFIX, g_eReqs[id][szName]);
-			
-			if(id == 999)
-			{
-				OnClientDisconnect(client);
-				CG_OnClientLoaded(client);
-			}
 		}
 	}
 	else if(action == MenuAction_End)
@@ -488,6 +464,30 @@ public void InitializingRedDatabase()
 			strcopy(g_eReqs[i][szDesc], 64, "在匪镇谍影服务器进行20局游戏");
 			strcopy(g_eReqs[i][szAwds], 64, "Share+40|Credits+20");
 		}
+		if(i == 102)
+		{
+			g_eReqs[i][iId] = i;
+			g_eReqs[i][iLvl] = 5;
+			g_eReqs[i][iTerm] = 16;
+			g_eReqs[i][iAwdShare] = 40;
+			g_eReqs[i][iAwdCredit] = 20;
+			strcopy(g_eReqs[i][szLvls], 16, "E级");
+			strcopy(g_eReqs[i][szName], 32, "平民日常");
+			strcopy(g_eReqs[i][szDesc], 64, "在匪镇谍影服务器以平民身份获胜16局");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+40|Credits+20");
+		}
+		if(i == 103)
+		{
+			g_eReqs[i][iId] = i;
+			g_eReqs[i][iLvl] = 5;
+			g_eReqs[i][iTerm] = 30;
+			g_eReqs[i][iAwdShare] = 40;
+			g_eReqs[i][iAwdCredit] = 20;
+			strcopy(g_eReqs[i][szLvls], 16, "E级");
+			strcopy(g_eReqs[i][szName], 32, "叛徒日常");
+			strcopy(g_eReqs[i][szDesc], 64, "在匪镇谍影服务器以叛徒正确击杀30人");
+			strcopy(g_eReqs[i][szAwds], 64, "Share+40|Credits+20");
+		}
 		if(i == 111)
 		{
 			g_eReqs[i][iId] = i;
@@ -623,18 +623,5 @@ public void InitializingRedDatabase()
 			strcopy(g_eReqs[i][szAwds], 64, "Share+400|Credits+200");
 		}
 		
-		//for MISC
-		if(i == 999)
-		{
-			g_eReqs[i][iId] = i;
-			g_eReqs[i][iLvl] = 5;
-			g_eReqs[i][iTerm] = 1500;
-			g_eReqs[i][iAwdShare] = 30;
-			g_eReqs[i][iAwdCredit] = 30;
-			strcopy(g_eReqs[i][szLvls], 16, "E级");
-			strcopy(g_eReqs[i][szName], 32, "我要挂机");
-			strcopy(g_eReqs[i][szDesc], 64, "在任意服务器内持续在线25分钟");
-			strcopy(g_eReqs[i][szAwds], 64, "Share+30|Credits+30");
-		}
 	}
 }

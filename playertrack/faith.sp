@@ -136,29 +136,29 @@ public void ShowFaithMainMenuToClient(int client)
 	Format(szItem, 256, "[Planeptune]   Faith - Main\n 你当前归属[%s - %s] \n ", szFaith_NATION[g_eClient[client][iFaith]], szFaith_NAME[g_eClient[client][iFaith]]);
 	SetMenuTitle(menu, szItem);
 	
-	Format(szItem, 256, "查看说明");
+	Format(szItem, 256, "关于Faith系统说明");
 	AddMenuItem(menu, "query_fhelp", szItem);
 	
-	Format(szItem, 256, "查看Share");
+	Format(szItem, 256, "查看当前Share数据");
 	AddMenuItem(menu, "query_share", szItem);
 	
-	Format(szItem, 256, "查看Buff");
+	Format(szItem, 256, "查看各个Faith的Buff");
 	AddMenuItem(menu, "query_buff_", szItem);
 	
-	Format(szItem, 256, "增加Sahre");
+	Format(szItem, 256, "承接任务以增加Sahre");
 	AddMenuItem(menu, "gotoguild__", szItem);
 	
-	Format(szItem, 256, "Share排行");
+	Format(szItem, 256, "查看你的Share排行");
 	AddMenuItem(menu, "query_rank_", szItem);
 	
 	if(g_eClient[client][iBuff] <= 0)
-		Format(szItem, 256, "设置副Buff");
+		Format(szItem, 256, "初次设置副Buff");
 	else
-		Format(szItem, 256, "重选副Buff");
+		Format(szItem, 256, "重新选择副Buff");
 	AddMenuItem(menu, "reset_faith", szItem);
 	
-	Format(szItem, 256, "充值信仰");
-	AddMenuItem(menu, "charge_____", szItem);
+	Format(szItem, 256, "充值信仰[已关闭]");
+	AddMenuItem(menu, "charge_____", szItem, ITEMDRAW_DISABLED);
 
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 0);
