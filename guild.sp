@@ -265,12 +265,14 @@ public int MenuHandler_ConfirmRate(Handle menu, MenuAction action, int client, i
 			
 			if(type == 0)
 			{
+				PrintToChat(client,  "%s  你已经重置了[%s]", g_eReqs[CG_GetReqID(client)][szName]);
 				CG_SetReqRate(client, 0);
 				CG_SaveReq(client);
 			}
 			
 			if(type == 1)
 			{
+				PrintToChat(client,  "%s  你已经放弃了[%s]", g_eReqs[CG_GetReqID(client)][szName]);
 				CG_ResetReq(client);
 			}
 		}

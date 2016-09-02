@@ -19,7 +19,10 @@ public void ShowFaithFirstMenuToClient(int client)
 	char szItem[256];
 	Format(szItem, 256, "[Planeptune]   Faith\n \n ");
 	SetMenuTitle(menu, szItem);
-	AddMenuItem(menu, "", "目前系统检测到你的Faith为空[输入!fhelp了解更多]", ITEMDRAW_DISABLED);
+	
+	Format(szItem, 256, "目前系统检测到你的Faith为空[输入!fhelp了解更多] \nBuff参数已调整,请查看论坛公告");
+	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
+	
 	AddMenuItem(menu, "", "选择1个Faith以获得Buff[暂时不能更换]", ITEMDRAW_DISABLED);
 	
 	Format(szItem, 256, "[%s - %s] - Buff: 速度  Guardian: 猫灵", szFaith_NATION[PURPLE], szFaith_NAME[PURPLE]);
@@ -399,12 +402,12 @@ void ConfirmSecondBuff(int client, int buff)
 	else if(buff == 2)
 	{
 		AddMenuItem(menu, "", "你选择的Buff是: 嗜血", ITEMDRAW_DISABLED);
-		AddMenuItem(menu, "", "你每造成30点(ZE模式为800点)伤害就能恢复2点HP", ITEMDRAW_DISABLED);
+		AddMenuItem(menu, "", "你每造成30点(ZE模式为500点)伤害就能恢复2点HP", ITEMDRAW_DISABLED);
 	}
 	else if(buff == 3)
 	{
 		AddMenuItem(menu, "", "你选择的Buff是: 生命", ITEMDRAW_DISABLED);
-		AddMenuItem(menu, "", "出生时提升血量和血量上限8%", ITEMDRAW_DISABLED);
+		AddMenuItem(menu, "", "出生时提升血量和血量上限10%", ITEMDRAW_DISABLED);
 	}
 	else if(buff == 4)
 	{
@@ -421,6 +424,7 @@ void ConfirmSecondBuff(int client, int buff)
 		AddMenuItem(menu, "", "你选择的Buff是: 子弹", ITEMDRAW_DISABLED);
 		AddMenuItem(menu, "", "你每射出10发(ZE为30)子弹将会往你主弹夹填充2发子弹", ITEMDRAW_DISABLED);
 	}
+
 	AddMenuItem(menu, "", "修改子Buff每次需要5000Credits", ITEMDRAW_DISABLED);
 	AddMenuItem(menu, "", "你现在要设置吗?", ITEMDRAW_DISABLED);
 	

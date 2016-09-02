@@ -1,9 +1,9 @@
 #pragma newdecls required //let`s go! new syntax!!!
-//Build 319
+//Build 322
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define PLUGIN_VERSION " 5.2.6 - 2016/08/31 07:07 "
+#define PLUGIN_VERSION " 5.2.7 - 2016/09/02 03:00 "
 #define PLUGIN_PREFIX "[\x0EPlaneptune\x01]  "
 #define PLUGIN_PREFIX_SIGN "[\x0EPlaneptune\x01]  "
 
