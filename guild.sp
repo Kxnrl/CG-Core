@@ -31,7 +31,7 @@ public Plugin myinfo =
 	name = " [CG] Guild Center ",
 	author = "xQy",
 	description = "",
-	version = "1.2.1",
+	version = "1.2.2",
 	url = "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -265,14 +265,14 @@ public int MenuHandler_ConfirmRate(Handle menu, MenuAction action, int client, i
 			
 			if(type == 0)
 			{
-				PrintToChat(client,  "%s  你已经重置了[%s]", g_eReqs[CG_GetReqID(client)][szName]);
+				PrintToChat(client,  "%s  你已经重置了[%s]", PREFIX, g_eReqs[CG_GetReqID(client)][szName]);
 				CG_SetReqRate(client, 0);
 				CG_SaveReq(client);
 			}
 			
 			if(type == 1)
 			{
-				PrintToChat(client,  "%s  你已经放弃了[%s]", g_eReqs[CG_GetReqID(client)][szName]);
+				PrintToChat(client,  "%s  你已经放弃了[%s]", PREFIX, g_eReqs[CG_GetReqID(client)][szName]);
 				CG_ResetReq(client);
 			}
 		}
