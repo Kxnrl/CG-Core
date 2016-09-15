@@ -25,18 +25,17 @@
 void OpenSelectTargetMenu(int client)
 {
 	Handle menu = CreateMenu(SelectTargetMenuHandler);
-	char szItem[64];
-	Format(szItem, 64, "[Planeptune]   未知错误");
-	if(g_eAdmin[iType] == 1)
-		Format(szItem, 64, "[Planeptune]   添加临时神烦坑比\n -by shAna.xQy");
-	if(g_eAdmin[iType] == 2)
-		Format(szItem, 64, "[Planeptune]   添加临时小学生\n -by shAna.xQy");
-	if(g_eAdmin[iType] == 3)
-		Format(szItem, 64, "[Planeptune]   撤销临时认证\n -by shAna.xQy");
-	if(g_eAdmin[iType] == 4)
-		Format(szItem, 64, "[Planeptune]   重新载入认证\n -by shAna.xQy");
 
-	SetMenuTitle(menu, szItem);
+	if(g_eAdmin[iType] == 1)
+		SetMenuTitle(menu, "[Planeptune]   添加临时神烦坑比\n　");
+	else if(g_eAdmin[iType] == 2)
+		SetMenuTitle(menu, "[Planeptune]   添加临时小学生\n　");
+	else if(g_eAdmin[iType] == 3)
+		SetMenuTitle(menu, "[Planeptune]   撤销临时认证\n　");
+	else if(g_eAdmin[iType] == 4)
+		SetMenuTitle(menu, "[Planeptune]   重新载入认证\n　");
+	else
+		SetMenuTitle(menu, "[Planeptune]   未知错误");
 
 	if(g_eAdmin[iType] == 1 || g_eAdmin[iType] == 2)
 	{
@@ -47,8 +46,8 @@ void OpenSelectTargetMenu(int client)
 				if(g_eClient[x][iGroupId] == 0 && g_eClient[x][iTemp] == 0)
 				{
 					char szInfo[16], szName[64];
-					FormatEx(szInfo, 16, "%d", GetClientUserId(x));
-					FormatEx(szName, 64, "%N", x);
+					Format(szInfo, 16, "%d", GetClientUserId(x));
+					Format(szName, 64, "%N", x);
 					AddMenuItem(menu, szInfo, szName);
 				}
 			}
@@ -63,12 +62,12 @@ void OpenSelectTargetMenu(int client)
 				if(g_eClient[x][iTemp] > 0)
 				{
 					char szInfo[16], szName[64];
-					FormatEx(szInfo, 16, "%d", GetClientUserId(x));
-					FormatEx(szName, 64, "%N", x);
+					Format(szInfo, 16, "%d", GetClientUserId(x));
+					Format(szName, 64, "%N", x);
 					if(g_eClient[x][iGroupId] == 9000)
-						FormatEx(szName, 64, "%N[神烦坑比]", x);
+						Format(szName, 64, "%N[神烦坑比]", x);
 					if(g_eClient[x][iGroupId] == 9001)
-						FormatEx(szName, 64, "%N[小学生]", x);
+						Format(szName, 64, "%N[小学生]", x);
 					AddMenuItem(menu, szInfo, szName);
 				}
 			}
@@ -81,8 +80,8 @@ void OpenSelectTargetMenu(int client)
 			if(IsClientInGame(x) && !IsClientBot(x))
 			{
 				char szInfo[16], szName[64];
-				FormatEx(szInfo, 16, "%d", GetClientUserId(x));
-				FormatEx(szName, 64, "%N", x);
+				Format(szInfo, 16, "%d", GetClientUserId(x));
+				Format(szName, 64, "%N", x);
 				AddMenuItem(menu, szInfo, szName);
 			}
 		}
@@ -123,9 +122,7 @@ public int SelectTargetMenuHandler(Handle menu, MenuAction action, int client, i
 void OpenSelectTimeMenu(int client)
 {
 	Handle menu = CreateMenu(SelectTimeMenuHandler);
-	char szItem[64];
-	Format(szItem, 64, "[Planeptune]   选择临时认证时长\n -by shAna.xQy");
-	SetMenuTitle(menu, szItem);
+	SetMenuTitle(menu, "[Planeptune]   选择临时认证时长\n　");
 	AddMenuItem(menu, "1800", "30 Mins");
 	AddMenuItem(menu, "3600", "1 Hour");
 	AddMenuItem(menu, "10800", "3 Hours");
@@ -187,10 +184,10 @@ void DoAddTempPA(int client)
 		Format(sName, 32, "小学生");
 	}
 	
-	char szQuery[256], auth[32];
-	GetClientAuthId(target, AuthId_Steam2, auth, 32, true);
+	char szQuery[256], m_szAuth[32];
+	GetClientAuthId(target, AuthId_Steam2, m_szAuth, 32, true);
 	
-	Format(szQuery, 256, "UPDATE `playertrack_player` SET groupid = '%d', groupname = '%s', temp = '%d' WHERE id = '%d' and steamid = '%s'", GroupIndex, sName, ExpiredTime, g_eClient[target][iPlayerId], auth);
+	Format(szQuery, 256, "UPDATE `playertrack_player` SET groupid = '%d', groupname = '%s', temp = '%d' WHERE id = '%d' and steamid = '%s'", GroupIndex, sName, ExpiredTime, g_eClient[target][iPlayerId], m_szAuth);
 	SQL_TQuery(g_hDB_csgo, SQLCallback_SetTemp, szQuery, GetClientUserId(client));
 }
 
@@ -198,11 +195,11 @@ void DoUnbanTempPA(int client)
 {
 	int target = g_eAdmin[iTarget]; 
 
-	char szQuery[256], auth[32];
+	char szQuery[256], m_szAuth[32];
 
-	GetClientAuthId(target, AuthId_Steam2, auth, 32);
+	GetClientAuthId(target, AuthId_Steam2, m_szAuth, 32);
 
-	Format(szQuery, 256, "UPDATE `playertrack_player` SET groupid = '0', groupname = '未认证', temp = '0' WHERE id = '%d' and steamid = '%s'", g_eClient[target][iPlayerId], auth);
+	Format(szQuery, 256, "UPDATE `playertrack_player` SET groupid = '0', groupname = '未认证', temp = '0' WHERE id = '%d' and steamid = '%s'", g_eClient[target][iPlayerId], m_szAuth);
 	SQL_TQuery(g_hDB_csgo, SQLCallback_DeleteTemp, szQuery, GetClientUserId(client), DBPrio_High);
 
 	PrintToChatAll("%s 管理员\x10%N\x01解除了\x02%N\x01的临时认证", PLUGIN_PREFIX, client, target);
@@ -217,8 +214,8 @@ void DoReloadPA(int client)
 
 void LoadAuthorized(int client)
 {
-	char szQuery[256], auth[32];
-	GetClientAuthId(client, AuthId_Steam2, auth, 32);
-	Format(szQuery, 256, "SELECT `groupid`,`groupname`,`exp`,`level`,`temp` FROM `playertrack_player` WHERE id = '%d' and steamid = '%s'", g_eClient[client][iPlayerId], auth);
+	char szQuery[256], m_szAuth[32];
+	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32);
+	Format(szQuery, 256, "SELECT `groupid`,`groupname`,`exp`,`level`,`temp` FROM `playertrack_player` WHERE id = '%d' and steamid = '%s'", g_eClient[client][iPlayerId], m_szAuth);
 	SQL_TQuery(g_hDB_csgo, SQLCallback_GetGroupId, szQuery, GetClientUserId(client));
 }

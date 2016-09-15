@@ -108,7 +108,7 @@ public Action Timer_ReConnect_csgo(Handle timer)
 
 public Action Timer_ReConnect_discuz(Handle timer)
 {
-	SQL_TConnect_csgo();
+	SQL_TConnect_discuz();
 	return Plugin_Stop;
 }
 
@@ -215,10 +215,10 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 	{
 		//输出错误日志
 		LogToFileEx(LogFile, "Query Client Stats Failed! Client:\"%N\" \nError Happen: %s", client, error);
-		char auth[32], m_szQuery[512];
-		GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
-		Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.number, a.faith, a.share, a.buff, a.signature, a.groupid, a.groupname, a.exp, a.level, a.temp, a.notice, a.reqid, a.reqterm, a.reqrate, b.unixtimestamp FROM playertrack_player AS a LEFT JOIN `playertrack_sign` b ON b.steamid = a.steamid WHERE a.steamid = '%s' ORDER BY a.id ASC LIMIT 1;", auth);
-		SQL_TQuery(g_hDB_csgo, SQLCallback_GetClientStat, m_szQuery, g_eClient[client][iUserId]);
+		char m_szAuth[32], m_szQuery[512];
+		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
+		Format(m_szQuery, 512, "SELECT id, onlines, number, faith, share, buff, signature, groupid, groupname, exp, level, temp, notice, reqid, reqterm, reqrate, signnumber, signtime, lilyid, lilyrank, lilyexp, lilydate FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
+		SQL_TQuery(g_hDB_csgo, SQLCallback_GetClientStat, m_szQuery, g_eClient[client][iUserId], DBPrio_High);
 		return;
 	}
 
@@ -227,8 +227,8 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 	{
 		//客户端数据读取 ID|在线时长|连线次数|签名
 		g_eClient[client][iPlayerId] = SQL_FetchInt(hndl, 0);
-		g_eClient[client][iOnlineTime] = SQL_FetchInt(hndl, 1);
-		g_eClient[client][iConnectCounts] = SQL_FetchInt(hndl, 2);
+		g_eClient[client][iOnline] = SQL_FetchInt(hndl, 1);
+		g_eClient[client][iNumber] = SQL_FetchInt(hndl, 2);
 		g_eClient[client][iFaith] = SQL_FetchInt(hndl, 3);
 		g_eClient[client][iShare] = SQL_FetchInt(hndl, 4);
 		g_eClient[client][iBuff] = SQL_FetchInt(hndl, 5);
@@ -238,57 +238,39 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 		g_eClient[client][iExp] = SQL_FetchInt(hndl, 9);
 		g_eClient[client][iLevel] = SQL_FetchInt(hndl, 10);
 		g_eClient[client][iTemp] = SQL_FetchInt(hndl, 11);
-		g_eClient[client][bPrint] = SQL_FetchInt(hndl, 12) > g_iLatestData ? true : false;
+		//g_eClient[client][bPrint] = SQL_FetchInt(hndl, 12) > g_iLatestData ? true : false;
 		g_eClient[client][iReqId] = SQL_FetchInt(hndl, 13);
 		g_eClient[client][iReqTerm] = SQL_FetchInt(hndl, 14);
 		g_eClient[client][iReqRate] = SQL_FetchInt(hndl, 15);
+		g_eClient[client][iSignNum] = SQL_FetchInt(hndl, 16);
+		g_eClient[client][iSignTime] = SQL_FetchInt(hndl, 17);
+		InitializeLily(client, SQL_FetchInt(hndl, 18), SQL_FetchInt(hndl, 19), SQL_FetchInt(hndl, 20), SQL_FetchInt(hndl, 21));
 		
 		g_eClient[client][bLoaded] = true;
 
-		char steam32[32], steamid64[32], m_szQuery[512];
-		GetClientAuthId(client, AuthId_Steam2, steam32, 32, true);
-		GetClientAuthId(client, AuthId_SteamID64, steamid64, 32, true);
+		char m_szAuth[32], m_szQuery[512];
+		GetClientAuthId(client, AuthId_SteamID64, m_szAuth, 32, true);
 		
-		Format(m_szQuery, 512, "SELECT m.uid, m.username FROM dz_steam_users AS s LEFT JOIN dz_common_member m ON s.uid = m.uid WHERE s.steamID64 = '%s' LIMIT 1", steamid64);
+		Format(m_szQuery, 512, "SELECT m.uid, m.username FROM dz_steam_users AS s LEFT JOIN dz_common_member m ON s.uid = m.uid WHERE s.steamID64 = '%s' LIMIT 1", m_szAuth);
 		SQL_TQuery(g_hDB_discuz, SQLCallback_GetClientDiscuzName, m_szQuery, g_eClient[client][iUserId]);
 		
 		if(g_eClient[client][iFaith] == 0 && g_iServerId != 23 && g_iServerId != 24 && g_iServerId != 11 && g_iServerId != 12 && g_iServerId != 13)
 		{
 			ShowFaithFirstMenuToClient(client);
 		}
-		
-		//签到查询部分
-		if(SQL_IsFieldNull(hndl, 16))
-		{
-			//如果查不到数据
-			char username[128], EscapeName[256];
-			GetClientName(client, username, 128);
 
-			SQL_EscapeString(g_hDB_csgo, username, EscapeName, 256);
-
-			Format(m_szQuery, 512, "INSERT INTO playertrack_sign (username, steamid, timeofsignin, unixtimestamp) VALUES ('%s', '%s', '0', '0')", EscapeName, steam32);
-			SQL_TQuery(g_hDB_csgo, SQLCallback_NothingCallback, m_szQuery, g_eClient[client][iUserId]);
-
-			g_eClient[client][iLastSignTime] = 0;
-			SetClientSignStat(client);
-		}
-		else
-		{
-			g_eClient[client][iLastSignTime] = SQL_FetchInt(hndl, 16);
-			SetClientSignStat(client);
-		}
-		
+		SetClientSignStat(client);
 		OnClientAuthLoaded(client);
 	}
 	else
 	{
 		//如果查不到数据 INSERT为新的玩家 记录到日志文件
 		//获得客户端数据 steamid|名字|IP|权限
-		char auth[32], username[128], EscapeName[256], m_szQuery[512];
-		GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
+		char m_szAuth[32], username[128], EscapeName[256], m_szQuery[512];
+		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
 		GetClientName(client, username, 128);
 		SQL_EscapeString(g_hDB_csgo, username, EscapeName, 256);
-		Format(m_szQuery, 512, "INSERT INTO playertrack_player (name, steamid, onlines, lastip, firsttime, lasttime, os, flags, number, signature) VALUES ('%s', '%s', '0', '%s', '%d', '0', 'unknow', 'unknow', '0', DEFAULT)", EscapeName, auth, g_eClient[client][szIP], g_eClient[client][iConnectTime]);
+		Format(m_szQuery, 512, "INSERT INTO playertrack_player (name, steamid, onlines, lastip, firsttime, lasttime, os, flags, number, signature) VALUES ('%s', '%s', '0', '%s', '%d', '0', 'unknow', 'unknow', '0', DEFAULT)", EscapeName, m_szAuth, g_eClient[client][szIP], g_eClient[client][iConnectTime]);
 		SQL_TQuery(g_hDB_csgo, SQLCallback_InsertClientStat, m_szQuery, g_eClient[client][iUserId]);
 	}
 }
@@ -392,10 +374,10 @@ public void SQLCallback_InsertClientStat(Handle owner, Handle hndl, const char[]
 		LogToFileEx(LogFile, "INSERT playertrack_player Failed! Client:\"%N\" \nError Happen: %s", client, error);
 		
 		//重试检查  辣鸡阿里云RDS
-		char auth[32], m_szQuery[512];
-		GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
-		Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.number, a.faith, a.share, a.buff, a.signature, a.groupid, a.groupname, a.exp, a.level, a.temp, a.notice, a.reqid, a.reqterm, a.reqrate, b.unixtimestamp FROM playertrack_player AS a LEFT JOIN `playertrack_sign` b ON b.steamid = a.steamid WHERE a.steamid = '%s' ORDER BY a.id ASC LIMIT 1;", auth);
-		SQL_TQuery(g_hDB_csgo, SQLCallback_GetClientStat, m_szQuery, g_eClient[client][iUserId]);
+		char m_szAuth[32], m_szQuery[512];
+		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
+		Format(m_szQuery, 512, "SELECT id, onlines, number, faith, share, buff, signature, groupid, groupname, exp, level, temp, notice, reqid, reqterm, reqrate, signnumber, signtime, lilyid, lilyrank, lilyexp, lilydate FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
+		SQL_TQuery(g_hDB_csgo, SQLCallback_GetClientStat, m_szQuery, g_eClient[client][iUserId], DBPrio_High);
 	}
 	else
 	{
@@ -490,62 +472,46 @@ public void SQLCallback_GetSigninStat(Handle owner, Handle hndl, const char[] er
 	
 	if(hndl == INVALID_HANDLE)
 	{
-		PrintToChat(client, "%s \x02未知错误,请重试!", PLUGIN_PREFIX_SIGN);
+		PrintToChat(client, "%s \x02未知错误,请重试!", PLUGIN_PREFIX);
 		g_eClient[client][LoginProcess] = false;
+		LogToFileEx(LogFile, "Get SigninStat Failed client: %N error: %s", client, error);
 		return;
 	}
-	
-	char m_szQuery[512], auth[32], username[128], EscapeName[256];
-	GetClientName(client, username, 128);
-	GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
-	SQL_EscapeString(g_hDB_csgo, username, EscapeName, 256);
-	
+
 	if(SQL_FetchRow(hndl)) 
 	{
 		//Getting last login time
-		int lastlogon = SQL_FetchInt(hndl, 1);
-		int timeslogged = SQL_FetchInt(hndl, 0);
-		int thistime = GetTime();
-		int result = thistime - lastlogon;	
-		
-		//86400 = 24h
-		if(result >= 86400) 
-		{			
-			Format(m_szQuery, 512, "UPDATE playertrack_sign SET username = '%s', timeofsignin = timeofsignin+1, unixtimestamp = '%d' WHERE steamid = '%s' ", EscapeName, GetTime(), auth);
+		g_eClient[client][iSignNum] = SQL_FetchInt(hndl, 0);
+		g_eClient[client][iSignTime] = SQL_FetchInt(hndl, 1);
 
-			Handle SQLDataPack = CreateDataPack();
-			WritePackCell(SQLDataPack, g_eClient[client][iUserId]);
-			WritePackCell(SQLDataPack, timeslogged);
-			ResetPack(SQLDataPack);
-			SQL_TQuery(g_hDB_csgo, SQLCallback_SignCallback, m_szQuery, SQLDataPack);
+		//86400 = 24h
+		if((GetTime()-g_eClient[client][iSignTime]) >= 86400) 
+		{
+			char m_szQuery[256];
+			Format(m_szQuery, 256, "UPDATE playertrack_player SET signnumber = signnumber+1, signtime = '%d' WHERE id = '%d' ", GetTime(), g_eClient[client][iPlayerId]);
+			SQL_TQuery(g_hDB_csgo, SQLCallback_SignCallback, m_szQuery, GetClientUserId(client));
 		}
-	}
-	else
-	{
-		Format(m_szQuery, 512, "INSERT INTO playertrack_sign (username, steamid, timeofsignin, unixtimestamp) VALUES ('%s', '%s', '0', '0')", EscapeName, auth);
-		SQL_TQuery(g_hDB_csgo, SQLCallback_NothingCallback, m_szQuery, g_eClient[client][iUserId]);
-		PrintToChat(client, "%s \x02已经刷新你的签到数据,请重新签到!", PLUGIN_PREFIX_SIGN);
 	}
 }
 
-public void SQLCallback_SignCallback(Handle owner, Handle hndl, const char[] error, any SQLDataPack)
+public void SQLCallback_SignCallback(Handle owner, Handle hndl, const char[] error, int userid)
 {
-	int userid = ReadPackCell(SQLDataPack);
 	int client = GetClientOfUserId(userid);
-	int timeslogged = ReadPackCell(SQLDataPack);
+
 	if(hndl == INVALID_HANDLE)
 	{
-		PrintToChat(client, "%s \x02未知错误!", PLUGIN_PREFIX_SIGN);
+		PrintToChat(client, "%s \x02未知错误!", PLUGIN_PREFIX);
 		g_eClient[client][LoginProcess] = false;
 		LogToFileEx(LogFile, "UPDATE Client Sign Failed! Client:%N Query:%s", client, error);
 		return;
 	}
-	
-	PrintToChat(client, "%s \x01签到成功,你已累计签到\x0C%i\x01天!", PLUGIN_PREFIX_SIGN, timeslogged+1);
+
+	g_eClient[client][iSignNum]++;
+	g_eClient[client][iSignTime] = GetTime();
+	PrintToChat(client, "%s \x01签到成功,你已累计签到\x0C%i\x01天!", PLUGIN_PREFIX, g_eClient[client][iSignNum]);
 	g_eClient[client][bTwiceLogin] = true;
 	g_eClient[client][LoginProcess] = false;
 	OnClientSignSucessed(client);
-	CloseHandle(SQLDataPack);
 }
 
 public void SQLCallback_GetAdvData(Handle owner, Handle hndl, const char[] error, any data)
@@ -701,27 +667,27 @@ public void SQLCallback_FaithShareRank(Handle owner, Handle hndl, const char[] e
 	if(!client || !IsClientInGame(client))
 		return;
 	
-	int iIndex, ishare;
-	char sName[128];
+	int m_iIndex, ishare;
+	char m_szName[128];
 	
 	if(SQL_GetRowCount(hndl))
 	{
 		Handle hPack = CreateDataPack();
-		WritePackCell(hPack, iIndex);
+		WritePackCell(hPack, m_iIndex);
 		while(SQL_FetchRow(hndl))
 		{
-			SQL_FetchString(hndl, 0, sName, 128);
+			SQL_FetchString(hndl, 0, m_szName, 128);
 			ishare = SQL_FetchInt(hndl, 1);
 
-			WritePackString(hPack, sName);
+			WritePackString(hPack, m_szName);
 			WritePackCell(hPack, ishare);
 
-			iIndex++;
+			m_iIndex++;
 		}
 
 		ResetPack(hPack);
-		WritePackCell(hPack, iIndex);
-		CreateTopMenu(client, hPack);
+		WritePackCell(hPack, m_iIndex);
+		ShareRankToMenu(client, hPack);
 	}
 }
 
@@ -785,54 +751,17 @@ public void SQLCallback_OnConnect(Handle owner, Handle hndl, const char[] error,
 	}
 }
 
-public void SQLCallback_GetNotice(Handle owner, Handle hndl, const char[] error, any data)
-{
-	if(hndl == INVALID_HANDLE)
-	{
-		LogToFileEx(LogFile, "Get Notice Failed! Error: %s", error);
-		return;
-	}
-	
-	if(SQL_GetRowCount(hndl) > 0)
-	{
-		int global, server;
-		while(SQL_FetchRow(hndl))
-		{
-			if(SQL_FetchInt(hndl, 0) == 0)
-			{
-				SQL_FetchString(hndl, 3, g_szGlobal[0], 256);
-				SQL_FetchString(hndl, 4, g_szGlobal[1], 256);
-				SQL_FetchString(hndl, 5, g_szGlobal[2], 256);
-				SQL_FetchString(hndl, 6, g_szGlobal[3], 256);
-				SQL_FetchString(hndl, 7, g_szGlobal[4], 256);
-				SQL_FetchString(hndl, 8, g_szGlobal[5], 256);
-				global = SQL_FetchInt(hndl, 9);
-			}
-			if(SQL_FetchInt(hndl, 0) == g_iServerId)
-			{
-				SQL_FetchString(hndl, 3, g_szServer[0], 256);
-				SQL_FetchString(hndl, 4, g_szServer[1], 256);
-				SQL_FetchString(hndl, 5, g_szServer[2], 256);
-				SQL_FetchString(hndl, 6, g_szServer[3], 256);
-				SQL_FetchString(hndl, 7, g_szServer[4], 256);
-				SQL_FetchString(hndl, 8, g_szServer[5], 256);
-				server = SQL_FetchInt(hndl, 9);
-			}
-		}
-		
-		if(global > server)
-			g_iLatestData = global;
-		else
-			g_iLatestData = server;
-	}
-}
-
 public void SQLCallback_ResetReq(Handle owner, Handle hndl, const char[] error, int userid)
 { 
 	int client = GetClientOfUserId(userid);
 	
 	if(hndl == INVALID_HANDLE)
 		LogToFileEx(LogFile, "Reset Client Req Failed! [%N]  %s", client, error);
+	else
+	{
+		if(client && IsClientInGame(client))
+			PrintToConsole(client, "[Planeptune]  任务进度已重置!");
+	}
 }
 
 public void SQLCallback_SaveReq(Handle owner, Handle hndl, const char[] error, int userid)
@@ -841,6 +770,11 @@ public void SQLCallback_SaveReq(Handle owner, Handle hndl, const char[] error, i
 	
 	if(hndl == INVALID_HANDLE)
 		LogToFileEx(LogFile, "Save Client Req Failed! [%N]  %s", client, error);
+	else
+	{
+		if(client && IsClientInGame(client))
+			PrintToConsole(client, "[Planeptune]  任务进度已保存!");
+	}
 }
 
 public void SQLCallback_InsertGuild(Handle owner, Handle hndl, const char[] error, int userid)
@@ -849,4 +783,182 @@ public void SQLCallback_InsertGuild(Handle owner, Handle hndl, const char[] erro
 	
 	if(hndl == INVALID_HANDLE)
 		LogToFileEx(LogFile, "Insert Client Req Conpelete Failed! [%N](%d)  %s", client, g_eClient[client][iReqId], error);
+	else
+	{
+		if(client && IsClientInGame(client))
+			PrintToConsole(client, "[Planeptune]  任务已添加!");
+	}
+}
+
+public void SQLCallback_UpdateLily(Handle owner, Handle hndl, const char[] error, Handle pack)
+{
+	int Neptune = GetClientOfUserId(ReadPackCell(pack));
+	int Noire = GetClientOfUserId(ReadPackCell(pack));
+	CloseHandle(pack);
+
+	if(hndl == INVALID_HANDLE)
+	{
+		if(Neptune && IsClientInGame(Neptune))
+		{
+			PrintToChat(Neptune, "%s  系统中闪光弹了,请重试[错误x03]", PLUGIN_PREFIX);
+			LogToFileEx(LogFile, "UpdateLily %N error: %s", Neptune, error);
+		}
+		
+		if(Noire && IsClientInGame(Noire))
+		{
+			PrintToChat(Noire, "%s  系统中闪光弹了,请重试[错误x03]", PLUGIN_PREFIX);
+			LogToFileEx(LogFile, "UpdateLily %N error: %s", Noire, error);
+		}
+		
+		return;
+	}
+	
+	if(Neptune && IsClientInGame(Neptune) && Noire && IsClientInGame(Noire))
+	{
+		g_eClient[Neptune][iLilyId] = Noire;
+		g_eClient[Noire][iLilyId] = Neptune;
+		
+		g_eClient[Neptune][iLilyRank] = 0;
+		g_eClient[Neptune][iLilyExp] = 0;
+		g_eClient[Neptune][iLilyDate] = GetTime();
+		
+		g_eClient[Noire][iLilyRank] = 0;
+		g_eClient[Noire][iLilyExp] = 0;
+		g_eClient[Noire][iLilyDate] = GetTime();
+		
+		Call_StartForward(g_fwdOnLilyCouple);
+		Call_PushCell(Neptune);
+		Call_PushCell(Noire);
+		Call_Finish();
+		
+		PrintToChatAll("%s  \x0F恭喜\x0E%N\x0F和\x0E%N\x0F结成Lily.", PLUGIN_PREFIX, Neptune, Noire);
+	}
+	
+	if(Neptune && IsClientInGame(Neptune) && (!Noire || !IsClientInGame(Noire)))
+	{
+		g_eClient[Neptune][iLilyId] = -1;
+		g_eClient[Neptune][iLilyRank] = 0;
+		g_eClient[Neptune][iLilyExp] = 0;
+		g_eClient[Neptune][iLilyDate] = GetTime();
+		
+		PrintToChat(Neptune, "%s  系统已保存你们的数据,但是你老婆当前离线,你不能享受\x0ENeptune\x01的新婚祝福", PLUGIN_PREFIX);
+	}
+	
+	if(Noire && IsClientInGame(Noire) && (!Neptune || !IsClientInGame(Neptune)))
+	{
+		g_eClient[Noire][iLilyId] = -1;
+		g_eClient[Noire][iLilyRank] = 0;
+		g_eClient[Noire][iLilyExp] = 0;
+		g_eClient[Noire][iLilyDate] = GetTime();
+		
+		PrintToChat(Noire, "%s  系统已保存你们的数据,但是你老婆当前离线,你不能享受\x0ENeptune\x01的新婚祝福", PLUGIN_PREFIX);
+	}
+}
+
+public void SQLCallback_CheckDivorce(Handle owner, Handle hndl, const char[] error, int userid)
+{
+	int client = GetClientOfUserId(userid);
+	
+	if(!client || !IsClientInGame(client))
+		return;
+	
+	if(hndl == INVALID_HANDLE)
+	{
+		PrintToChat(client, "%s  服务器中了闪光弹,请稍候再试[错误x04]", PLUGIN_PREFIX);
+		LogToFileEx(LogFile, "CheckDivorce %N error: %s", client, error);
+		return;
+	}
+	
+	if(!SQL_FetchRow(hndl))
+	{
+		PrintToChat(client, "%s  服务器中了闪光弹,请稍候再试[错误x05]", PLUGIN_PREFIX);
+		return;
+	}
+	else
+	{
+		int m_iId = SQL_FetchInt(hndl, 0);
+		char m_szName[64];
+		SQL_FetchString(hndl, 1, m_szName, 64);
+		ReplaceString(m_szName, 64, ";", "", false);
+		ConfirmDivorce(client, m_iId, m_szName);
+	}
+}
+
+public void SQLCallback_UpdateDivorce(Handle owner, Handle hndl, const char[] error, Handle pack)
+{
+	int client = GetClientOfUserId(ReadPackCell(pack));
+	int m_iId = ReadPackCell(pack);
+	char m_szName[64];
+	ReadPackString(pack, m_szName, 64);
+	CloseHandle(pack);
+	
+	if(!client || !IsClientInGame(client))
+		return;
+	
+	if(hndl == INVALID_HANDLE)
+	{
+		PrintToChat(client, "%s  服务器中了闪光弹,请稍候再试[错误x06]", PLUGIN_PREFIX);
+		LogToFileEx(LogFile, "UpdateDivorce %N error: %s", client, error);
+		return;
+	}
+
+	int m_iPartner = FindClientByPlayerId(m_iId);
+
+	PrintToChatAll("%s  \x0F%N\x05解除了和\x0F%s\x05的Lily,他们的关系维持了\x07%d\x05天", PLUGIN_PREFIX, client, m_szName, (GetTime()-g_eClient[client][iLilyDate])/86400);
+
+	if(m_iPartner > 0)
+	{
+		g_eClient[m_iPartner][iLilyId] = -2;
+		g_eClient[m_iPartner][iLilyRank] = 0;
+		g_eClient[m_iPartner][iLilyExp] = 0;
+		g_eClient[m_iPartner][iLilyDate] = 0;
+	}
+	
+	g_eClient[client][iLilyId] = -2;
+	g_eClient[client][iLilyRank] = 0;
+	g_eClient[client][iLilyExp] = 0;
+	g_eClient[client][iLilyDate] = 0;
+	
+	Call_StartForward(g_fwdOnLilyDivorce);
+	Call_PushCell(client);
+	Call_PushCell(m_iPartner);
+	Call_Finish();
+}
+
+public void SQLCallback_LilyRank(Handle owner, Handle hndl, const char[] error, int userid)
+{
+	int client = GetClientOfUserId(userid);
+	
+	if(!client || !IsClientInGame(client))
+		return;
+	
+	if(hndl == INVALID_HANDLE)
+	{
+		PrintToChat(client, "%s  服务器中了闪光弹,请稍候再试[错误x07]", PLUGIN_PREFIX);
+		LogToFileEx(LogFile, "LilyRank %N error: %s", client, error);
+		return;
+	}
+	
+	int m_iIndex, m_iRank;
+	char m_szName[128];
+	if(SQL_GetRowCount(hndl))
+	{
+		Handle hPack = CreateDataPack();
+		WritePackCell(hPack, m_iIndex);
+
+		while(SQL_FetchRow(hndl))
+		{
+			SQL_FetchString(hndl, 0, m_szName, 128);
+			m_iRank = SQL_FetchInt(hndl, 1);
+
+			WritePackString(hPack, m_szName);
+			WritePackCell(hPack, m_iRank);
+
+			m_iIndex++;
+		}
+
+		ResetPack(hPack);
+		WritePackCell(hPack, m_iIndex);
+		LilyRankToMenu(client, hPack);
+	}
 }

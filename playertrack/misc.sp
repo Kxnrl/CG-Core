@@ -1,3 +1,18 @@
+public void IntiGameData()
+{
+	g_hOSGamedata = LoadGameConfigFile("detect_os.games");
+	if(g_hOSGamedata == INVALID_HANDLE)
+	{
+		SetFailState("Failed to load gamedata file detect_os.games.txt: client operating system data will be unavailable.");
+	}
+	else
+	{
+		GameConfGetKeyValue(g_hOSGamedata, "Convar_Windows", g_szOSConVar[OS_Windows], 64);
+		GameConfGetKeyValue(g_hOSGamedata, "Convar_Mac", g_szOSConVar[OS_Mac], 64);
+		GameConfGetKeyValue(g_hOSGamedata, "Convar_Linux", g_szOSConVar[OS_Linux], 64);
+	}
+}
+
 stock bool IsClientBot(int client)
 {
 	//是不是有效的客户
@@ -5,10 +20,10 @@ stock bool IsClientBot(int client)
 		return true;
 
 	//是不是BOT
-	char SteamID[32];
-	GetClientAuthId(client, AuthId_Steam2, SteamID, 32, true);
+	char m_szAuth[32];
+	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
 
-	if(StrEqual(SteamID, "BOT", false))
+	if(StrEqual(m_szAuth, "BOT", false))
 		return true;
 
 	return false;
@@ -24,10 +39,10 @@ stock bool IsValidClient(int client, bool checkBOT = false)
 	
 	if(checkBOT)
 	{
-		char SteamID[64];
-		GetClientAuthId(client, AuthId_Steam2, SteamID, 32);
+		char m_szAuth[64];
+		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32);
 
-		if(StrEqual(SteamID, "BOT", false))
+		if(StrEqual(m_szAuth, "BOT", false))
 		return false;
 	}
 
@@ -66,14 +81,14 @@ public void SetClientVIP(int client, int type)
 	g_eClient[client][bIsVip] = true;
 	g_eClient[client][iVipType] = type;
 	
-	char steamid[32];
-	GetClientAuthId(client, AuthId_Steam2, steamid, 32);
+	char m_szAuth[32];
+	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32);
 
-	if(GetUserAdmin(client) == INVALID_ADMIN_ID && FindAdminByIdentity(AUTHMETHOD_STEAM, steamid) == INVALID_ADMIN_ID)
+	if(GetUserAdmin(client) == INVALID_ADMIN_ID && FindAdminByIdentity(AUTHMETHOD_STEAM, m_szAuth) == INVALID_ADMIN_ID)
 	{
 		AdminId adm = CreateAdmin(g_eClient[client][szDiscuzName]);
 		
-		BindAdminIdentity(adm, AUTHMETHOD_STEAM, steamid);
+		BindAdminIdentity(adm, AUTHMETHOD_STEAM, m_szAuth);
 		
 		SetAdminFlag(adm, Admin_Reservation, true);
 		SetAdminFlag(adm, Admin_Generic, true);
@@ -100,7 +115,7 @@ public void SetClientVIP(int client, int type)
 	else
 	{
 		AdminId adm = GetUserAdmin(client);
-		AdminId admid = FindAdminByIdentity(AUTHMETHOD_STEAM, steamid);
+		AdminId admid = FindAdminByIdentity(AUTHMETHOD_STEAM, m_szAuth);
 		
 		if(adm == admid)
 		{
@@ -148,13 +163,13 @@ public void GetClientFlags(int client)
 	int flags = GetUserFlagBits(client);
 	
 	//取得32位ID
-	char auth[32];
-	GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
+	char m_szAuth[32];
+	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
 
 	//Main判定
-	if(StrEqual(auth, "STEAM_1:1:44083262")|| StrEqual(auth, "STEAM_1:1:3339181") || StrEqual(auth, "STEAM_1:0:3339246"))
+	if(StrEqual(m_szAuth, "STEAM_1:1:44083262")|| StrEqual(m_szAuth, "STEAM_1:1:3339181") || StrEqual(m_szAuth, "STEAM_1:0:3339246"))
 	{
-		strcopy(g_eClient[client][szAdminFlags], 64, "守护女神");
+		strcopy(g_eClient[client][szAdminFlags], 64, "守護女神");
 	}
 	//狗管理权限为 CVAR
 	else if(flags & ADMFLAG_CONVARS)
@@ -193,9 +208,9 @@ void PrintConsoleInfo(int client)
 	int timeleft;
 	GetMapTimeLeft(timeleft);
 	
-	if(timeleft <= 0)
+	if(timeleft <= 30)
 		return;
-	
+
 	char szTimeleft[32], szMap[128], szHostname[128];
 	Format(szTimeleft, 32, "%d:%02d", timeleft / 60, timeleft % 60);
 	GetCurrentMap(szMap, 128);
@@ -221,4 +236,23 @@ void PrintConsoleInfo(int client)
 	PrintToConsole(client, "                                                                                               ");
 	PrintToConsole(client, "-----------------------------------------------------------------------------------------------");		
 	PrintToConsole(client, "                                                                                               ");
+}
+
+int FindClientByPlayerId(int PlayerId)
+{
+	if(PlayerId < 0)
+		return -2;
+
+	for(int client = 1; client <= MaxClients; ++client)
+	{
+		if(IsClientInGame(client))
+		{
+			if(g_eClient[client][bLoaded] && g_eClient[client][iPlayerId] == PlayerId)
+			{
+				return client;
+			}
+		}
+	}
+
+	return -1;
 }

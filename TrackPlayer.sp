@@ -1,11 +1,11 @@
 #pragma newdecls required //let`s go! new syntax!!!
-//Build 322
+//Build 337
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define PLUGIN_VERSION " 5.2.7 - 2016/09/02 03:00 "
+#define PLUGIN_VERSION " 5.3.2 - 2016/09/16 02:57 "
 #define PLUGIN_PREFIX "[\x0EPlaneptune\x01]  "
-#define PLUGIN_PREFIX_SIGN "[\x0EPlaneptune\x01]  "
+#define PLUGIN_PREFIX "[\x0EPlaneptune\x01]  "
 
 //////////////////////////////
 //			INCLUDES		//
@@ -33,11 +33,12 @@ enum Clients
 	iShare,
 	iBuff,
 	iGetShare,
-	iLastSignTime,
+	iSignNum,
+	iSignTime,
 	iConnectTime,
 	iPlayerId,
-	iConnectCounts,
-	iOnlineTime,
+	iNumber,
+	iOnline,
 	iDataRetry,
 	iOSQuery,
 	iAnalyticsId,
@@ -50,9 +51,12 @@ enum Clients
 	iReqId,
 	iReqTerm,
 	iReqRate,
+	iLilyId,
+	iLilyRank,
+	iLilyExp,
+	iLilyDate,
 	bool:bLoaded,
 	bool:bIsBot,
-	bool:bPrint,
 	bool:bIsVip,
 	bool:bAllowLogin,
 	bool:bTwiceLogin,
@@ -87,7 +91,9 @@ Handle g_fwdOnClientDailySign;
 Handle g_fwdOnClientDataLoaded;
 Handle g_fwdOnClientAuthLoaded;
 Handle g_fwdOnClientCompleteReq;
-Handle g_CheckedForwared;
+Handle g_fwdOnLilyCouple;
+Handle g_fwdOnLilyDivorce;
+Handle g_hCheckedForwared;
 Handle g_hCVAR;
 
 Clients g_eClient[MAXPLAYERS+1][Clients];
@@ -96,14 +102,11 @@ eAdmins g_eAdmin[eAdmins];
 int g_iServerId = -1;
 int g_iReconnect_csgo;
 int g_iReconnect_discuz;
-int g_iLatestData;
 bool g_bLateLoad;
 char g_szIP[64];
 char g_szHostName[256];
 char LogFile[128];
 char g_szOSConVar[OS_Total][64];
-char g_szGlobal[6][256];
-char g_szServer[6][256];
 
 
 //////////////////////////////
@@ -112,10 +115,10 @@ char g_szServer[6][256];
 #include "playertrack/auth.sp"
 #include "playertrack/faith.sp"
 #include "playertrack/misc.sp"
-#include "playertrack/notice.sp"
 #include "playertrack/sign.sp"
 #include "playertrack/sqlcb.sp"
 #include "playertrack/track.sp"
+#include "playertrack/lily.sp"
 
 //////////////////////////////
 //		PLUGIN DEFINITION	//
@@ -123,7 +126,7 @@ char g_szServer[6][256];
 public Plugin myinfo = 
 {
 	name = " [CG] - Core ",
-	author = "maoling ( shAna.xQy )",
+	author = "maoling ( xQy )",
 	description = "Player Tracker System",
 	version = PLUGIN_VERSION,
 	url = "http://steamcommunity.com/id/_xQy_/"
@@ -134,53 +137,40 @@ public Plugin myinfo =
 //////////////////////////////
 public void OnPluginStart()
 {
-	//Create Log Files
 	BuildPath(Path_SM, LogFile, 128, "logs/Core.log");
 
-	//Hook ConVar
 	g_hCVAR = FindConVar("sv_hibernate_when_empty");
 	SetConVarInt(g_hCVAR, 0);
 	HookConVarChange(g_hCVAR, OnSettingChanged);
-	
-	//Connect To Database
+
 	SQL_TConnect_csgo();
 	SQL_TConnect_discuz();
 	
-	//Load gamedata
-	g_hOSGamedata = LoadGameConfigFile("detect_os.games");
-	if(g_hOSGamedata == INVALID_HANDLE)
-	{
-		SetFailState("Failed to load gamedata file detect_os.games.txt: client operating system data will be unavailable.");
-	}
-	else
-	{
-		GameConfGetKeyValue(g_hOSGamedata, "Convar_Windows", g_szOSConVar[OS_Windows], 64);
-		GameConfGetKeyValue(g_hOSGamedata, "Convar_Mac", g_szOSConVar[OS_Mac], 64);
-		GameConfGetKeyValue(g_hOSGamedata, "Convar_Linux", g_szOSConVar[OS_Linux], 64);
-	}
+	IntiGameData();
 
-	//Register Command
 	RegConsoleCmd("sm_sign", Command_Login);
 	RegConsoleCmd("sm_qiandao", Command_Login);
 	RegConsoleCmd("sm_online", Command_Online);
-	RegConsoleCmd("sm_onlines", Command_Online);
 	RegConsoleCmd("sm_track", Command_Track);
-	RegConsoleCmd("sm_rz", Command_Track)
+	RegConsoleCmd("sm_rz", Command_Track);
 	RegConsoleCmd("sm_faith", Command_Faith);
 	RegConsoleCmd("sm_fhelp", Command_FHelp);
 	RegConsoleCmd("sm_share", Command_Share);
 	RegConsoleCmd("sm_exp", Command_Exp);
-	RegConsoleCmd("sm_notice", Command_Notice);
+	RegConsoleCmd("sm_cp", Command_Lily);
+	RegConsoleCmd("sm_lily", Command_Lily);
+
 	RegAdminCmd("sm_pa", Command_Set, ADMFLAG_BAN);
 	RegAdminCmd("sm_reloadadv", Command_ReloadAdv, ADMFLAG_BAN);
 	RegAdminCmd("pareloadall", Command_reloadall, ADMFLAG_ROOT);
 
-	//Create Forward
 	g_fwdOnServerLoaded = CreateGlobalForward("CG_OnServerLoaded", ET_Ignore, Param_Cell);
 	g_fwdOnClientDailySign = CreateGlobalForward("CG_OnClientDailySign", ET_Ignore, Param_Cell);
 	g_fwdOnClientDataLoaded = CreateGlobalForward("CG_OnClientLoaded", ET_Ignore, Param_Cell);
 	g_fwdOnClientAuthLoaded = CreateGlobalForward("PA_OnClientLoaded", ET_Ignore, Param_Cell);
 	g_fwdOnClientCompleteReq = CreateGlobalForward("CG_OnClientCompleteReq", ET_Ignore, Param_Cell, Param_Cell);
+	g_fwdOnLilyCouple = CreateGlobalForward("Lily_OnLilyCouple", ET_Ignore, Param_Cell, Param_Cell);
+	g_fwdOnLilyDivorce = CreateGlobalForward("Lily_OnLilyDivorce", ET_Ignore, Param_Cell, Param_Cell);
 }
 
 public void OnPluginEnd()
@@ -224,14 +214,19 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("PA_GetGroupName", Native_GetGroupName);
 	CreateNative("PA_GetLevel", Native_GetLevel);
 	CreateNative("PA_GivePlayerExp", Native_GivePlayerExp);
+	CreateNative("Lily_GetPartner", Native_GetLilyPartner);
+	CreateNative("Lily_GetRank", Native_GetLilyRank);
+	CreateNative("Lily_GetExp", Native_GetLilyExp);
+	CreateNative("Lily_GetDate", Native_GetLilyDate);
+	CreateNative("Lily_SetExp", Native_SetLilyExp);
+	CreateNative("Lily_AddLily", Native_AddLily);
 
-	g_CheckedForwared = CreateForward(ET_Ignore, Param_Cell);
+	g_hCheckedForwared = CreateForward(ET_Ignore, Param_Cell);
 	CreateNative("HookClientVIPChecked", Native_HookClientVIPChecked);
-	
-	//Get Server IP
+
 	int ip = GetConVarInt(FindConVar("hostip"));
 	Format(g_szIP, 64, "%d.%d.%d.%d:%d", ((ip & 0xFF000000) >> 24) & 0xFF, ((ip & 0x00FF0000) >> 16) & 0xFF, ((ip & 0x0000FF00) >>  8) & 0xFF, ((ip & 0x000000FF) >>  0) & 0xFF, GetConVarInt(FindConVar("hostport")));
-	
+
 	g_bLateLoad = late;
 
 	RegPluginLibrary("csgogamers");
@@ -256,7 +251,6 @@ void OnClientDataLoaded(int client)
 {
 	CheckClientBuff(client);
 	PrintConsoleInfo(client);
-	CreateTimer(10.0, Timer_Notice, GetClientUserId(client), TIMER_REPEAT);
 
 	Call_StartForward(g_fwdOnClientDataLoaded);
 	Call_PushCell(client);
@@ -272,7 +266,7 @@ void OnClientAuthLoaded(int client)
 
 void VipChecked(int client)
 {
-	Call_StartForward(g_CheckedForwared);
+	Call_StartForward(g_hCheckedForwared);
 	Call_PushCell(client);
 	Call_Finish();
 }
@@ -289,7 +283,7 @@ public int Native_GetShare(Handle plugin, int numParams)
 
 public int Native_GetOnlines(Handle plugin, int numParams)
 {
-	return g_eClient[GetNativeCell(1)][iOnlineTime];
+	return g_eClient[GetNativeCell(1)][iOnline];
 }
 
 public int Native_GetPlayerID(Handle plugin, int numParams)
@@ -314,22 +308,26 @@ public int Native_GetSecondBuff(Handle plugin, int numParams)
 
 public int Native_GiveClientShare(Handle plugin, int numParams)
 {
-	char m_szReason[128];
 	int client = GetNativeCell(1);
-	int ishare = GetNativeCell(2);
-	GetNativeString(3, m_szReason, 128);
-	if(ishare > 0)
+	
+	if(g_eClient[client][iFaith] > 0)
 	{
-		g_eClient[client][iGetShare] = g_eClient[client][iGetShare] + ishare;
-		g_eClient[client][iShare] = g_eClient[client][iShare] + ishare;
-		PrintToConsole(client, "[Planeptune]  你获得了%d点Share,当前总计%d点!  来自: %s", ishare, g_eClient[client][iShare], m_szReason);
-	}
-	else
-	{
-		ishare *= -1;
-		g_eClient[client][iGetShare] = g_eClient[client][iGetShare] - ishare;
-		g_eClient[client][iShare] = g_eClient[client][iShare] - ishare;
-		PrintToConsole(client, "[Planeptune]  你失去了%d点Share,当前总计%d点!  原因: %s", ishare, g_eClient[client][iShare], m_szReason);
+		char m_szReason[128];
+		int ishare = GetNativeCell(2);
+		GetNativeString(3, m_szReason, 128);
+		if(ishare > 0)
+		{
+			g_eClient[client][iGetShare] = g_eClient[client][iGetShare] + ishare;
+			g_eClient[client][iShare] = g_eClient[client][iShare] + ishare;
+			PrintToConsole(client, "[Planeptune]  你获得了%d点Share,当前总计%d点!  来自: %s", ishare, g_eClient[client][iShare], m_szReason);
+		}
+		else
+		{
+			ishare *= -1;
+			g_eClient[client][iGetShare] = g_eClient[client][iGetShare] - ishare;
+			g_eClient[client][iShare] = g_eClient[client][iShare] - ishare;
+			PrintToConsole(client, "[Planeptune]  你失去了%d点Share,当前总计%d点!  原因: %s", ishare, g_eClient[client][iShare], m_szReason);
+		}
 	}
 }
 
@@ -371,7 +369,7 @@ public int Native_GetVipType(Handle plugin, int numParams)
 
 public int Native_HookClientVIPChecked(Handle plugin, int numParams)
 {
-	AddToForward(g_CheckedForwared, plugin, GetNativeCell(1));
+	AddToForward(g_hCheckedForwared, plugin, GetNativeCell(1));
 }
 
 public int Native_SaveDatabase(Handle plugin, int numParams)
@@ -433,6 +431,16 @@ public int Native_GivePlayerExp(Handle plugin, int numParams)
 	{
 		PrintToConsole(client,"%s  你获得了%d点认证Exp!  来自: %s", PLUGIN_PREFIX, Exp, m_szReason);
 		g_eClient[client][iExp] += Exp;
+		
+		if(g_eClient[client][iExp] >= 1000)
+		{
+			g_eClient[client][iExp] = 0;
+			g_eClient[client][iLevel]++;
+			PrintToChat(client, "%s  \x04你的认证等级已提升,当前\x0C%d\x04级", g_eClient[client][iLevel]);
+			char m_szQuery[128];
+			Format(m_szQuery, 128, "UPDATE `playertrack_player` SET level = level + 1 WHERE id = %d", g_eClient[client][iPlayerId]);
+			CG_SaveDatabase(m_szQuery);
+		}
 	}
 }
 
@@ -514,13 +522,77 @@ public int Native_CheckReq(Handle plugin, int numParams)
 	}
 }
 
+public int Native_GetLilyPartner(Handle plugin, int numParams)
+{
+	return g_eClient[GetNativeCell(1)][iLilyId];
+}
+
+public int Native_GetLilyRank(Handle plugin, int numParams)
+{
+	return g_eClient[GetNativeCell(1)][iLilyRank];
+}
+
+public int Native_GetLilyExp(Handle plugin, int numParams)
+{
+	return g_eClient[GetNativeCell(1)][iLilyExp];
+}
+
+public int Native_GetLilyDate(Handle plugin, int numParams)
+{
+	return g_eClient[GetNativeCell(1)][iLilyDate];
+}
+
+public int Native_SetLilyExp(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	int exp = GetNativeCell(2)
+	g_eClient[client][iLilyExp] += exp;
+	if(g_eClient[client][iLilyExp] > ((g_eClient[client][iLilyRank]+5)*10))
+	{
+		g_eClient[client][iLilyRank]++;
+		if(SyncLilyData(client))
+		{
+			g_eClient[client][iLilyExp] = 0;
+			PrintToChat(client, "%s  Lily Rank Level Up! Now: \x04Lv.\x0C%d", PLUGIN_PREFIX, g_eClient[client][iLilyRank]);
+			PrintToChat(g_eClient[client][iLilyId], "%s  Lily Rank Level Up! Now: \x04Lv.\x0C%d", PLUGIN_PREFIX, g_eClient[client][iLilyRank]);
+		}
+		else
+		{
+			g_eClient[client][iLilyRank]--;
+		}
+	}
+	else
+		PrintToConsole(client, "[Planeptune]  Lily Exp +%d", exp);
+}
+
+public int Native_AddLily(Handle plugin, int numParams)
+{
+	int Neptune = GetNativeCell(1);
+	int Noire = GetNativeCell(2);
+	if(g_eClient[Neptune][iLilyId] == -2 &&  g_eClient[Noire][iLilyId] == -2)
+	{
+		g_eClient[Neptune][iLilyId] = Noire;
+		g_eClient[Noire][iLilyId] = Neptune;
+		char m_szQuery[128];
+		Format(m_szQuery, 128, "UPDATE `playertrack_player` SET lilyid = %d where id = %d", g_eClient[Noire][iPlayerId], g_eClient[Neptune][iPlayerId]);
+		CG_SaveDatabase(m_szQuery);
+		Format(m_szQuery, 128, "UPDATE `playertrack_player` SET lilyid = %d where id = %d", g_eClient[Neptune][iPlayerId], g_eClient[Noire][iPlayerId]);
+		CG_SaveDatabase(m_szQuery);
+		SyncLilyData(Neptune);
+		
+		Call_StartForward(g_fwdOnLilyCouple);
+		Call_PushCell(Neptune);
+		Call_PushCell(Noire);
+		Call_Finish();
+	}
+}
+
 //////////////////////////////
 //			HOOK CONVAR		//
 //////////////////////////////
 public void OnSettingChanged(Handle convar, const char[] oldValue, const char[] newValue)
 {
-	if(convar == g_hCVAR)
-		SetConVarInt(g_hCVAR, 0);
+	SetConVarInt(g_hCVAR, 0);
 }
 
 public void OnMapStart()
@@ -530,11 +602,6 @@ public void OnMapStart()
 		char m_szQuery[256];
 		Format(m_szQuery, 256, "SELECT faith,SUM(share) FROM playertrack_player GROUP BY faith");
 		SQL_TQuery(g_hDB_csgo, SQLCallback_GetShare, m_szQuery);
-		
-		Format(m_szQuery, 256, "SELECT * FROM playertrack_server WHERE id = 0 or id = %d order by id asc;", g_iServerId);
-		SQL_TQuery(g_hDB_csgo, SQLCallback_GetNotice, m_szQuery);
-
-		SettingAdver();
 	}
 }
 
@@ -554,24 +621,24 @@ public void OnClientPostAdminCheck(int client)
 		return;
 	}
 
-	//玩家数据初始化
 	g_eClient[client][bLoaded] = false;
 	g_eClient[client][LoginProcess] = false;
 	g_eClient[client][bAllowLogin] = false;
 	g_eClient[client][bTwiceLogin] = false;
 	g_eClient[client][bIsVip] = false;
-	g_eClient[client][bPrint] = false;
+	//g_eClient[client][bPrint] = false;
 	g_eClient[client][iUserId] = GetClientUserId(client);
 	g_eClient[client][iUID] = -1;
 	g_eClient[client][iFaith] = -1;
 	g_eClient[client][iBuff] = 0;
 	g_eClient[client][iShare] = -1;
 	g_eClient[client][iGetShare] = 0;
-	g_eClient[client][iLastSignTime] = 0;
+	g_eClient[client][iSignNum] = 0;
+	g_eClient[client][iSignTime] = 0;
 	g_eClient[client][iConnectTime] = GetTime();
 	g_eClient[client][iPlayerId] = 0;
-	g_eClient[client][iConnectCounts] = 0;
-	g_eClient[client][iOnlineTime] = 0;
+	g_eClient[client][iNumber] = 0;
+	g_eClient[client][iOnline] = 0;
 	g_eClient[client][iDataRetry] = 0;
 	g_eClient[client][iOSQuery] = 0;
 	g_eClient[client][iAnalyticsId] = -1;
@@ -584,6 +651,10 @@ public void OnClientPostAdminCheck(int client)
 	g_eClient[client][iReqId] = 0;
 	g_eClient[client][iReqTerm] = 0;
 	g_eClient[client][iReqRate] = 0;
+	g_eClient[client][iLilyId] = -2;
+	g_eClient[client][iLilyRank] = 0;
+	g_eClient[client][iLilyExp] = 0;
+	g_eClient[client][iLilyDate] = 0;
 	g_eClient[client][iOS] = OS_Unknown;
 
 	strcopy(g_eClient[client][szIP], 32, "127.0.0.1");
@@ -604,10 +675,10 @@ public void OnClientPostAdminCheck(int client)
 		CreateTimer(10.0, Timer_HandleConnect, g_eClient[client][iUserId], TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 		g_eClient[client][hOSTimer] = CreateTimer(30.0, Timer_OSTimeout, g_eClient[client][iUserId]);
 
-		char steam32[32], m_szQuery[512];
-		GetClientAuthId(client, AuthId_Steam2, steam32, 32, true);
+		char m_szAuth[32], m_szQuery[512];
+		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
 		
-		Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.number, a.faith, a.share, a.buff, a.signature, a.groupid, a.groupname, a.exp, a.level, a.temp, a.notice, a.reqid, a.reqterm, a.reqrate, b.unixtimestamp FROM playertrack_player AS a LEFT JOIN `playertrack_sign` b ON b.steamid = a.steamid WHERE a.steamid = '%s' ORDER BY a.id ASC LIMIT 1;", steam32);
+		Format(m_szQuery, 512, "SELECT id, onlines, number, faith, share, buff, signature, groupid, groupname, exp, level, temp, notice, reqid, reqterm, reqrate, signnumber, signtime, lilyid, lilyrank, lilyexp, lilydate FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
 		SQL_TQuery(g_hDB_csgo, SQLCallback_GetClientStat, m_szQuery, g_eClient[client][iUserId], DBPrio_High);
 	}
 	else
@@ -615,7 +686,7 @@ public void OnClientPostAdminCheck(int client)
 		OnClientAuthLoaded(client);
 		OnClientDataLoaded(client);
 		VipChecked(client);
-		LogToFile(LogFile, "Query Client[%N] Failed:  Database is not avaliable!", client);
+		LogToFileEx(LogFile, "Query Client[%N] Failed:  Database is not avaliable!", client);
 	}
 }
 
@@ -624,7 +695,7 @@ public void OnClientDisconnect(int client)
 	if(g_eClient[client][bIsBot])
 		return;
 
-	g_eClient[client][bAllowLogin] = false;
+	CheckingLily(client);
 	
 	if(g_eClient[client][hSignTimer] != INVALID_HANDLE)
 	{
@@ -656,10 +727,10 @@ public Action Command_ReloadAdv(int client, int args)
 
 public Action Command_Online(int client, int args)
 {
-	int m_iHours = g_eClient[client][iOnlineTime]/3600;
-	int m_iMins = g_eClient[client][iOnlineTime]/60 - m_iHours*60;
+	int m_iHours = g_eClient[client][iOnline]/3600;
+	int m_iMins = g_eClient[client][iOnline]/60 - m_iHours*60;
 	int t_iMins = (GetTime() - g_eClient[client][iConnectTime])/60;
-	PrintToChat(client, "%s 尊贵的CG玩家\x04%N\x01,你已经在CG社区进行了\x0C%d\x01小时\x0C%d\x01分钟的游戏(\x07%d\x01次连线),本次游戏时长\x0C%d\x01分钟", PLUGIN_PREFIX, client, m_iHours, m_iMins, g_eClient[client][iConnectCounts], t_iMins);
+	PrintToChat(client, "%s 尊贵的CG玩家\x04%N\x01,你已经在CG社区进行了\x0C%d\x01小时\x0C%d\x01分钟的游戏(\x07%d\x01次连线),本次游戏时长\x0C%d\x01分钟", PLUGIN_PREFIX, client, m_iHours, m_iMins, g_eClient[client][iNumber], t_iMins);
 }
 
 public Action Command_Track(int client, int args)
@@ -713,7 +784,7 @@ public Action Command_FHelp(int client, int args)
 	Handle panel = CreatePanel(GetMenuStyleHandle(MenuStyle_Radio));
 	
 	char szItem[64];
-	Format(szItem, 64, "[Planeptune]   Faith - Help \n ");
+	Format(szItem, 64, "[Planeptune]   Faith - Help \n　");
 
 	DrawPanelText(panel, szItem);
 	DrawPanelText(panel, "Buff:");
@@ -726,7 +797,7 @@ public Action Command_FHelp(int client, int args)
 	DrawPanelText(panel, "Share:");
 	DrawPanelText(panel, "Share值是Faith强大的体现所在");
 	DrawPanelText(panel, "Share值越高主Buff就越强大");
-	DrawPanelText(panel, "正确击杀+1(ZE+5)点 | 死亡-3点");
+	DrawPanelText(panel, "完成任务获得奖励 | 死亡会失去Share");
 	DrawPanelText(panel, "在线每分钟将会贡献1点Share");
 	DrawPanelText(panel, "Share值达到1000点才会激活副Buff");
 	DrawPanelItem(panel, " ",ITEMDRAW_SPACER|ITEMDRAW_RAWLINE);
@@ -738,24 +809,22 @@ public Action Command_FHelp(int client, int args)
 public Action Command_Share(int client, int args)
 {
 	float share[5];
-	share[0] = float(g_Share[1]+g_Share[2]+g_Share[3]+g_Share[4]);
-	share[1] = (float(g_Share[1])/share[0])*100;
-	share[2] = (float(g_Share[2])/share[0])*100;
-	share[3] = (float(g_Share[3])/share[0])*100;
-	share[4] = (float(g_Share[4])/share[0])*100;
+	share[ALLSHARE] = float(g_Share[PURPLE]+g_Share[BLACK]+g_Share[WHITE]+g_Share[GREEN]);
+	share[PURPLE] = (float(g_Share[PURPLE])/share[ALLSHARE])*100;
+	share[BLACK] = (float(g_Share[BLACK])/share[ALLSHARE])*100;
+	share[WHITE] = (float(g_Share[WHITE])/share[ALLSHARE])*100;
+	share[GREEN] = (float(g_Share[GREEN])/share[ALLSHARE])*100;
 	
-	PrintToChat(client, "[%s] Share [\x0F%.2f%%\x01 of \x05%d\x01]", szFaith_CNAME[4], share[4], RoundToFloor(share[0]));
-	PrintToChat(client, "[%s] Share [\x0F%.2f%%\x01 of \x05%d\x01]", szFaith_CNAME[3], share[3], RoundToFloor(share[0]));
-	PrintToChat(client, "[%s] Share [\x0F%.2f%%\x01 of \x05%d\x01]", szFaith_CNAME[2], share[2], RoundToFloor(share[0]));
-	PrintToChat(client, "[%s] Share [\x0F%.2f%%\x01 of \x05%d\x01]", szFaith_CNAME[1], share[1], RoundToFloor(share[0]));
+	PrintToChat(client, "[%s] Share [\x0F%.2f%%\x01 of \x05%d\x01]", szFaith_CNAME[GREEN], share[GREEN], RoundToFloor(share[ALLSHARE]));
+	PrintToChat(client, "[%s] Share [\x0F%.2f%%\x01 of \x05%d\x01]", szFaith_CNAME[WHITE], share[WHITE], RoundToFloor(share[ALLSHARE]));
+	PrintToChat(client, "[%s] Share [\x0F%.2f%%\x01 of \x05%d\x01]", szFaith_CNAME[BLACK], share[BLACK], RoundToFloor(share[ALLSHARE]));
+	PrintToChat(client, "[%s] Share [\x0F%.2f%%\x01 of \x05%d\x01]", szFaith_CNAME[PURPLE], share[PURPLE], RoundToFloor(share[ALLSHARE]));
 }
 
 public Action Command_Set(int client, int args)
 {
 	Handle menu = CreateMenu(AdminMainMenuHandler);
-	char szItem[64];
-	Format(szItem, 64, "[玩家认证]   管理员菜单\n -by shAna.xQy");
-	SetMenuTitle(menu, szItem);
+	SetMenuTitle(menu, "[玩家认证]   管理员菜单\n　");
 	AddMenuItem(menu, "9000", "添加临时认证[神烦坑比]");
 	AddMenuItem(menu, "9001", "添加临时认证[小学生]");
 	AddMenuItem(menu, "unban", "解除临时认证");
@@ -781,7 +850,7 @@ public Action Command_reloadall(int client, int args)
 	}
 }
 
-public Action Command_Notice(int client, int args)
+public Action Command_Lily(int client, int args)
 {
-	ShowPanelToClient(client);
+	BuildLilyMenuToClient(client);
 }

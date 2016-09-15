@@ -6,7 +6,7 @@
 #include <store>
 
 #define PLUGIN_AUTHOR 	"maoling ( xQy )"
-#define PLUGIN_VERSION 	"1.2"
+#define PLUGIN_VERSION 	"1.3"
 #define PLUGIN_TAG		"[\x0C小喇叭\x01] "
 #define PLAYER_GAGED 	1
 #define PLAYER_UNGAGED 	0
@@ -52,6 +52,36 @@ public void OnPluginEnd()
 public void OnConfigsExecuted()
 {
 	ConnecToMasterServer();
+}
+
+public void Lily_OnLilyCouple(int Neptune, int Noire)
+{
+	char finalMessage[1024];
+	Format(finalMessage, 1024, " \x07恭喜\x0C%N\x07和\x0C%N\x07组成了\x0ELily\x07!他们收到了来自Planeptune女神的祝福...", Neptune, Noire);
+
+	char Error[256];
+	Handle database = SQL_Connect("csgo", true, Error, 256);
+	
+	if(database == INVALID_HANDLE)
+	{
+		return;
+	}
+	
+	char EscapeString[512];
+	SQL_EscapeString(database, finalMessage, EscapeString, 512);
+	CloseHandle(database);
+
+	char m_szQuery[1024];
+	Format(m_szQuery, 1024, "INSERT INTO `dz_plugin_ahome_laba` (`username`, `tousername`, `level`, `lid`, `dateline`, `content`, `color`, `url`) VALUES ('Lily System', '', 'game', 0, '%d', '%s', '', '')", GetTime(), EscapeString);
+	CG_SaveForumData(m_szQuery);
+	
+	Format(finalMessage, 1024, "\x04[\x0ELily\x04]  \x07>\x05>\x0C> %s", finalMessage);
+	
+	PrintToChatAll(finalMessage);
+
+	Format(finalMessage, 1024, "%s%s", key, finalMessage);
+	LogMessage("Send message: %s", finalMessage);
+	SocketSend(globalClientSocket, finalMessage, sizeof(finalMessage));
 }
 
 public Action CMD_SendMessage1(client, args)

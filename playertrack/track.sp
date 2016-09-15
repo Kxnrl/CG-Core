@@ -111,9 +111,9 @@ void SaveClient(int client)
 		strcopy(os, 64, "Linux");
 
 	//获得客户名字
-	char username[128], auth[32];
+	char username[128], m_szAuth[32];
 	GetClientName(client, username, 128);
-	GetClientAuthId(client, AuthId_Steam2, auth, 32, true);	
+	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);	
 
 	//开始SQL查询操作
 	char sBuffer[3][256];
@@ -125,18 +125,17 @@ void SaveClient(int client)
 	{
 		int exp = (RoundToNearest(duration * 0.033333) + g_eClient[client][iExp]) % 1000;
 		int upl = (RoundToNearest(duration * 0.033333) + g_eClient[client][iExp]) / 1000;
-		Format(g_eClient[client][szUpdateData], 1024, "UPDATE playertrack_player AS a, playertrack_analytics AS b SET a.name = '%s', a.onlines = a.onlines+%d, a.lastip = '%s', a.lasttime = '%d', a.os = '%s', a.flags = '%s', a.number = a.number+1, a.share = a.share+%d, a.exp = '%d', a.level = a.level+%d, a.reqid = %d, a.reqterm = %d, a.reqrate = %d, b.duration = '%d' WHERE a.id = '%d' AND b.id = '%d' AND a.steamid = '%s' AND b.playerid = '%d'", sBuffer[0], duration, g_eClient[client][szIP], GetTime(), sBuffer[1], sBuffer[2], share, exp, upl, g_eClient[client][iReqId], g_eClient[client][iReqTerm], g_eClient[client][iReqRate], duration, g_eClient[client][iPlayerId], g_eClient[client][iAnalyticsId], auth, g_eClient[client][iPlayerId]);
+		Format(g_eClient[client][szUpdateData], 1024, "UPDATE playertrack_player AS a, playertrack_analytics AS b SET a.name = '%s', a.onlines = a.onlines+%d, a.lastip = '%s', a.lasttime = '%d', a.os = '%s', a.flags = '%s', a.number = a.number+1, a.share = a.share+%d, a.exp = '%d', a.level = a.level+%d, a.reqid = %d, a.reqterm = %d, a.reqrate = %d, a.lilyexp = %d, b.duration = '%d' WHERE a.id = '%d' AND b.id = '%d' AND a.steamid = '%s' AND b.playerid = '%d'", sBuffer[0], duration, g_eClient[client][szIP], GetTime(), sBuffer[1], sBuffer[2], share, exp, upl, g_eClient[client][iReqId], g_eClient[client][iReqTerm], g_eClient[client][iReqRate], g_eClient[client][iLilyExp], duration, g_eClient[client][iPlayerId], g_eClient[client][iAnalyticsId], m_szAuth, g_eClient[client][iPlayerId]);
 	}
 	else
-		Format(g_eClient[client][szUpdateData], 1024, "UPDATE playertrack_player AS a, playertrack_analytics AS b SET a.name = '%s', a.onlines = a.onlines+%d, a.lastip = '%s', a.lasttime = '%d', a.os = '%s', a.flags = '%s', a.number = a.number+1, a.share = a.share+%d, a.reqid = %d, a.reqterm = %d, a.reqrate = %d, b.duration = '%d' WHERE a.id = '%d' AND b.id = '%d' AND a.steamid = '%s' AND b.playerid = '%d'", sBuffer[0], duration, g_eClient[client][szIP], GetTime(), sBuffer[1], sBuffer[2], share, g_eClient[client][iReqId], g_eClient[client][iReqTerm], g_eClient[client][iReqRate], duration, g_eClient[client][iPlayerId], g_eClient[client][iAnalyticsId], auth, g_eClient[client][iPlayerId]);
-	
+		Format(g_eClient[client][szUpdateData], 1024, "UPDATE playertrack_player AS a, playertrack_analytics AS b SET a.name = '%s', a.onlines = a.onlines+%d, a.lastip = '%s', a.lasttime = '%d', a.os = '%s', a.flags = '%s', a.number = a.number+1, a.share = a.share+%d, a.reqid = %d, a.reqterm = %d, a.reqrate = %d, a.lilyexp = %d, b.duration = '%d' WHERE a.id = '%d' AND b.id = '%d' AND a.steamid = '%s' AND b.playerid = '%d'", sBuffer[0], duration, g_eClient[client][szIP], GetTime(), sBuffer[1], sBuffer[2], share, g_eClient[client][iReqId], g_eClient[client][iReqTerm], g_eClient[client][iReqRate], g_eClient[client][iLilyExp], duration, g_eClient[client][iPlayerId], g_eClient[client][iAnalyticsId], m_szAuth, g_eClient[client][iPlayerId]);
+
 	SQL_TQuery(g_hDB_csgo, SQLCallback_SaveClientStat, g_eClient[client][szUpdateData], g_eClient[client][iUserId]);
 
 	if(GetUserFlagBits(client) & ADMFLAG_CHANGEMAP)
 	{
-		char steamid[32], m_szQueryString[256];
-		GetClientAuthId(client, AuthId_Steam2, steamid, 32, true);
-		Format(m_szQueryString, 256, "UPDATE sb_admins SET onlines=onlines+%d,lastseen=%d,today=today+%d WHERE (authid=\"STEAM_1:%s\" OR authid=\"STEAM_0:%s\")", duration, GetTime(), duration, steamid[8], steamid[8]);
-		SQL_TQuery(g_hDB_csgo, SQLCallBack_SaveAdminOnlines, m_szQueryString, GetClientUserId(client));
+		char m_szQuery[256];
+		Format(m_szQuery, 256, "UPDATE sb_admins SET onlines=onlines+%d,lastseen=%d,today=today+%d WHERE (authid=\"STEAM_1:%s\" OR authid=\"STEAM_0:%s\")", duration, GetTime(), duration, m_szAuth[8], m_szAuth[8]);
+		SQL_TQuery(g_hDB_csgo, SQLCallBack_SaveAdminOnlines, m_szQuery, GetClientUserId(client));
 	}
 }

@@ -23,8 +23,6 @@ enum types
 }
 
 types g_eReqs[1000][types];
-int g_iTrackTime[MAXPLAYERS+1];
-Handle g_hTrackTimer[MAXPLAYERS+1];
 
 public Plugin myinfo = 
 {
@@ -42,17 +40,6 @@ public void OnPluginStart()
 	InitializingRedDatabase();
 }
 
-public void OnClientDisconnect(int client)
-{
-	if(g_hTrackTimer[client] != INVALID_HANDLE)
-	{
-		KillTimer(g_hTrackTimer[client]);
-	}
-
-	g_hTrackTimer[client] = INVALID_HANDLE;
-	g_iTrackTime[client] = -1;
-}
-
 public void CG_OnClientCompleteReq(int client, int ReqId)
 {
 	PrintToChatAll("%s \x0C%N\x01完成了\x07%s\x01任务\x04[%s]\x01获得了不菲的奖励", PREFIX, client, g_eReqs[ReqId][szLvls], g_eReqs[ReqId][szName]);
@@ -61,18 +48,6 @@ public void CG_OnClientCompleteReq(int client, int ReqId)
 	Store_SetClientCredits(client, Store_GetClientCredits(client)+g_eReqs[ReqId][iAwdCredit], m_szReason);
 	CG_GiveClientShare(client, g_eReqs[ReqId][iAwdShare], m_szReason);
 	CG_ResetReq(client);
-}
-
-public Action Timer_TrackClient(Handle timer, int userid)
-{
-	int client = GetClientOfUserId(userid);
-	if(client && IsClientInGame(client))
-	{
-		CG_SetReqRate(client, 1500);
-		CG_CheckReq(client);
-	}
-
-	g_hTrackTimer[client] = INVALID_HANDLE;
 }
 
 public Action Command_Guild(int client, int args)
@@ -94,9 +69,7 @@ void ShowMainGuild(int client)
 	int ishare = CG_GetClientShare(client);
 	
 	Handle menu = CreateMenu(MenuHandler_MainGuild);
-	char szItem[256];
-	Format(szItem, 256, "[Planeptune]   Faith - Guild Center\n 你当前有 %d 点 Share\n 当前你没有进行中的任务\n ", ishare);
-	SetMenuTitle(menu, szItem);
+	SetMenuTitle(menu, "[Planeptune]   Faith - Guild Center\n 你当前有 %d 点 Share\n 当前你没有进行中的任务\n ", ishare);
 	
 	AddMenuItem(menu, "0", "承接S级任务", ishare >= 3000 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 	AddMenuItem(menu, "1", "承接A级任务", ishare >= 1500 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
@@ -129,13 +102,14 @@ void ShowRateMenu(int client, int reqid)
 	int ishare = CG_GetClientShare(client);
 	
 	Handle menu = CreateMenu(MenuHandler_RateGuild);
-	char szItem[256];
-	Format(szItem, 256, "[Planeptune]   Faith - Guild Center\n 你当前有 %d 点 Share\n ", ishare);
-	SetMenuTitle(menu, szItem);
+	SetMenuTitle(menu, "[Planeptune]   Faith - Guild Center\n 你当前有 %d 点 Share\n ", ishare);
 	
 	int rate = CG_GetReqRate(client);
 	int term = CG_GetReqTerm(client);
 	float vol = (float(rate)/float(term))*100;
+	
+	char szItem[256];
+
 	Format(szItem, 256, "[%s - %s]   完成度%.2f%%[%d/%d]\n ", g_eReqs[reqid][szLvls], g_eReqs[reqid][szName], vol, rate, term);
 	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
 	
@@ -144,7 +118,6 @@ void ShowRateMenu(int client, int reqid)
 	
 	Format(szItem, 256, "任务奖励: %s\n ", g_eReqs[reqid][szAwds]);
 	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
-	
 	
 	AddMenuItem(menu, "xxxxx", "我就看看");
 	AddMenuItem(menu, "reset", "重置任务");
@@ -178,11 +151,10 @@ void SelectReqMenu(int client, int level)
 	int ishare = CG_GetClientShare(client);
 	
 	Handle menu = CreateMenu(MenuHandler_SelectReq);
-	char szItem[256], szId[4];
-	Format(szItem, 256, "[Planeptune]   Faith - Guild Center\n 你当前有 %d 点 Share\n  ", ishare);
-	SetMenuTitle(menu, szItem);
+	SetMenuTitle(menu, "[Planeptune]   Faith - Guild Center\n 你当前有 %d 点 Share\n  ", ishare);
 	
 	int count;
+	char szItem[256], szId[4];
 	for(int x; x < 1000; ++x)
 	{
 		if(g_eReqs[x][iLvl] == level)
@@ -223,9 +195,7 @@ void ConfirmRateMenu(int client, int type)
 	int ishare = CG_GetClientShare(client);
 	
 	Handle menu = CreateMenu(MenuHandler_ConfirmRate);
-	char szItem[256];
-	Format(szItem, 256, "[Planeptune]   Faith - Guild Center[beta]\n 你当前有 %d 点 Share\n ", ishare);
-	SetMenuTitle(menu, szItem);
+	SetMenuTitle(menu, "[Planeptune]   Faith - Guild Center[beta]\n 你当前有 %d 点 Share\n ", ishare);
 	
 	if(type == 0)
 	{
@@ -242,9 +212,10 @@ void ConfirmRateMenu(int client, int type)
 	}
 	
 	AddMenuItem(menu, "", "这项操作不可恢复", ITEMDRAW_DISABLED);
-	
+
 	AddMenuItem(menu, "no", "我拒绝");
 
+	char szItem[256];
 	Format(szItem, 256, "%d", type);
 	AddMenuItem(menu, szItem, "我确定");
 	
@@ -288,10 +259,10 @@ void ConfirmReqMenu(int client, int id)
 	int ishare = CG_GetClientShare(client);
 	
 	Handle menu = CreateMenu(MenuHandler_ConfirmReq);
-	char szItem[256];
-	Format(szItem, 256, "[Planeptune]   Faith - Guild Center\n 你当前有 %d 点 Share\n ", ishare);
-	SetMenuTitle(menu, szItem);
+	SetMenuTitle(menu, "[Planeptune]   Faith - Guild Center\n 你当前有 %d 点 Share\n ", ishare);
 	
+	char szItem[256];
+
 	Format(szItem, 256, "你要承接[%s]吗?", g_eReqs[id][szName]);
 	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
 	
@@ -384,12 +355,12 @@ public void InitializingRedDatabase()
 		{
 			g_eReqs[i][iId] = i;
 			g_eReqs[i][iLvl] = 4;
-			g_eReqs[i][iTerm] = 100;
+			g_eReqs[i][iTerm] = 200;
 			g_eReqs[i][iAwdShare] = 60;
 			g_eReqs[i][iAwdCredit] = 30;
 			strcopy(g_eReqs[i][szLvls], 16, "D级");
 			strcopy(g_eReqs[i][szName], 32, "瞎眼神器");
-			strcopy(g_eReqs[i][szDesc], 64, "在僵尸逃跑服务器使用人类神器100次");
+			strcopy(g_eReqs[i][szDesc], 64, "在僵尸逃跑服务器使用人类神器200次");
 			strcopy(g_eReqs[i][szAwds], 64, "Share+60|Credits+30");
 		}
 		if(i == 21)

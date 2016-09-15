@@ -16,7 +16,7 @@ public Plugin myinfo =
 	name = " [CG] Faith Extended ",
 	author = "xQy",
 	description = "",
-	version = "1.5",
+	version = "1.5.1",
 	url = "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -30,7 +30,7 @@ public void OnPluginStart()
 public void OnClientPostAdminCheck(int client)
 {
 	g_bListener[client] = false;
-	Format(g_szSignature[client], 256, "");
+	strcopy(g_szSignature[client], 256, "");
 	g_hTimerListner[client] = INVALID_HANDLE;
 }
 
@@ -63,9 +63,9 @@ public Action Cmd_BuffReset(int client, int args)
 	}
 	
 	Handle menu = CreateMenu(ResetBuffConfirmMenuHandler);
+	SetMenuTitle(menu, "[Planeptune]   Faith - Reset Second Buff\n ");
+
 	char szItem[256];
-	Format(szItem, 256, "[Planeptune]   Faith - Reset Second Buff\n \n ");
-	SetMenuTitle(menu, szItem);
 
 	Format(szItem, 256, "你当前的Faith为[%s] - %s \n ", szFaith_NAME[CG_GetClientFaith(client)], szFaith_NATION[CG_GetClientFaith(client)]);
 	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
@@ -160,39 +160,19 @@ public Action Cmd_FaithRecharge(int client, int args)
 		PrintToChat(client, "%s  服务器已关闭充值信仰功能,请使用!guild来增加Share", PREFIX);
 		return Plugin_Handled;
 	}
-
 	
 	Handle menu = CreateMenu(FaithChargeMenuHandler);
-	char szItem[256];
-	Format(szItem, 256, "[Planeptune]   充值信仰 \n 你已经为%s贡献了%d点Share\n ", szFaith_NAME[CG_GetClientFaith(client)], CG_GetClientShare(client));
-	SetMenuTitle(menu, szItem);
+	SetMenuTitle(menu, "[Planeptune]   充值信仰 \n 你已经为%s贡献了%d点Share\n ", szFaith_NAME[CG_GetClientFaith(client)], CG_GetClientShare(client));
 	
-	Format(szItem, 256, "20点Share[400Credits]");
-	AddMenuItem(menu, "20", szItem);
-	
-	Format(szItem, 256, "50点Share[1,000Credits]");
-	AddMenuItem(menu, "50", szItem);
-	
-	Format(szItem, 256, "100点Share[2,000Credits]");
-	AddMenuItem(menu, "100", szItem);
-	
-	Format(szItem, 256, "200点Share[4,000Credits]");
-	AddMenuItem(menu, "200", szItem);
-	
-	Format(szItem, 256, "500点Share[10,000Credits]");
-	AddMenuItem(menu, "500", szItem);
-	
-	Format(szItem, 256, "1000点Share[20,000Credits]");
-	AddMenuItem(menu, "1000", szItem);
-	
-	Format(szItem, 256, "2000点Share[40,000Credits]");
-	AddMenuItem(menu, "2000", szItem);
-	
-	Format(szItem, 256, "5000点Share[100,000Credits]");
-	AddMenuItem(menu, "5000", szItem);
-	
-	Format(szItem, 256, "什么? 不够? 老板你的信仰已经很充足了");
-	AddMenuItem(menu, "-9999", szItem, ITEMDRAW_DISABLED);
+	AddMenuItem(menu, "20", "20点Share[400Credits]");
+	AddMenuItem(menu, "50", "50点Share[1,000Credits]");
+	AddMenuItem(menu, "100", "100点Share[2,000Credits]");
+	AddMenuItem(menu, "200", "200点Share[4,000Credits]");
+	AddMenuItem(menu, "500", "500点Share[10,000Credits]");
+	AddMenuItem(menu, "1000", "1000点Share[20,000Credits]");
+	AddMenuItem(menu, "2000", "2000点Share[40,000Credits]");
+	AddMenuItem(menu, "5000", "5000点Share[100,000Credits]");
+	AddMenuItem(menu, "-9999", "什么? 不够? 老板你的信仰已经很充足了", ITEMDRAW_DISABLED);
 	
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 0);
@@ -252,12 +232,11 @@ public Action Cmd_Signature(int client, int args)
 void ShowListenerMenu(int client)
 {
 	Handle menu = CreateMenu(ListenerMenuHandler);
-	char szItem[256];
-	Format(szItem, 256, "^[Planeptune]^  签名设置  \n设置签名需要500Credits[首次免费] \n ");
-	SetMenuTitle(menu, szItem);
+	SetMenuTitle(menu, "[Planeptune^  签名设置  \n设置签名需要500Credits[首次免费] \n ");
 
-	Format(szItem, 256, "你现在可以按Y输入签名了 \n ");
+	char szItem[256];
 	
+	Format(szItem, 256, "你现在可以按Y输入签名了 \n ");
 	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
 	
 	Format(szItem, 256, "可用颜色代码\n {亮红} {黄} {蓝} {绿} {橙} {紫} {粉} \n ");
