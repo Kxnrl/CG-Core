@@ -1,4 +1,4 @@
- public int AdminMainMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 
+ public int MenuHandler_AdminPAMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 
 {
 	if(action == MenuAction_Select) 
 	{
@@ -24,7 +24,7 @@
 
 void OpenSelectTargetMenu(int client)
 {
-	Handle menu = CreateMenu(SelectTargetMenuHandler);
+	Handle menu = CreateMenu(MenuHandler_PASelectTarget);
 
 	if(g_eAdmin[iType] == 1)
 		SetMenuTitle(menu, "[Planeptune]   添加临时神烦坑比\n　");
@@ -92,7 +92,7 @@ void OpenSelectTargetMenu(int client)
 }
 
 
-public int SelectTargetMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 
+public int MenuHandler_PASelectTarget(Handle menu, MenuAction action, int client, int itemNum) 
 {
 	if(action == MenuAction_Select) 
 	{
@@ -121,7 +121,7 @@ public int SelectTargetMenuHandler(Handle menu, MenuAction action, int client, i
 
 void OpenSelectTimeMenu(int client)
 {
-	Handle menu = CreateMenu(SelectTimeMenuHandler);
+	Handle menu = CreateMenu(MenuHandler_PASelectTime);
 	SetMenuTitle(menu, "[Planeptune]   选择临时认证时长\n　");
 	AddMenuItem(menu, "1800", "30 Mins");
 	AddMenuItem(menu, "3600", "1 Hour");
@@ -135,7 +135,7 @@ void OpenSelectTimeMenu(int client)
 	DisplayMenu(menu, client, 0);
 }
 
-public int SelectTimeMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 
+public int MenuHandler_PASelectTime(Handle menu, MenuAction action, int client, int itemNum) 
 {
 	if(action == MenuAction_Select) 
 	{

@@ -1,5 +1,6 @@
 public void SetClientFaith(int client, int faith)
 {
+	//没加载完就不需要设置Faith了是吧
 	if(!g_eClient[client][bLoaded])
 	{
 		PrintToChat(client, "%s  很抱歉,你的数据尚未加载完毕", PLUGIN_PREFIX);
@@ -8,6 +9,7 @@ public void SetClientFaith(int client, int faith)
 	
 	g_eClient[client][iFaith] = faith;
 	
+	//设置完总得同步到数据库吧
 	char m_szQuery[256];
 	Format(m_szQuery, 256, "UPDATE `playertrack_player` SET faith = '%d' WHERE id = '%d'", faith, g_eClient[client][iPlayerId]);
 	SQL_TQuery(g_hDB_csgo, SQLCallback_SetFaith, m_szQuery, GetClientUserId(client));
@@ -15,7 +17,8 @@ public void SetClientFaith(int client, int faith)
 
 public void ShowFaithFirstMenuToClient(int client)
 {
-	Handle menu = CreateMenu(FaithFirstMenuHandler);
+	//初始选择菜单
+	Handle menu = CreateMenu(MenuHandler_FaithFirstMenu);
 	SetMenuTitle(menu, "[Planeptune]   Faith - Select\n　");
 	
 	AddMenuItem(menu, "", "目前系统检测到你的Faith为空[输入!fhelp了解更多]", ITEMDRAW_DISABLED);
@@ -39,7 +42,7 @@ public void ShowFaithFirstMenuToClient(int client)
 	DisplayMenu(menu, client, 0);
 }
 
-public int FaithFirstMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 
+public int MenuHandler_FaithFirstMenu(Handle menu, MenuAction action, int client, int itemNum) 
 {
 	if(action == MenuAction_Select) 
 	{
@@ -68,7 +71,8 @@ public int FaithHelpMenuHandler(Handle menu, MenuAction action, int client, int 
 
 public void ConfirmSelect(int client, int faith)
 {
-	Handle menu = CreateMenu(FaithConfirmMenuHandler);
+	//确认选择菜单
+	Handle menu = CreateMenu(MenuHandler_FaithConfirm);
 	SetMenuTitle(menu, "[Planeptune]   Faith - Confirm\n　");
 	
 	char m_szItem[128];
@@ -113,7 +117,7 @@ public void ConfirmSelect(int client, int faith)
 	DisplayMenu(menu, client, 0);
 }
 
-public int FaithConfirmMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 
+public int MenuHandler_FaithConfirm(Handle menu, MenuAction action, int client, int itemNum) 
 {
 	if(action == MenuAction_Select) 
 	{
@@ -142,7 +146,7 @@ public void ShowFaithMainMenuToClient(int client)
 		return;
 	}
 	
-	Handle menu = CreateMenu(FaithMainMenuHandler);
+	Handle menu = CreateMenu(MenuHandler_FaithMain);
 	SetMenuTitle(menu, "[Planeptune]   Faith - Main\n \n当前归属: %s - %s\n当前Share: %d\n　", szFaith_NATION[g_eClient[client][iFaith]], szFaith_NAME[g_eClient[client][iFaith]], g_eClient[client][iShare]);
 
 	AddMenuItem(menu, "fhelp", "关于Faith系统说明");
@@ -162,7 +166,7 @@ public void ShowFaithMainMenuToClient(int client)
 	DisplayMenu(menu, client, 0);
 }
 
-public int FaithMainMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 
+public int MenuHandler_FaithMain(Handle menu, MenuAction action, int client, int itemNum) 
 {
 	if(action == MenuAction_Select) 
 	{
@@ -197,7 +201,7 @@ public int FaithMainMenuHandler(Handle menu, MenuAction action, int client, int 
 
 public void ShowAllFaithShareToClient(int client)
 {
-	Handle menu = CreateMenu(ShowAllFaithShareMenuHandler);
+	Handle menu = CreateMenu(MenuHandler_FaithShowAllShare);
 	SetMenuTitle(menu, "[Planeptune]   Faith -  查看各个Faith的Share值\n　");
 
 	float share[5];
@@ -228,14 +232,14 @@ public void ShowAllFaithShareToClient(int client)
 	ShowFaithOfferToClient(client);
 }
 
-public int ShowAllFaithShareMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 
+public int MenuHandler_FaithShowAllShare(Handle menu, MenuAction action, int client, int itemNum) 
 {
 	
 }
 
 public void ShowAllFaithBuffToClient(int client)
 {
-	Handle menu = CreateMenu(ShowAllFaithBuffMenuHandler);
+	Handle menu = CreateMenu(MenuHandler_FaithShowAllBuff);
 	SetMenuTitle(menu, "[Planeptune]   Faith -  查看各个Faith的Buff\n　");
 	
 	char m_szItem[256];
@@ -257,7 +261,7 @@ public void ShowAllFaithBuffToClient(int client)
 	DisplayMenu(menu, client, 0);
 }
 
-public int ShowAllFaithBuffMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 
+public int MenuHandler_FaithShowAllBuff(Handle menu, MenuAction action, int client, int itemNum) 
 {
 	if(action == MenuAction_Cancel && itemNum == MenuCancel_ExitBack)
 	{
@@ -281,7 +285,7 @@ public void ShowFaithShareRankToClient(int client)
 void ShareRankToMenu(int client, Handle pack)
 {
 	char m_szItem[256], sName[128];
-	Handle hMenu = CreateMenu(ShareRankMenuHandler);
+	Handle hMenu = CreateMenu(MenuHandler_FaithRank);
 
 	Format(m_szItem, 256, "[Planeptune]   Faith Share Rank - %s \n　", szFaith_NAME[g_eClient[client][iFaith]]);
 	SetMenuTitle(hMenu, m_szItem);
@@ -306,7 +310,7 @@ void ShareRankToMenu(int client, Handle pack)
 	DisplayMenu(hMenu, client, 60);
 }
 
-public int ShareRankMenuHandler(Handle menu, MenuAction action, int client, int itemNum)
+public int MenuHandler_FaithRank(Handle menu, MenuAction action, int client, int itemNum)
 {
 
 }
@@ -316,7 +320,7 @@ void CheckClientBuff(int client)
 	if(g_eClient[client][iFaith] <= 0 || g_eClient[client][iBuff] > 0)
 		return;
 
-	Handle menu = CreateMenu(ShowSecondBuffMenuHandler);
+	Handle menu = CreateMenu(MenuHandler_FaithSecondBuff);
 	SetMenuTitle(menu, "[Planeptune]   Faith -  Second Buff\n　");
 	
 	AddMenuItem(menu, "", "系统侦测到当前你未设置副Buff", ITEMDRAW_DISABLED);
@@ -331,7 +335,7 @@ void CheckClientBuff(int client)
 	DisplayMenu(menu, client, 0);
 }
 
-public int ShowSecondBuffMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 
+public int MenuHandler_FaithSecondBuff(Handle menu, MenuAction action, int client, int itemNum) 
 {
 	if(action == MenuAction_Select) 
 	{
@@ -349,7 +353,7 @@ public int ShowSecondBuffMenuHandler(Handle menu, MenuAction action, int client,
 
 void ShowSecondBuffToClient(int client)
 {
-	Handle menu = CreateMenu(SelectSecondBuffMenuHandler);
+	Handle menu = CreateMenu(MenuHandler_FaithSecondSelect);
 	SetMenuTitle(menu, "[Planeptune]   Faith -  Second Buff\n　");
 	
 	AddMenuItem(menu, "1", "射速 [提高除了匕首和手雷之外枪械的射速]");
@@ -364,7 +368,7 @@ void ShowSecondBuffToClient(int client)
 	DisplayMenu(menu, client, 0);
 }
 
-public int SelectSecondBuffMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 
+public int MenuHandler_FaithSecondSelect(Handle menu, MenuAction action, int client, int itemNum) 
 {
 	if(action == MenuAction_Select) 
 	{
@@ -385,7 +389,7 @@ public int SelectSecondBuffMenuHandler(Handle menu, MenuAction action, int clien
 
 void ConfirmSecondBuff(int client, int buff)
 {
-	Handle menu = CreateMenu(ConfirmSecondBuffMenuHandler);
+	Handle menu = CreateMenu(MenuHandler_FaithSecondConfirm);
 	SetMenuTitle(menu, "[Planeptune]   Faith -  Second Buff\n　");
 	
 	if(buff == 1)
@@ -433,7 +437,7 @@ void ConfirmSecondBuff(int client, int buff)
 	DisplayMenu(menu, client, 0);
 }
 
-public int ConfirmSecondBuffMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 
+public int MenuHandler_FaithSecondConfirm(Handle menu, MenuAction action, int client, int itemNum) 
 {
 	if(action == MenuAction_Select) 
 	{

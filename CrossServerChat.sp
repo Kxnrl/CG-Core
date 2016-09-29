@@ -6,7 +6,7 @@
 #include <store>
 
 #define PLUGIN_AUTHOR 	"maoling ( xQy )"
-#define PLUGIN_VERSION 	"1.3"
+#define PLUGIN_VERSION 	"1.4"
 #define PLUGIN_TAG		"[\x0C小喇叭\x01] "
 #define PLAYER_GAGED 	1
 #define PLAYER_UNGAGED 	0
@@ -16,7 +16,8 @@
 #define SENDERMSG		"[MESSAGE]"
 #define key				"[&KVJL>P*^Y*(JHjkhlsa]"
 #define MasterServer	"112.74.128.238"
-#define port			"2001"
+#define port			"64333"
+#define CHAT_SYMBOL '#'
 
 Handle globalClientSocket;
 
@@ -35,10 +36,10 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
-	RegConsoleCmd("sm_msg", CMD_SendMessage1, "Send a message to all server.");
-	RegConsoleCmd("sm_xlb", CMD_SendMessage1, "Send a message to all server.");
-	RegConsoleCmd("sm_dlb", CMD_SendMessage2, "Send a message to all server.");
-	RegAdminCmd("sm_servermsg", CMD_ServerMessage, ADMFLAG_ROOT, "Send a message to all server.");
+	RegConsoleCmd("sm_msg", Command_PubMessage);
+	RegConsoleCmd("sm_xlb", Command_PubMessage);
+	RegConsoleCmd("sm_dlb", Command_SrvMessage);
+	RegAdminCmd("sm_servermsg", Command_SrvMessage, ADMFLAG_ROOT);
 }
 
 public void OnPluginEnd()
@@ -84,7 +85,7 @@ public void Lily_OnLilyCouple(int Neptune, int Noire)
 	SocketSend(globalClientSocket, finalMessage, sizeof(finalMessage));
 }
 
-public Action CMD_SendMessage1(client, args)
+public Action Command_PubMessage(client, args)
 {
 	if(Store_GetClientCredits(client) < 500)
 	{
@@ -185,7 +186,7 @@ public Action CMD_SendMessage1(client, args)
 	return Plugin_Handled;
 }
 
-public Action CMD_ServerMessage(client, args)
+public Action Command_SrvMessage(client, args)
 {
 	if(args < 1)
 		return Plugin_Handled;
@@ -245,7 +246,7 @@ public Action CMD_ServerMessage(client, args)
 }
 
 
-public Action CMD_SendMessage2(client, args)
+public Action Command_PnlMessage(client, args)
 {
 	if(Store_GetClientCredits(client) < 10000)
 	{
@@ -494,4 +495,110 @@ public bool UpdateMessageToDiscuz(int client, const char[] message)
 	CG_SaveForumData(m_szQuery);
 	
 	return true;
+}
+
+public Action OnClientSayCommand(int client, const char[] command, const char[] sArgs)
+{
+	if(client == 0)
+		return Plugin_Continue;
+
+	int startidx;
+	if(sArgs[startidx] != CHAT_SYMBOL)
+		return Plugin_Continue;
+
+	startidx++;
+	
+	if(strcmp(command, "say", false) != 0)
+		return Plugin_Continue;
+
+	if(sArgs[startidx] != CHAT_SYMBOL) // sm_say alias
+	{
+		char message[900];
+		strcopy(message, sizeof(message), sArgs[startidx]);
+		ReplaceString(message, sizeof(message), "{default}", "");
+		ReplaceString(message, sizeof(message), "{white}", "");
+		ReplaceString(message, sizeof(message), "{darkred}", "");
+		ReplaceString(message, sizeof(message), "{pink}", "");
+		ReplaceString(message, sizeof(message), "{green}", "");
+		ReplaceString(message, sizeof(message), "{lime}", "");
+		ReplaceString(message, sizeof(message), "{lightgreen}", "");
+		ReplaceString(message, sizeof(message), "{red}", "");
+		ReplaceString(message, sizeof(message), "{gray}", "");
+		ReplaceString(message, sizeof(message), "{grey}", "");
+		ReplaceString(message, sizeof(message), "{olive}", "");
+		ReplaceString(message, sizeof(message), "{orange}", "");
+		ReplaceString(message, sizeof(message), "{purple}", "");
+		ReplaceString(message, sizeof(message), "{lightblue}", "");
+		ReplaceString(message, sizeof(message), "{blue}", "");
+		ReplaceString(message, sizeof(message), "\x01", "");
+		ReplaceString(message, sizeof(message), "\x02", "");
+		ReplaceString(message, sizeof(message), "\x03", "");
+		ReplaceString(message, sizeof(message), "\x04", "");
+		ReplaceString(message, sizeof(message), "\x05", "");
+		ReplaceString(message, sizeof(message), "\x06", "");
+		ReplaceString(message, sizeof(message), "\x07", "");
+		ReplaceString(message, sizeof(message), "\x08", "");
+		ReplaceString(message, sizeof(message), "\x09", "");
+		ReplaceString(message, sizeof(message), "\x10", "");
+		ReplaceString(message, sizeof(message), "\x0A", "");
+		ReplaceString(message, sizeof(message), "\x0B", "");
+		ReplaceString(message, sizeof(message), "\x0C", "");
+		ReplaceString(message, sizeof(message), "\x0D", "");
+		ReplaceString(message, sizeof(message), "\x0E", "");
+		ReplaceString(message, sizeof(message), "\x0F", "");
+
+		char finalMessage[999];
+		
+		char m_szServerName[64], m_szServerTag[32];
+		GetConVarString(FindConVar("hostname"), m_szServerName, 64);
+		if(StrContains(m_szServerName, "逃跑", false ) != -1)
+			strcopy(m_szServerTag, 32, "僵尸逃跑");
+		else if(StrContains(m_szServerName, "TTT", false ) != -1)
+			strcopy(m_szServerTag, 32, "匪镇碟影");
+		else if(StrContains(m_szServerName, "MiniGames", false ) != -1)
+			strcopy(m_szServerTag, 32, "娱乐休闲");
+		else if(StrContains(m_szServerName, "JailBreak", false ) != -1)
+			strcopy(m_szServerTag, 32, "越狱搞基");
+		else if(StrContains(m_szServerName, "KreedZ", false ) != -1)
+			strcopy(m_szServerTag, 32, "Kz跳跃");
+		else if(StrContains(m_szServerName, "DeathRun", false ) != -1)
+			strcopy(m_szServerTag, 32, "死亡奔跑");
+		else if(StrContains(m_szServerName, "战役", false ) != -1)
+			strcopy(m_szServerTag, 32, "求生战役");
+		else if(StrContains(m_szServerName, "对抗", false ) != -1)
+			strcopy(m_szServerTag, 32, "求生对抗");
+		else if(StrContains(m_szServerName, "HG", false ) != -1)
+			strcopy(m_szServerTag, 32, "饥饿游戏");
+		else if(StrContains(m_szServerName, "死斗", false ) != -1)
+			strcopy(m_szServerTag, 32, "纯净死斗");
+		else if(StrContains(m_szServerName, "纯净死亡", false ) != -1)
+			strcopy(m_szServerTag, 32, "纯净死亡");
+		else if(StrContains(m_szServerName, "Riot", false ) != -1)
+			strcopy(m_szServerTag, 32, "僵尸暴动");
+		else if(StrContains(m_szServerName, "Ninja", false ) != -1)
+			strcopy(m_szServerTag, 32, "忍者行动");
+		else if(StrContains(m_szServerName, "BHop", false ) != -1)
+			strcopy(m_szServerTag, 32, "BHop连跳");
+		else if(StrContains(m_szServerName, "满十", false ) != -1)
+			strcopy(m_szServerTag, 32, "满十比赛");
+		else
+			strcopy(m_szServerTag, 32, "论坛");
+		
+		Format(finalMessage, sizeof(finalMessage), "[\x02小\x04喇\x0C叭\x01] [\x0E%s\x01]  \x04%N\x01 :   \x07%s", m_szServerTag, client, message);
+		
+		if(!UpdateMessageToDiscuz(client, message))
+			return Plugin_Stop;
+		
+		Store_SetClientCredits(client, Store_GetClientCredits(client)-500, "发送小喇叭");
+		PrintToChat(client, "\x01 \x04[Store]  \x01你花费\x04500Credits\x01发送了一条小喇叭");
+
+		PrintToChatAll(finalMessage);
+
+		Format(finalMessage, sizeof(finalMessage), "%s%s", key, finalMessage);
+		SocketSend(globalClientSocket, finalMessage, sizeof(finalMessage));
+
+		return Plugin_Stop;
+	}
+	
+	return Plugin_Continue;
 }

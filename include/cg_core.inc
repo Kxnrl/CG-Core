@@ -26,6 +26,7 @@ native int CG_GetClientFaith(int client);
 native int CG_GetClientShare(int client);
 native int CG_GetSecondBuff(int client);
 native int CG_GetOnlines(int client);
+native int CG_GetLastseen(int client);
 native int CG_GetPlayerID(int client);
 native int CG_GetDiscuzUID(int client);
 native int CG_GetReqID(int client);

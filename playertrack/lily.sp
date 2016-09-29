@@ -1,5 +1,6 @@
 void InitializeLily(int client, int LilyId, int LilyRank, int LilyExp, int LilyDate)
 {
+	// 在数据库中如果LilyId<1那么肯定就是光棍
 	if(LilyId < 1)
 	{
 		g_eClient[client][iLilyId] = -2;
@@ -9,12 +10,16 @@ void InitializeLily(int client, int LilyId, int LilyRank, int LilyExp, int LilyD
 	}
 	else
 	{
+		//通过PlayerId来查询Client Slot    -1就是离线,-2就是光棍,0因为是Console比较特殊所以排除
 		int m_iPartner = FindClientByPlayerId(LilyId);
+		
+		//建立CP关联
 		g_eClient[client][iLilyId] = m_iPartner;
 		g_eClient[client][iLilyRank] = LilyRank;
 		g_eClient[client][iLilyExp] = LilyExp;
 		g_eClient[client][iLilyDate] = LilyDate;
 		
+		//如果返回的Slot是有效的，那么那个Client就是你的CP的Id
 		if(1 <= m_iPartner <= MaxClients)
 		{
 			g_eClient[m_iPartner][iLilyId] = client;
@@ -25,21 +30,25 @@ void InitializeLily(int client, int LilyId, int LilyRank, int LilyExp, int LilyD
 
 void CheckingLily(int Neptune)
 {
+	//先获取你CP是不是有效的玩家
 	int Noire = g_eClient[Neptune][iLilyId];
 	
 	if(Noire < 1)
 		return;
 
+	//清除关联
 	g_eClient[Noire][iLilyId] = -1;
 }
 
 bool SyncLilyData(int Neptune)
 {
+	//同上
 	int Noire = g_eClient[Neptune][iLilyId];
 
 	if(Noire < 1)
 		return false;
 
+	//如果Rank都一样，还同步毛线？
 	if(g_eClient[Neptune][iLilyRank] != g_eClient[Noire][iLilyRank])
 	{
 		if(g_eClient[Neptune][iLilyRank] < g_eClient[Noire][iLilyRank])
@@ -48,9 +57,9 @@ bool SyncLilyData(int Neptune)
 			g_eClient[Noire][iLilyRank] = g_eClient[Neptune][iLilyRank];
 		
 		char m_szQuery[256];
-		Format(m_szQuery, 256, "UPDATE `playertrack_player` SET lilyrank = %d where id = %d or id = %d", g_eClient[Neptune][iLilyRank], Neptune, Noire);
+		Format(m_szQuery, 256, "UPDATE `playertrack_player` SET lilyrank = %d where id = %d or id = %d", g_eClient[Neptune][iLilyRank], g_eClient[Neptune][iPlayerId],  g_eClient[Noire][iPlayerId]);
 		CG_SaveDatabase(m_szQuery);
-		
+
 		return true;
 	}
 	
@@ -59,7 +68,8 @@ bool SyncLilyData(int Neptune)
 
 void BuildLilyMenuToClient(int client)
 {
-	Handle menu = CreateMenu(LilyMainMenuHandler);
+	//Lily主菜单
+	Handle menu = CreateMenu(MenuHandler_LilyMain);
 	SetMenuTitle(menu, "[Lily]  主菜单 \n　");
 
 	AddMenuItem(menu, "propose", "寻找Lily", g_eClient[client][iLilyId] == -2 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
@@ -72,7 +82,7 @@ void BuildLilyMenuToClient(int client)
 	DisplayMenu(menu, client, 20);
 }
 
-public int LilyMainMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 
+public int MenuHandler_LilyMain(Handle menu, MenuAction action, int client, int itemNum) 
 {
 	if(action == MenuAction_Select) 
 	{
@@ -98,9 +108,9 @@ public int LilyMainMenuHandler(Handle menu, MenuAction action, int client, int i
 
 void BuildSelectLilyMenu(int client)
 {
-	Handle menu = CreateMenu(SelectLilyMenuHandler)
-	
-	
+	//选择Lily对象的菜单
+	Handle menu = CreateMenu(MenuHandler_LilySelect)
+
 	SetMenuTitle(menu, "[Lily]  选择Lily对象\n　");
 	
 	int counts;
@@ -129,7 +139,7 @@ void BuildSelectLilyMenu(int client)
 	DisplayMenu(menu, client, 0);
 }
 
-public int SelectLilyMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 
+public int MenuHandler_LilySelect(Handle menu, MenuAction action, int client, int itemNum) 
 {
 	switch(action)
 	{
@@ -165,7 +175,8 @@ public int SelectLilyMenuHandler(Handle menu, MenuAction action, int client, int
 
 void ConfirmLilyRequest(int client, int target)
 {
-	Handle menu = CreateMenu(ConfirmLilyMenuHandler)
+	//接受lily请求菜单
+	Handle menu = CreateMenu(MenuHandler_LilyConfirm)
 	SetMenuTitle(menu, "[Lily]  Lily Requset\n \n 你收到了一个来自 %N 的Lily邀请\n　", target);
 
 	AddMenuItem(menu, "", "Lily能提供多种游戏福利", ITEMDRAW_DISABLED);
@@ -185,15 +196,17 @@ void ConfirmLilyRequest(int client, int target)
 	DisplayMenu(menu, target, 0);
 }
 
-public int ConfirmLilyMenuHandler(Handle menu, MenuAction action, int target, int itemNum) 
+public int MenuHandler_LilyConfirm(Handle menu, MenuAction action, int target, int itemNum) 
 {
 	if(action == MenuAction_Select) 
 	{
 		char info[32];
 		GetMenuItem(menu, itemNum, info, 32);
 
+		//接受?
 		if(StrContains(info, "Accept", false) != -1)
 		{
+			//移除标识符
 			ReplaceString(info, 32, "Accept", "", false);
 			int client = GetClientOfUserId(StringToInt(info));
 			
@@ -206,6 +219,7 @@ public int ConfirmLilyMenuHandler(Handle menu, MenuAction action, int target, in
 			Lily_AddNewCouple(client, target);
 		}
 		
+		//拒绝?
 		if(StrContains(info, "Refuse", false) != -1)
 		{
 			ReplaceString(info, 32, "Refuse", "", false);
@@ -228,6 +242,7 @@ public int ConfirmLilyMenuHandler(Handle menu, MenuAction action, int target, in
 
 public void Lily_AddNewCouple(int Neptune, int Noire)
 {
+	//对象无效?
 	if(!IsClientInGame(Neptune))
 	{
 		PrintToChat(Noire, "%s  系统中闪光弹了,请重试", PLUGIN_PREFIX);
@@ -240,18 +255,21 @@ public void Lily_AddNewCouple(int Neptune, int Noire)
 		return;
 	}
 	
+	//创建DataPack
 	Handle m_hPack = CreateDataPack();
 	WritePackCell(m_hPack, GetClientUserId(Neptune));
 	WritePackCell(m_hPack, GetClientUserId(Noire));
 	ResetPack(m_hPack);
 
-	char m_szQuery[512];
-	Format(m_szQuery, 512, "CALL lily_addcouple(%d, %d)", g_eClient[Neptune][iPlayerId], g_eClient[Noire][iPlayerId]);
+	//使用SQL函数 CALL
+	char m_szQuery[128];
+	Format(m_szQuery, 128, "CALL lily_addcouple(%d, %d)", g_eClient[Neptune][iPlayerId], g_eClient[Noire][iPlayerId]);
 	SQL_TQuery(g_hDB_csgo, SQLCallback_UpdateLily, m_szQuery, m_hPack);
 }
 
 void CheckingDivorce(int client)
 {
+	//防止某些人刷Lily
 	if((GetTime() - g_eClient[client][iLilyDate]) < 604800)
 	{
 		PrintToChat(client, "%s  新组成Lily之后7天内不能申请解除", PLUGIN_PREFIX);
@@ -259,15 +277,18 @@ void CheckingDivorce(int client)
 		return;
 	}
 
+	//Lily是不是在服务器内
 	if(g_eClient[client][iLilyId] > 0)
 	{
 		char m_szName[64];
 		GetClientName(g_eClient[client][iLilyId], m_szName, 64);
+		//过滤名字中的保留符号';' 因为之后的函数需要用这个做间隔符来爆破字符串
 		ReplaceString(m_szName, 64, ";", "", false);
 		ConfirmDivorce(client, g_eClient[g_eClient[client][iLilyId]][iPlayerId], m_szName);
 	}
 	else
 	{
+		//需要读取Lily的名字来创建确认菜单
 		char m_szQuery[256];
 		Format(m_szQuery, 256, "SELECT id, name FROM `playertrack_player` WHERE lilyid = %d", g_eClient[client][iPlayerId]);
 		SQL_TQuery(g_hDB_csgo, SQLCallback_CheckDivorce, m_szQuery, GetClientUserId(client));
@@ -276,7 +297,8 @@ void CheckingDivorce(int client)
 
 void ConfirmDivorce(int client, const int m_iId, const char[] m_szName)
 {
-	Handle menu = CreateMenu(ConfirmDivorceMenuHandler);
+	//确认离婚了
+	Handle menu = CreateMenu(MenuHandler_LilyConfirmDivorce);
 	SetMenuTitle(menu, "[Lily]  Confirm Divorce \n　");
 	
 	char m_szItem[128];
@@ -301,7 +323,7 @@ void ConfirmDivorce(int client, const int m_iId, const char[] m_szName)
 	DisplayMenu(menu, client, 0);
 }
 
-public int ConfirmDivorceMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 
+public int MenuHandler_LilyConfirmDivorce(Handle menu, MenuAction action, int client, int itemNum) 
 {
 	switch(action)
 	{
@@ -316,17 +338,20 @@ public int ConfirmDivorceMenuHandler(Handle menu, MenuAction action, int client,
 				return;
 			}
 
+			//使用';'来爆破字符串取得数据? 其实是因为我偷懒 不想用全局变量，当然也算节省开销
 			char m_szData[2][64];
 			ExplodeString(info, ";", m_szData, 2, 64);
 
+			//DataPack
 			Handle m_hPack = CreateDataPack();
 			WritePackCell(m_hPack, GetClientUserId(client));
 			WritePackCell(m_hPack, StringToInt(m_szData[0]));
 			WritePackString(m_hPack, m_szData[1]);
 			ResetPack(m_hPack);
 
-			char m_szQuery[512];
-			Format(m_szQuery, 512, "UPDATE `playertrack_player` SET lilyid = '-2', lilyrank = 0, lilyexp = 0, lilydate = 0 where id = %d or lilyid = %d", g_eClient[client][iPlayerId], g_eClient[client][iPlayerId]);
+			//确认离婚之后更新数据库
+			char m_szQuery[256];
+			Format(m_szQuery, 256, "UPDATE `playertrack_player` SET lilyid = '-2', lilyrank = 0, lilyexp = 0, lilydate = 0 where id = %d or lilyid = %d", g_eClient[client][iPlayerId], g_eClient[client][iPlayerId]);
 			SQL_TQuery(g_hDB_csgo, SQLCallback_UpdateDivorce, m_szQuery, m_hPack);
 		}
 		case MenuAction_End:
@@ -337,6 +362,7 @@ public int ConfirmDivorceMenuHandler(Handle menu, MenuAction action, int client,
         {
             if(itemNum == MenuCancel_ExitBack)
             {
+				//返回之后就重铸菜单
                 BuildLilyMenuToClient(client);
             }
         }
@@ -345,6 +371,7 @@ public int ConfirmDivorceMenuHandler(Handle menu, MenuAction action, int client,
 
 void BuildLilyRankPanel(int client)
 {
+	//Lily排行榜，虽然是临时的
 	char m_szQuery[128];
 	Format(m_szQuery, 128, "SELECT name, lilyrank FROM `playertrack_player` WHERE lilyid > 0 ORDER BY lilyrank DESC LIMIT 30;")
 	SQL_TQuery(g_hDB_csgo, SQLCallback_LilyRank, m_szQuery, GetClientUserId(client));
@@ -352,15 +379,19 @@ void BuildLilyRankPanel(int client)
 
 void LilyRankToMenu(int client, Handle pack)
 {
+	//刷新Pack
 	ResetPack(pack);
-	
-	char m_szItem[256], m_szName[128];
-	Handle menu = CreateMenu(LilyRankMenuHandler);
 
+	//建立排行榜菜单
+	char m_szItem[256], m_szName[128];
+	Handle menu = CreateMenu(MenuHandler_LilyRank);
+
+	//标题
 	SetMenuTitle(menu, "[Planeptune]   Lily Rank \n　");
 
 	int m_iRank, iCount = ReadPackCell(pack);
 
+	//会出现夫妻重复，暂时无解
 	for(int i = 0; i < iCount; ++i)
 	{
 		ReadPackString(pack, m_szName, 128);
@@ -375,13 +406,14 @@ void LilyRankToMenu(int client, Handle pack)
 	DisplayMenu(menu, client, 20);
 }
 
-public int LilyRankMenuHandler(Handle menu, MenuAction action, int client, int itemNum)
+public int MenuHandler_LilyRank(Handle menu, MenuAction action, int client, int itemNum)
 {
 	
 }
 
 void BuildLilyHelpPanel(int client)
 {
+	//lily的帮助菜单
 	Handle panel = CreatePanel();
 	DrawPanelText(panel, "[Lily]  Lily Help");
 	DrawPanelText(panel, " ");

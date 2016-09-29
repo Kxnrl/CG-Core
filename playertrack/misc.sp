@@ -1,5 +1,6 @@
 public void IntiGameData()
 {
+	//初始化GameData数据
 	g_hOSGamedata = LoadGameConfigFile("detect_os.games");
 	if(g_hOSGamedata == INVALID_HANDLE)
 	{
@@ -51,10 +52,12 @@ stock bool IsValidClient(int client, bool checkBOT = false)
 
 public void SettingAdver()
 {
+	//创建Kv
 	Handle kv = CreateKeyValues("ServerAdvertisement", "", "");
 	char FILE_PATH[256];
 	BuildPath(Path_SM, FILE_PATH, 256, "configs/ServerAdvertisement.cfg");
 	
+	//创建Key
 	if(KvJumpToKey(kv, "Settings", true))
 	{
 		KvSetString(kv, "enable", "1");
@@ -65,6 +68,7 @@ public void SettingAdver()
 		KvRewind(kv);
 		KeyValuesToFile(kv, FILE_PATH);
 	}
+
 	CloseHandle(kv);
 	kv = INVALID_HANDLE;
 
@@ -78,12 +82,14 @@ public void SettingAdver()
 
 public void SetClientVIP(int client, int type)
 {
+	//设置VIP(Allow API)
 	g_eClient[client][bIsVip] = true;
 	g_eClient[client][iVipType] = type;
 	
 	char m_szAuth[32];
 	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32);
 
+	//看看这个VIP是不是OP? 并且补起各个权限和权重
 	if(GetUserAdmin(client) == INVALID_ADMIN_ID && FindAdminByIdentity(AUTHMETHOD_STEAM, m_szAuth) == INVALID_ADMIN_ID)
 	{
 		AdminId adm = CreateAdmin(g_eClient[client][szDiscuzName]);
@@ -255,4 +261,30 @@ int FindClientByPlayerId(int PlayerId)
 	}
 
 	return -1;
+}
+
+ public int MenuHandler_MainMenu(Handle menu, MenuAction action, int client, int itemNum) 
+{
+	if(action == MenuAction_Select) 
+	{
+		char info[32];
+		GetMenuItem(menu, itemNum, info, 32);
+		
+		if(strcmp(info, "store") == 0)
+			FakeClientCommand(client, "sm_store");
+		else if(strcmp(info, "faith") == 0)
+			FakeClientCommand(client, "sm_faith");
+		else if(strcmp(info, "lily") == 0)
+			FakeClientCommand(client, "sm_lily");
+		else if(strcmp(info, "music") == 0)
+			FakeClientCommand(client, "sm_music");
+		else if(strcmp(info, "sign") == 0)
+			FakeClientCommand(client, "sm_sign");
+		else if(strcmp(info, "vip") == 0)
+			FakeClientCommand(client, "sm_vip");
+	}
+	else if(action == MenuAction_End)
+	{
+		CloseHandle(menu);
+	}
 }

@@ -1,5 +1,6 @@
 public void SetClientSignStat(int client)
 {
+	//初始化签到程序的Client状态
 	if(g_eClient[client][iSignTime] == 0)
 	{
 		g_eClient[client][hSignTimer] = CreateTimer(600.0, Timer_AllowToLogin, GetClientUserId(client));
@@ -14,6 +15,7 @@ public void SetClientSignStat(int client)
 
 public Action Timer_AllowToLogin(Handle timer, any userid)
 {
+	//计时器满，允许签到
 	int client = GetClientOfUserId(userid);
 
 	if (IsClientInGame(client) && !IsFakeClient(client) && !g_eClient[client][bTwiceLogin])

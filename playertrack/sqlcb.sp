@@ -214,10 +214,15 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 	if(hndl == INVALID_HANDLE)
 	{
 		//输出错误日志
-		LogToFileEx(LogFile, "Query Client Stats Failed! Client:\"%N\" \nError Happen: %s", client, error);
+		if(StrContains(error, "lost connection", false) == -1)
+		{
+			LogToFileEx(LogFile, "Query Client Stats Failed! Client:\"%N\" Error Happened: %s", client, error);
+			return;
+		}
+
 		char m_szAuth[32], m_szQuery[512];
 		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-		Format(m_szQuery, 512, "SELECT id, onlines, number, faith, share, buff, signature, groupid, groupname, exp, level, temp, notice, reqid, reqterm, reqrate, signnumber, signtime, lilyid, lilyrank, lilyexp, lilydate FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
+		Format(m_szQuery, 512, "SELECT id, onlines, number, faith, share, buff, signature, groupid, groupname, exp, level, temp, notice, reqid, reqterm, reqrate, signnumber, signtime, lilyid, lilyrank, lilyexp, lilydate, lasttime FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
 		SQL_TQuery(g_hDB_csgo, SQLCallback_GetClientStat, m_szQuery, g_eClient[client][iUserId], DBPrio_High);
 		return;
 	}
@@ -244,6 +249,8 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 		g_eClient[client][iReqRate] = SQL_FetchInt(hndl, 15);
 		g_eClient[client][iSignNum] = SQL_FetchInt(hndl, 16);
 		g_eClient[client][iSignTime] = SQL_FetchInt(hndl, 17);
+		g_eClient[client][iLastseen] = SQL_FetchInt(hndl, 22);
+
 		InitializeLily(client, SQL_FetchInt(hndl, 18), SQL_FetchInt(hndl, 19), SQL_FetchInt(hndl, 20), SQL_FetchInt(hndl, 21));
 		
 		g_eClient[client][bLoaded] = true;
@@ -251,8 +258,20 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 		char m_szAuth[32], m_szQuery[512];
 		GetClientAuthId(client, AuthId_SteamID64, m_szAuth, 32, true);
 		
-		Format(m_szQuery, 512, "SELECT m.uid, m.username FROM dz_steam_users AS s LEFT JOIN dz_common_member m ON s.uid = m.uid WHERE s.steamID64 = '%s' LIMIT 1", m_szAuth);
-		SQL_TQuery(g_hDB_discuz, SQLCallback_GetClientDiscuzName, m_szQuery, g_eClient[client][iUserId]);
+		if(g_hDB_discuz != INVALID_HANDLE)
+		{
+			Format(m_szQuery, 512, "SELECT m.uid, m.username FROM dz_steam_users AS s LEFT JOIN dz_common_member m ON s.uid = m.uid WHERE s.steamID64 = '%s' LIMIT 1", m_szAuth);
+			SQL_TQuery(g_hDB_discuz, SQLCallback_GetClientDiscuzName, m_szQuery, g_eClient[client][iUserId]);
+		}
+		else
+		{
+			LogToFileEx(LogFile, "Check '%N' DZ Error happened: %s", client, error);
+			RunAdminCacheChecks(client);
+			VipChecked(client);
+			OnClientDataLoaded(client);
+			g_eClient[client][iUID] = -1;
+			strcopy(g_eClient[client][szDiscuzName], 128, "未注册");
+		}
 		
 		if(g_eClient[client][iFaith] == 0 && g_iServerId != 23 && g_iServerId != 24 && g_iServerId != 11 && g_iServerId != 12 && g_iServerId != 13)
 		{
@@ -286,12 +305,23 @@ public void SQLCallback_GetClientDiscuzName(Handle owner, Handle hndl, const cha
 	
 	if(hndl == INVALID_HANDLE)
 	{
-		RunAdminCacheChecks(client);
-		VipChecked(client);
-		OnClientDataLoaded(client);
-		g_eClient[client][iUID] = -1;
-		strcopy(g_eClient[client][szDiscuzName], 128, "未注册");
-		LogToFileEx(LogFile, "Check '%N' VIP Error happened: %s", client, error);
+		if(StrContains(error, "lost connection", false) == -1)
+		{
+			LogToFileEx(LogFile, "Check '%N' DZ Error happened: %s", client, error);
+			RunAdminCacheChecks(client);
+			VipChecked(client);
+			OnClientDataLoaded(client);
+			g_eClient[client][iUID] = -1;
+			strcopy(g_eClient[client][szDiscuzName], 128, "未注册");
+			return;
+		}
+		
+		char m_szAuth[32], m_szQuery[256];
+		GetClientAuthId(client, AuthId_SteamID64, m_szAuth, 32, true);
+		
+		Format(m_szQuery, 256, "SELECT m.uid, m.username FROM dz_steam_users AS s LEFT JOIN dz_common_member m ON s.uid = m.uid WHERE s.steamID64 = '%s' LIMIT 1", m_szAuth);
+		SQL_TQuery(g_hDB_discuz, SQLCallback_GetClientDiscuzName, m_szQuery, g_eClient[client][iUserId]);
+
 		return;
 	}
 
@@ -326,9 +356,17 @@ public void SQLCallback_CheckVIP(Handle owner, Handle hndl, const char[] error, 
 
 	if(hndl == INVALID_HANDLE)
 	{
-		RunAdminCacheChecks(client);
-		VipChecked(client);
-		LogToFileEx(LogFile, "Check '%N' VIP Error happened: %s", client, error);
+		if(StrContains(error, "lost connection", false) == -1)
+		{
+			RunAdminCacheChecks(client);
+			VipChecked(client);
+			LogToFileEx(LogFile, "Check '%N' VIP Error happened: %s", client, error);
+		}
+		
+		char m_szQuery[128];
+		Format(m_szQuery, 128, "SELECT exptime, isyear FROM dz_dc_vip WHERE uid = %d", g_eClient[client][iUID]);
+		SQL_TQuery(g_hDB_discuz, SQLCallback_CheckVIP, m_szQuery, g_eClient[client][iUserId]);
+		
 		return;
 	}
 
@@ -371,12 +409,12 @@ public void SQLCallback_InsertClientStat(Handle owner, Handle hndl, const char[]
 	if(hndl == INVALID_HANDLE)
 	{
 		//记录客户信息 写入到错误日志
-		LogToFileEx(LogFile, "INSERT playertrack_player Failed! Client:\"%N\" \nError Happen: %s", client, error);
+		LogToFileEx(LogFile, "INSERT playertrack_player Failed! Client:\"%N\" Error Happened: %s", client, error);
 		
 		//重试检查  辣鸡阿里云RDS
 		char m_szAuth[32], m_szQuery[512];
 		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-		Format(m_szQuery, 512, "SELECT id, onlines, number, faith, share, buff, signature, groupid, groupname, exp, level, temp, notice, reqid, reqterm, reqrate, signnumber, signtime, lilyid, lilyrank, lilyexp, lilydate FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
+		Format(m_szQuery, 512, "SELECT id, onlines, number, faith, share, buff, signature, groupid, groupname, exp, level, temp, notice, reqid, reqterm, reqrate, signnumber, signtime, lilyid, lilyrank, lilyexp, lilydate, lasttime FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
 		SQL_TQuery(g_hDB_csgo, SQLCallback_GetClientStat, m_szQuery, g_eClient[client][iUserId], DBPrio_High);
 	}
 	else
@@ -404,11 +442,11 @@ public void SQLCallback_SaveClientStat(Handle owner, Handle hndl, const char[] e
 		{
 			g_eClient[client][iDataRetry]++;
 			SQL_TQuery(g_hDB_csgo, SQLCallback_SaveClientStat, g_eClient[client][szUpdateData], g_eClient[client][iUserId]);
-			LogToFileEx(LogFile, "UPDATE Client Data Failed!   Times:%d Player:\"%N\" \nError Happen:%s", g_eClient[client][iDataRetry], client, error);
+			LogToFileEx(LogFile, "UPDATE Client Data Failed!   Times:%d Player:\"%N\" Error Happened:%s", g_eClient[client][iDataRetry], client, error);
 		}
 		else
 		{
-			LogToFileEx(LogFile, "UPDATE Client Data Failed!   Times:(Times out) Player:\"%N\" \nError Happen:%s", client, error);
+			LogToFileEx(LogFile, "UPDATE Client Data Failed!   Times:(Times out) Player:\"%N\" Error Happened:%s", client, error);
 			g_eClient[client][iDataRetry] = 0;
 		}
 	}
@@ -426,7 +464,7 @@ public void SQLCallback_InsertPlayerStat(Handle owner, Handle hndl, const char[]
 	if(hndl == INVALID_HANDLE)
 	{
 		//记录客户信息 写入到错误日志
-		LogToFileEx(LogFile, "INSERT playertrack_analytics Failed!   Player:\"%N\" \nError Happen:%s", client, error);
+		LogToFileEx(LogFile, "INSERT playertrack_analytics Failed!   Player:\"%N\" Error Happened:%s", client, error);
 		char m_szQuery[256];
 		Format(m_szQuery, 256, "SELECT * FROM `playertrack_analytics` WHERE (connect_time = %d AND ip = '%s' AND playerid = %d) order by id desc limit 1;", g_eClient[client][iConnectTime], g_eClient[client][szIP], g_eClient[client][iPlayerId]);
 		SQL_TQuery(g_hDB_csgo, SQLCallback_InsertPlayerStatFailed, m_szQuery, g_eClient[client][iUserId]);
@@ -449,7 +487,7 @@ public void SQLCallback_InsertPlayerStatFailed(Handle owner, Handle hndl, const 
 	if(hndl == INVALID_HANDLE)
 	{
 		//输出错误日志
-		LogToFileEx(LogFile, "Confirm Insert Failed! Client:\"%N\" \nError Happen: %s", error);
+		LogToFileEx(LogFile, "Confirm Insert Failed! Client:\"%N\" Error Happened: %s", error);
 		char m_szQuery[256];
 		Format(m_szQuery, 256, "SELECT * FROM `playertrack_analytics` WHERE (connect_time = %d AND ip = '%s' AND playerid = %d) order by id desc limit 1;", g_eClient[client][iConnectTime], g_eClient[client][szIP], g_eClient[client][iPlayerId]);
 		SQL_TQuery(g_hDB_csgo, SQLCallback_InsertPlayerStatFailed, m_szQuery, g_eClient[client][iUserId]);
@@ -593,10 +631,18 @@ public void SQLCallback_SaveDatabase(Handle owner, Handle hndl, const char[] err
 	{
 		char m_szQuery[512];
 		ReadPackString(data, m_szQuery, 512);
+		int database = ReadPackCell(data);
+		ResetPack(data);
 		LogToFileEx(LogFile, "==========================================================");
-		LogToFileEx(LogFile, "Native SaveDatabase.  Error: %s", error);
+		LogToFileEx(LogFile, "Native SaveDatabase[%s].  Error: %s", database == 0 ? "csgo" : "discuz", error);
 		LogToFileEx(LogFile, "Query: %s", m_szQuery);
 		LogToFileEx(LogFile, "==========================================================");
+		
+		if(StrContains(error, "lost connection", false) != -1)
+		{
+			SQL_TQuery(database == 0 ? g_hDB_csgo : g_hDB_discuz, SQLCallback_NothingCallback, m_szQuery, data);
+			return;
+		}
 	}
 	CloseHandle(data);
 }

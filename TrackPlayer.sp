@@ -1,10 +1,9 @@
 #pragma newdecls required //let`s go! new syntax!!!
-//Build 337
+//Build 340
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define PLUGIN_VERSION " 5.3.2 - 2016/09/16 02:57 "
-#define PLUGIN_PREFIX "[\x0EPlaneptune\x01]  "
+#define PLUGIN_VERSION " 5.3.5- 2016/09/30 03:00 "
 #define PLUGIN_PREFIX "[\x0EPlaneptune\x01]  "
 
 //////////////////////////////
@@ -16,6 +15,8 @@
 //////////////////////////////
 //			ENUMS			//
 //////////////////////////////
+
+//操作系统类型
 enum OS
 {
 	OS_Unknown = -1,
@@ -25,6 +26,7 @@ enum OS
 	OS_Total = 3
 };
 
+//玩家数据
 enum Clients
 {
 	iUserId,
@@ -39,6 +41,7 @@ enum Clients
 	iPlayerId,
 	iNumber,
 	iOnline,
+	iLastseen,
 	iDataRetry,
 	iOSQuery,
 	iAnalyticsId,
@@ -73,6 +76,7 @@ enum Clients
 	OS:iOS
 }
 
+//认证系统Index
 enum eAdmins
 {
 	iType,
@@ -83,6 +87,7 @@ enum eAdmins
 //////////////////////////////////
 //		GLOBAL VARIABLES		//
 //////////////////////////////////
+//Handles
 Handle g_hDB_csgo;
 Handle g_hDB_discuz;
 Handle g_hOSGamedata;
@@ -96,9 +101,11 @@ Handle g_fwdOnLilyDivorce;
 Handle g_hCheckedForwared;
 Handle g_hCVAR;
 
+//enum
 Clients g_eClient[MAXPLAYERS+1][Clients];
 eAdmins g_eAdmin[eAdmins];
 
+//全部变量
 int g_iServerId = -1;
 int g_iReconnect_csgo;
 int g_iReconnect_discuz;
@@ -137,17 +144,22 @@ public Plugin myinfo =
 //////////////////////////////
 public void OnPluginStart()
 {
+	//建立Log文件
 	BuildPath(Path_SM, LogFile, 128, "logs/Core.log");
 
+	//锁定ConVar
 	g_hCVAR = FindConVar("sv_hibernate_when_empty");
 	SetConVarInt(g_hCVAR, 0);
 	HookConVarChange(g_hCVAR, OnSettingChanged);
 
+	//连接到数据库
 	SQL_TConnect_csgo();
 	SQL_TConnect_discuz();
 	
+	//初始化游戏数据
 	IntiGameData();
 
+	//监听控制台命令
 	RegConsoleCmd("sm_sign", Command_Login);
 	RegConsoleCmd("sm_qiandao", Command_Login);
 	RegConsoleCmd("sm_online", Command_Online);
@@ -159,11 +171,14 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_exp", Command_Exp);
 	RegConsoleCmd("sm_cp", Command_Lily);
 	RegConsoleCmd("sm_lily", Command_Lily);
+	RegConsoleCmd("sm_cg", Command_Menu);
 
+	//创建管理员命令
 	RegAdminCmd("sm_pa", Command_Set, ADMFLAG_BAN);
 	RegAdminCmd("sm_reloadadv", Command_ReloadAdv, ADMFLAG_BAN);
 	RegAdminCmd("pareloadall", Command_reloadall, ADMFLAG_ROOT);
 
+	//创建全局Forward
 	g_fwdOnServerLoaded = CreateGlobalForward("CG_OnServerLoaded", ET_Ignore, Param_Cell);
 	g_fwdOnClientDailySign = CreateGlobalForward("CG_OnClientDailySign", ET_Ignore, Param_Cell);
 	g_fwdOnClientDataLoaded = CreateGlobalForward("CG_OnClientLoaded", ET_Ignore, Param_Cell);
@@ -175,6 +190,7 @@ public void OnPluginStart()
 
 public void OnPluginEnd()
 {
+	//保存所有玩家数据
 	for(int i = 1; i <= MaxClients; ++i)
 		if(IsClientInGame(i))
 			OnClientDisconnect(i);
@@ -185,9 +201,11 @@ public void OnPluginEnd()
 //////////////////////////////
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
+	//创建API
 	CreateNative("CG_GetServerID", Native_GetServerID);
 	CreateNative("CG_GetShare", Native_GetShare);
 	CreateNative("CG_GetOnlines", Native_GetOnlines);
+	CreateNative("CG_GetLastseen", Native_GetLastseen);
 	CreateNative("CG_GetPlayerID", Native_GetPlayerID);
 	CreateNative("CG_GetClientFaith", Native_GetClientFaith);
 	CreateNative("CG_GetClientShare", Native_GetClientShare);
@@ -224,11 +242,13 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	g_hCheckedForwared = CreateForward(ET_Ignore, Param_Cell);
 	CreateNative("HookClientVIPChecked", Native_HookClientVIPChecked);
 
+	//读取服务器IP地址
 	int ip = GetConVarInt(FindConVar("hostip"));
 	Format(g_szIP, 64, "%d.%d.%d.%d:%d", ((ip & 0xFF000000) >> 24) & 0xFF, ((ip & 0x00FF0000) >> 16) & 0xFF, ((ip & 0x0000FF00) >>  8) & 0xFF, ((ip & 0x000000FF) >>  0) & 0xFF, GetConVarInt(FindConVar("hostport")));
 
 	g_bLateLoad = late;
 
+	//注册函数库
 	RegPluginLibrary("csgogamers");
 
 	return APLRes_Success;
@@ -236,12 +256,14 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 void OnServerLoadSuccess()
 {
+	//Call Forward
 	Call_StartForward(g_fwdOnServerLoaded);
 	Call_Finish();
 }
 
 void OnClientSignSucessed(int client)
 {
+	//Call Forward
 	Call_StartForward(g_fwdOnClientDailySign);
 	Call_PushCell(client);
 	Call_Finish();
@@ -249,9 +271,11 @@ void OnClientSignSucessed(int client)
 
 void OnClientDataLoaded(int client)
 {
+	//检查玩家是否设置Buff|输出控制台数据
 	CheckClientBuff(client);
 	PrintConsoleInfo(client);
 
+	//Call Forward
 	Call_StartForward(g_fwdOnClientDataLoaded);
 	Call_PushCell(client);
 	Call_Finish();
@@ -259,6 +283,7 @@ void OnClientDataLoaded(int client)
 
 void OnClientAuthLoaded(int client)
 {
+	//Call Forward
 	Call_StartForward(g_fwdOnClientAuthLoaded);
 	Call_PushCell(client);
 	Call_Finish();
@@ -266,6 +291,7 @@ void OnClientAuthLoaded(int client)
 
 void VipChecked(int client)
 {
+	//Call Forward
 	Call_StartForward(g_hCheckedForwared);
 	Call_PushCell(client);
 	Call_Finish();
@@ -284,6 +310,11 @@ public int Native_GetShare(Handle plugin, int numParams)
 public int Native_GetOnlines(Handle plugin, int numParams)
 {
 	return g_eClient[GetNativeCell(1)][iOnline];
+}
+
+public int Native_GetLastseen(Handle plugin, int numParams)
+{
+	return g_eClient[GetNativeCell(1)][iLastseen];
 }
 
 public int Native_GetPlayerID(Handle plugin, int numParams)
@@ -381,6 +412,7 @@ public int Native_SaveDatabase(Handle plugin, int numParams)
 		{
 			Handle data = CreateDataPack();
 			WritePackString(data, m_szQuery);
+			WritePackCell(data, 0);
 			ResetPack(data);
 			SQL_TQuery(g_hDB_csgo, SQLCallback_SaveDatabase, m_szQuery, data);
 		}
@@ -396,6 +428,7 @@ public int Native_SaveForumData(Handle plugin, int numParams)
 		{
 			Handle data = CreateDataPack();
 			WritePackString(data, m_szQuery);
+			WritePackCell(data, 1);
 			ResetPack(data);
 			SQL_TQuery(g_hDB_discuz, SQLCallback_SaveDatabase, m_szQuery, data);
 		}
@@ -427,6 +460,7 @@ public int Native_GivePlayerExp(Handle plugin, int numParams)
 	int Exp = GetNativeCell(2);
 	GetNativeString(3, m_szReason, 128);
 	
+	//过滤临时认证
 	if(IsClientInGame(client) && g_eClient[client][iTemp] == -1)
 	{
 		PrintToConsole(client,"%s  你获得了%d点认证Exp!  来自: %s", PLUGIN_PREFIX, Exp, m_szReason);
@@ -592,11 +626,13 @@ public int Native_AddLily(Handle plugin, int numParams)
 //////////////////////////////
 public void OnSettingChanged(Handle convar, const char[] oldValue, const char[] newValue)
 {
+	//锁定ConVar
 	SetConVarInt(g_hCVAR, 0);
 }
 
 public void OnMapStart()
 {
+	//每次地图开始都刷新全部Share
 	if(g_iServerId != 0 && g_hDB_csgo != INVALID_HANDLE)
 	{
 		char m_szQuery[256];
@@ -608,25 +644,14 @@ public void OnMapStart()
 //////////////////////////////
 //		ON CLIENT EVENT		//
 //////////////////////////////
-public void OnClientPostAdminCheck(int client)
+public void OnClientConnected(int client)
 {
-	g_eClient[client][bIsBot] = false;
-
-	if(IsClientBot(client) || client > MaxClients || client < 1 || IsFakeClient(client))
-	{
-		g_eClient[client][bIsBot] = true;
-		OnClientDataLoaded(client);
-		OnClientAuthLoaded(client);
-		VipChecked(client);
-		return;
-	}
-
+	//初始化Client数据
 	g_eClient[client][bLoaded] = false;
 	g_eClient[client][LoginProcess] = false;
 	g_eClient[client][bAllowLogin] = false;
 	g_eClient[client][bTwiceLogin] = false;
 	g_eClient[client][bIsVip] = false;
-	//g_eClient[client][bPrint] = false;
 	g_eClient[client][iUserId] = GetClientUserId(client);
 	g_eClient[client][iUID] = -1;
 	g_eClient[client][iFaith] = -1;
@@ -639,6 +664,67 @@ public void OnClientPostAdminCheck(int client)
 	g_eClient[client][iPlayerId] = 0;
 	g_eClient[client][iNumber] = 0;
 	g_eClient[client][iOnline] = 0;
+	g_eClient[client][iLastseen] = 0;
+	g_eClient[client][iDataRetry] = 0;
+	g_eClient[client][iOSQuery] = 0;
+	g_eClient[client][iAnalyticsId] = -1;
+	g_eClient[client][iVipType] = 0;
+	g_eClient[client][iGroupId] = 0;
+	g_eClient[client][iLevel] = 0;
+	g_eClient[client][iExp] = 0;
+	g_eClient[client][iTemp] = 0;
+	g_eClient[client][iUpgrade] = 0;
+	g_eClient[client][iReqId] = 0;
+	g_eClient[client][iReqTerm] = 0;
+	g_eClient[client][iReqRate] = 0;
+	g_eClient[client][iLilyId] = -2;
+	g_eClient[client][iLilyRank] = 0;
+	g_eClient[client][iLilyExp] = 0;
+	g_eClient[client][iLilyDate] = 0;
+	g_eClient[client][iOS] = OS_Unknown;
+
+	strcopy(g_eClient[client][szIP], 32, "127.0.0.1");
+	strcopy(g_eClient[client][szSignature], 256, "数据读取中...");
+	strcopy(g_eClient[client][szDiscuzName], 256, "未注册");
+	strcopy(g_eClient[client][szAdminFlags], 64, "Unknown");
+	strcopy(g_eClient[client][szInsertData], 512, "");
+	strcopy(g_eClient[client][szUpdateData], 1024, "");
+	strcopy(g_eClient[client][szGroupName], 64, "未认证");
+}
+
+public void OnClientPostAdminCheck(int client)
+{
+	//过滤BOT和FakeClient
+	g_eClient[client][bIsBot] = false;
+
+	if(IsClientBot(client) || client > MaxClients || client < 1 || IsFakeClient(client))
+	{
+		g_eClient[client][bIsBot] = true;
+		OnClientDataLoaded(client);
+		OnClientAuthLoaded(client);
+		VipChecked(client);
+		return;
+	}
+
+	//Re Fix
+	g_eClient[client][bLoaded] = false;
+	g_eClient[client][LoginProcess] = false;
+	g_eClient[client][bAllowLogin] = false;
+	g_eClient[client][bTwiceLogin] = false;
+	g_eClient[client][bIsVip] = false;
+	g_eClient[client][iUserId] = GetClientUserId(client);
+	g_eClient[client][iUID] = -1;
+	g_eClient[client][iFaith] = -1;
+	g_eClient[client][iBuff] = 0;
+	g_eClient[client][iShare] = -1;
+	g_eClient[client][iGetShare] = 0;
+	g_eClient[client][iSignNum] = 0;
+	g_eClient[client][iSignTime] = 0;
+	g_eClient[client][iConnectTime] = GetTime();
+	g_eClient[client][iPlayerId] = 0;
+	g_eClient[client][iNumber] = 0;
+	g_eClient[client][iOnline] = 0;
+	g_eClient[client][iLastseen] = 0;
 	g_eClient[client][iDataRetry] = 0;
 	g_eClient[client][iOSQuery] = 0;
 	g_eClient[client][iAnalyticsId] = -1;
@@ -666,7 +752,8 @@ public void OnClientPostAdminCheck(int client)
 	strcopy(g_eClient[client][szGroupName], 64, "未认证");
 
 	//从数据库查询初始数据
-	if(g_hDB_csgo != INVALID_HANDLE && g_hDB_discuz != INVALID_HANDLE)
+	//如果连不上数据库直接就跳过了
+	if(g_hDB_csgo != INVALID_HANDLE)
 	{
 		for(int i = 0; i < view_as<int>(OS_Total); i++)
 			QueryClientConVar(client, g_szOSConVar[i], OnOSQueried);
@@ -678,11 +765,12 @@ public void OnClientPostAdminCheck(int client)
 		char m_szAuth[32], m_szQuery[512];
 		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
 		
-		Format(m_szQuery, 512, "SELECT id, onlines, number, faith, share, buff, signature, groupid, groupname, exp, level, temp, notice, reqid, reqterm, reqrate, signnumber, signtime, lilyid, lilyrank, lilyexp, lilydate FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
+		Format(m_szQuery, 512, "SELECT id, onlines, number, faith, share, buff, signature, groupid, groupname, exp, level, temp, notice, reqid, reqterm, reqrate, signnumber, signtime, lilyid, lilyrank, lilyexp, lilydate, lasttime FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
 		SQL_TQuery(g_hDB_csgo, SQLCallback_GetClientStat, m_szQuery, g_eClient[client][iUserId], DBPrio_High);
 	}
 	else
 	{
+		//Call Forward让其它程序也执行
 		OnClientAuthLoaded(client);
 		OnClientDataLoaded(client);
 		VipChecked(client);
@@ -692,11 +780,14 @@ public void OnClientPostAdminCheck(int client)
 
 public void OnClientDisconnect(int client)
 {
+	//Bot直接返回
 	if(g_eClient[client][bIsBot])
 		return;
 
+	//检查Lily在线情况
 	CheckingLily(client);
 	
+	//杀掉签到Timer
 	if(g_eClient[client][hSignTimer] != INVALID_HANDLE)
 	{
 		KillTimer(g_eClient[client][hSignTimer]);
@@ -711,8 +802,10 @@ public void OnClientDisconnect(int client)
 	}
 	
 	//执行回写数据
+	//数据库不可用或没加载成功就不用了
 	if(g_hDB_csgo != INVALID_HANDLE && g_eClient[client][bLoaded])
 	{
+		//保存数据
 		SaveClient(client);
 	}
 }
@@ -722,11 +815,13 @@ public void OnClientDisconnect(int client)
 //////////////////////////////
 public Action Command_ReloadAdv(int client, int args)
 {
+	//设置广告
 	SettingAdver();
 }
 
 public Action Command_Online(int client, int args)
 {
+	//查询在线时间
 	int m_iHours = g_eClient[client][iOnline]/3600;
 	int m_iMins = g_eClient[client][iOnline]/60 - m_iHours*60;
 	int t_iMins = (GetTime() - g_eClient[client][iConnectTime])/60;
@@ -735,6 +830,7 @@ public Action Command_Online(int client, int args)
 
 public Action Command_Track(int client, int args)
 {
+	//控制台查看玩家数据
 	if(client == 0)
 		return Plugin_Handled;
 	
@@ -773,6 +869,7 @@ public Action Command_Track(int client, int args)
 
 public Action Command_Faith(int client, int args)
 {
+	//判断是不是设置了Faith
 	if(1 <= g_eClient[client][iFaith] <= 4)
 		ShowFaithMainMenuToClient(client);
 	else
@@ -781,6 +878,7 @@ public Action Command_Faith(int client, int args)
 
 public Action Command_FHelp(int client, int args)
 {
+	//创建帮助面板
 	Handle panel = CreatePanel(GetMenuStyleHandle(MenuStyle_Radio));
 	
 	char szItem[64];
@@ -808,6 +906,7 @@ public Action Command_FHelp(int client, int args)
 
 public Action Command_Share(int client, int args)
 {
+	//直接输出所有Share到聊天框
 	float share[5];
 	share[ALLSHARE] = float(g_Share[PURPLE]+g_Share[BLACK]+g_Share[WHITE]+g_Share[GREEN]);
 	share[PURPLE] = (float(g_Share[PURPLE])/share[ALLSHARE])*100;
@@ -823,7 +922,8 @@ public Action Command_Share(int client, int args)
 
 public Action Command_Set(int client, int args)
 {
-	Handle menu = CreateMenu(AdminMainMenuHandler);
+	//狗OP的菜单
+	Handle menu = CreateMenu(MenuHandler_AdminPAMenuHandler);
 	SetMenuTitle(menu, "[玩家认证]   管理员菜单\n　");
 	AddMenuItem(menu, "9000", "添加临时认证[神烦坑比]");
 	AddMenuItem(menu, "9001", "添加临时认证[小学生]");
@@ -835,6 +935,7 @@ public Action Command_Set(int client, int args)
 
 public Action Command_Exp(int client, int args)
 {
+	//判定是不是认证
 	if(g_eClient[client][iGroupId] > 0 && g_eClient[client][iTemp] == -1)
 		PrintToChat(client, "%s \x04你当前经验值为: %i ,等级为: %i", PLUGIN_PREFIX, g_eClient[client][iExp], g_eClient[client][iLevel]);
 	else
@@ -843,6 +944,7 @@ public Action Command_Exp(int client, int args)
 
 public Action Command_reloadall(int client, int args)
 {
+	//管理员刷新所有人的认证
 	for(int i = 1; i <= MaxClients; ++i)
 	{
 		if(IsClientInGame(i))
@@ -852,5 +954,23 @@ public Action Command_reloadall(int client, int args)
 
 public Action Command_Lily(int client, int args)
 {
+	//打开Lily主菜单
 	BuildLilyMenuToClient(client);
+}
+
+public Action Command_Menu(int client, int args)
+{
+	//创建CG玩家主菜单
+	Handle menu = CreateMenu(MenuHandler_MainMenu);
+	SetMenuTitle(menu, "[Planeptune]   主菜单\n　");
+
+	AddMenuItem(menu, "store", "打开Store商店[购买皮肤/名字颜色/翅膀等道具]");
+	AddMenuItem(menu, "faith", "打开Faith菜单[Faith信仰系统各个功能]");
+	AddMenuItem(menu, "lily", "打开Lily菜单[进行CP配对/加成等功能]");
+	AddMenuItem(menu, "music", "打开CG电台[可以点播歌曲/收听电台]");
+	AddMenuItem(menu, "sign", "进行每日游戏签到[签到可以获得相应的奖励]");
+	AddMenuItem(menu, "vip", "打开VIP菜单[年费/永久VIP可用]", g_eClient[client][iVipType] > 1 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+
+	SetMenuExitButton(menu, true);
+	DisplayMenu(menu, client, 0);
 }
