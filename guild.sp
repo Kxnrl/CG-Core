@@ -2,7 +2,7 @@
 #pragma newdecls required
 
 #include <sourcemod>
-#include <sdktools>
+//#include <sdktools>
 #include <cstrike>
 #include <cg_core>
 #include <store>
@@ -69,7 +69,7 @@ void ShowMainGuild(int client)
 	int ishare = CG_GetClientShare(client);
 	
 	Handle menu = CreateMenu(MenuHandler_MainGuild);
-	SetMenuTitle(menu, "[Planeptune]   Faith - Guild Center\n 你当前有 %d 点 Share\n 当前你没有进行中的任务\n ", ishare);
+	SetMenuTitle(menu, "[Planeptune]   Faith - Guild \n 你当前有 %d 点 Share\n 当前你没有进行中的任务\n ", ishare);
 	
 	AddMenuItem(menu, "0", "承接S级任务", ishare >= 3000 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 	AddMenuItem(menu, "1", "承接A级任务", ishare >= 1500 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
@@ -102,7 +102,7 @@ void ShowRateMenu(int client, int reqid)
 	int ishare = CG_GetClientShare(client);
 	
 	Handle menu = CreateMenu(MenuHandler_RateGuild);
-	SetMenuTitle(menu, "[Planeptune]   Faith - Guild Center\n 你当前有 %d 点 Share\n ", ishare);
+	SetMenuTitle(menu, "[Planeptune]   Faith - Guild \n 你当前有 %d 点 Share\n ", ishare);
 	
 	int rate = CG_GetReqRate(client);
 	int term = CG_GetReqTerm(client);
@@ -151,7 +151,7 @@ void SelectReqMenu(int client, int level)
 	int ishare = CG_GetClientShare(client);
 	
 	Handle menu = CreateMenu(MenuHandler_SelectReq);
-	SetMenuTitle(menu, "[Planeptune]   Faith - Guild Center\n 你当前有 %d 点 Share\n  ", ishare);
+	SetMenuTitle(menu, "[Planeptune]   Faith - Guild \n 你当前有 %d 点 Share\n  ", ishare);
 	
 	int count;
 	char szItem[256], szId[4];
@@ -195,7 +195,7 @@ void ConfirmRateMenu(int client, int type)
 	int ishare = CG_GetClientShare(client);
 	
 	Handle menu = CreateMenu(MenuHandler_ConfirmRate);
-	SetMenuTitle(menu, "[Planeptune]   Faith - Guild Center[beta]\n 你当前有 %d 点 Share\n ", ishare);
+	SetMenuTitle(menu, "[Planeptune]   Faith - Guild \n 你当前有 %d 点 Share\n ", ishare);
 	
 	if(type == 0)
 	{
@@ -259,7 +259,7 @@ void ConfirmReqMenu(int client, int id)
 	int ishare = CG_GetClientShare(client);
 	
 	Handle menu = CreateMenu(MenuHandler_ConfirmReq);
-	SetMenuTitle(menu, "[Planeptune]   Faith - Guild Center\n 你当前有 %d 点 Share\n ", ishare);
+	SetMenuTitle(menu, "[Planeptune]   Faith - Guild \n 你当前有 %d 点 Share\n ", ishare);
 	
 	char szItem[256];
 

@@ -1,9 +1,9 @@
 #pragma newdecls required //let`s go! new syntax!!!
-//Build 340
+//Build 354
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define PLUGIN_VERSION " 5.3.5- 2016/09/30 03:00 "
+#define PLUGIN_VERSION " 5.3.7rc3 - 2016/10/08 02:46 "
 #define PLUGIN_PREFIX "[\x0EPlaneptune\x01]  "
 
 //////////////////////////////
@@ -96,6 +96,8 @@ Handle g_fwdOnClientDailySign;
 Handle g_fwdOnClientDataLoaded;
 Handle g_fwdOnClientAuthLoaded;
 Handle g_fwdOnClientCompleteReq;
+Handle g_fwdOnAPIStoreSetCredits;
+Handle g_fwdOnAPIStoreGetCredits;
 Handle g_fwdOnLilyCouple;
 Handle g_fwdOnLilyDivorce;
 Handle g_hCheckedForwared;
@@ -172,6 +174,8 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_cp", Command_Lily);
 	RegConsoleCmd("sm_lily", Command_Lily);
 	RegConsoleCmd("sm_cg", Command_Menu);
+	RegConsoleCmd("sm_investment", Command_Inves);
+	RegConsoleCmd("sm_inves", Command_Inves);
 
 	//创建管理员命令
 	RegAdminCmd("sm_pa", Command_Set, ADMFLAG_BAN);
@@ -180,6 +184,8 @@ public void OnPluginStart()
 
 	//创建全局Forward
 	g_fwdOnServerLoaded = CreateGlobalForward("CG_OnServerLoaded", ET_Ignore, Param_Cell);
+	g_fwdOnAPIStoreSetCredits = CreateGlobalForward("CG_APIStoreSetCredits", ET_Event, Param_Cell, Param_Cell, Param_String, Param_Cell);
+	g_fwdOnAPIStoreGetCredits = CreateGlobalForward("CG_APIStoreGetCredits", ET_Event, Param_Cell);
 	g_fwdOnClientDailySign = CreateGlobalForward("CG_OnClientDailySign", ET_Ignore, Param_Cell);
 	g_fwdOnClientDataLoaded = CreateGlobalForward("CG_OnClientLoaded", ET_Ignore, Param_Cell);
 	g_fwdOnClientAuthLoaded = CreateGlobalForward("PA_OnClientLoaded", ET_Ignore, Param_Cell);
@@ -236,7 +242,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("Lily_GetRank", Native_GetLilyRank);
 	CreateNative("Lily_GetExp", Native_GetLilyExp);
 	CreateNative("Lily_GetDate", Native_GetLilyDate);
-	CreateNative("Lily_SetExp", Native_SetLilyExp);
+	CreateNative("Lily_GiveExp", Native_GiveLilyExp);
 	CreateNative("Lily_AddLily", Native_AddLily);
 
 	g_hCheckedForwared = CreateForward(ET_Ignore, Param_Cell);
@@ -295,6 +301,33 @@ void VipChecked(int client)
 	Call_StartForward(g_hCheckedForwared);
 	Call_PushCell(client);
 	Call_Finish();
+}
+
+bool OnAPIStoreSetCredits(int client, int credits, const char[] reason, bool immed)
+{
+	bool result;
+
+	//Call Forward
+	Call_StartForward(g_fwdOnAPIStoreSetCredits);
+	Call_PushCell(client);
+	Call_PushCell(credits);
+	Call_PushString(reason);
+	Call_PushCell(immed);
+	Call_Finish(result);
+	
+	return result;
+}
+
+int OnAPIStoreGetCredits(int client) 
+{
+	int result;
+	
+	//Call Forward
+	Call_StartForward(g_fwdOnAPIStoreGetCredits);
+	Call_PushCell(client);
+	Call_Finish(result);
+
+	return result;
 }
 
 public int Native_GetServerID(Handle plugin, int numParams)
@@ -470,7 +503,7 @@ public int Native_GivePlayerExp(Handle plugin, int numParams)
 		{
 			g_eClient[client][iExp] = 0;
 			g_eClient[client][iLevel]++;
-			PrintToChat(client, "%s  \x04你的认证等级已提升,当前\x0C%d\x04级", g_eClient[client][iLevel]);
+			PrintToChat(client, "%s  \x04你的认证等级已提升,当前\x0C%d\x04级", PLUGIN_PREFIX, g_eClient[client][iLevel]);
 			char m_szQuery[128];
 			Format(m_szQuery, 128, "UPDATE `playertrack_player` SET level = level + 1 WHERE id = %d", g_eClient[client][iPlayerId]);
 			CG_SaveDatabase(m_szQuery);
@@ -544,7 +577,7 @@ public int Native_CheckReq(Handle plugin, int numParams)
 			if(g_eClient[client][iReqRate] >= g_eClient[client][iReqTerm])
 			{
 				char m_szQuery[256];
-				Format(m_szQuery, 256, "INSERT INTO `playertrack_guild` VALUES (DEFAULT, %d, %d, %d)", g_eClient[client][iPlayerId], g_eClient[client][iReqRate], GetTime());
+				Format(m_szQuery, 256, "INSERT INTO `playertrack_guild` VALUES (DEFAULT, %d, %d, %d)", g_eClient[client][iPlayerId], g_eClient[client][iReqId], GetTime());
 				SQL_TQuery(g_hDB_csgo, SQLCallback_InsertGuild, m_szQuery, GetClientUserId(client));
 				
 				Call_StartForward(g_fwdOnClientCompleteReq);
@@ -576,7 +609,7 @@ public int Native_GetLilyDate(Handle plugin, int numParams)
 	return g_eClient[GetNativeCell(1)][iLilyDate];
 }
 
-public int Native_SetLilyExp(Handle plugin, int numParams)
+public int Native_GiveLilyExp(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
 	int exp = GetNativeCell(2)
@@ -871,7 +904,7 @@ public Action Command_Faith(int client, int args)
 {
 	//判断是不是设置了Faith
 	if(1 <= g_eClient[client][iFaith] <= 4)
-		ShowFaithMainMenuToClient(client);
+		BuildFaithMainMenu(client);
 	else
 		ShowFaithFirstMenuToClient(client);
 }
@@ -973,4 +1006,9 @@ public Action Command_Menu(int client, int args)
 
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 0);
+}
+
+public Action Command_Inves(int client, int args)
+{
+	BuildInvestmentMenu(client);
 }

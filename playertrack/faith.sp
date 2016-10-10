@@ -138,7 +138,7 @@ public int MenuHandler_FaithConfirm(Handle menu, MenuAction action, int client, 
 	}
 }
 
-public void ShowFaithMainMenuToClient(int client)
+public void BuildFaithMainMenu(int client)
 {
 	if(!(0 < g_eClient[client][iFaith] <= FAITH_COUNTS))
 	{
@@ -154,13 +154,13 @@ public void ShowFaithMainMenuToClient(int client)
 	AddMenuItem(menu, "fbuff", "查看各个Faith的Buff");
 	AddMenuItem(menu, "guild", "承接任务以增加Sahre");
 	AddMenuItem(menu, "rank", "查看你的Share排行");
+	AddMenuItem(menu, "inves", "投资系统[Alpha测试]");
+	AddMenuItem(menu, "freset", "国庆限时重选Faith", ITEMDRAW_DISABLED);
 
 	if(g_eClient[client][iBuff] <= 0)
 		AddMenuItem(menu, "reset", "初次设置副Buff");
 	else
 		AddMenuItem(menu, "reset", "重新选择副Buff");
-	
-	AddMenuItem(menu, "charge", "充值信仰[已关闭]", ITEMDRAW_DISABLED);
 
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 0);
@@ -181,12 +181,16 @@ public int MenuHandler_FaithMain(Handle menu, MenuAction action, int client, int
 			ShowAllFaithBuffToClient(client);
 		else if(StrEqual(info, "guild"))
 			FakeClientCommandEx(client, "sm_guild");
+		else if(StrEqual(info, "inves"))
+			BuildInvestmentMenu(client);
+		else if(StrEqual(info, "freset"))
+			FakeClientCommandEx(client, "sm_freset");
 		else if(StrEqual(info, "reset"))
 		{
 			if(g_eClient[client][iBuff] <= 0)
 				CheckClientBuff(client);
 			else
-				FakeClientCommandEx(client, "sm_freset");
+				FakeClientCommandEx(client, "sm_fbuffreset");
 		}		
 		else if(StrEqual(info, "charge"))
 			FakeClientCommandEx(client, "sm_fcharge");
@@ -265,7 +269,7 @@ public int MenuHandler_FaithShowAllBuff(Handle menu, MenuAction action, int clie
 {
 	if(action == MenuAction_Cancel && itemNum == MenuCancel_ExitBack)
 	{
-		ShowFaithMainMenuToClient(client);
+		BuildFaithMainMenu(client);
 	}
 }
 
@@ -474,4 +478,308 @@ void SetClientBuff(int client, int buff)
 	char m_szQuery[256];
 	Format(m_szQuery, 256, "UPDATE `playertrack_player` SET buff = '%d' WHERE id = '%d'", buff, g_eClient[client][iPlayerId]);
 	SQL_TQuery(g_hDB_csgo, SQLCallback_SetBuff, m_szQuery, GetClientUserId(client));
+}
+
+void BuildInvestmentMenu(int client)
+{
+	Handle menu = CreateMenu(MenuHandler_InvestmentConfirm);
+	SetMenuTitle(menu, "[Planeptune]   Faith - Investment [developer preview]\n　");
+	
+	AddMenuItem(menu, "", "因Invesment仍处于开发者预览功能", ITEMDRAW_DISABLED);
+	AddMenuItem(menu, "", "进入Invesment之后任意操作都是不可逆的", ITEMDRAW_DISABLED);
+	AddMenuItem(menu, "", "有可能会导致Share/Credits增减或者回档", ITEMDRAW_DISABLED);
+	AddMenuItem(menu, "", "你确定要进入投资系统吗", ITEMDRAW_DISABLED);
+
+	AddMenuItem(menu, "sure", "我已经明白风险,且确定进入");
+	AddMenuItem(menu, "back", "我承担不起风险,我选择返回");
+
+	SetMenuExitBackButton(menu, true);
+	SetMenuExitButton(menu, false);
+	DisplayMenu(menu, client, 0);
+}
+
+public int MenuHandler_InvestmentConfirm(Handle menu, MenuAction action, int client, int itemNum) 
+{
+	if(action == MenuAction_Select) 
+	{
+		char info[32];
+		GetMenuItem(menu, itemNum, info, 32);
+		
+		if(StrEqual(info, "sure"))
+		{
+			Handle menu2 = CreateMenu(MenuHandler_InvestmentConfirm2);
+			SetMenuTitle(menu2, "[Planeptune]   Faith - Investment [developer preview]\n　");
+			
+			AddMenuItem(menu2, "", "我已经做好了承担后果的准备", ITEMDRAW_DISABLED);
+			AddMenuItem(menu2, "", "一旦出现问题后果都是我自己承担", ITEMDRAW_DISABLED);
+			AddMenuItem(menu2, "", "我不会麻烦管理员处理有关此的问题", ITEMDRAW_DISABLED);
+			AddMenuItem(menu2, "back", "我承担不起风险,我选择返回");
+			AddMenuItem(menu2, "back", "我承担不起风险,我选择返回");
+			AddMenuItem(menu2, "sure", "我同意以上使用协议并进入");
+
+			SetMenuExitBackButton(menu2, true);
+			SetMenuExitButton(menu2, false);
+			DisplayMenu(menu2, client, 0);
+		}
+		else
+		{
+			BuildFaithMainMenu(client);
+		}
+	}
+	else if(action == MenuAction_Cancel && itemNum == MenuCancel_ExitBack)
+	{
+		BuildFaithMainMenu(client);
+	}
+	else if(action == MenuAction_End)
+	{
+		CloseHandle(menu);
+	}
+}
+
+public int MenuHandler_InvestmentConfirm2(Handle menu, MenuAction action, int client, int itemNum)
+{
+	if(action == MenuAction_Select) 
+	{
+		char info[32];
+		GetMenuItem(menu, itemNum, info, 32);
+		
+		if(StrEqual(info, "sure"))
+		{
+			char m_szQuery[128];
+			Format(m_szQuery, 128, "SELECT * FROM playertrack_investment WHERE playerid = %d", g_eClient[client][iPlayerId]);
+			SQL_TQuery(g_hDB_csgo, SQLCallback_InvesProc, m_szQuery, GetClientUserId(client));
+		}
+		else
+		{
+			BuildFaithMainMenu(client);
+		}
+	}
+	else if(action == MenuAction_Cancel && itemNum == MenuCancel_ExitBack)
+	{
+		BuildFaithMainMenu(client);
+	}
+	else if(action == MenuAction_End)
+	{
+		CloseHandle(menu);
+	}
+}
+
+
+void BuildInvestmentListMenu(int client, Handle hPack)
+{
+	ResetPack(hPack);
+	int Commerce_Lvl = ReadPackCell(hPack);
+	int Commerce_Exp = ReadPackCell(hPack);
+	int Industrial_Lvl = ReadPackCell(hPack);
+	int Industrial_Exp = ReadPackCell(hPack);
+	int PublicRelations_Lvl = ReadPackCell(hPack);
+	int PublicRelations_Exp = ReadPackCell(hPack);
+	CloseHandle(hPack);
+	
+	Handle menu = CreateMenu(MenuHandler_InvestmentMenu);
+	SetMenuTitle(menu, "[Planeptune]   Faith - Investment :: Select [developer preview]\n　\n Your Credits: %d \n \n ", OnAPIStoreGetCredits(client));
+	
+	char m_szProc[128], m_szItem[128], m_szDesc[256];
+	
+	BuildInvesProcBar(Commerce_Exp, m_szProc, 256);
+	Format(m_szItem, 128, "commerce_%d_%d", Commerce_Lvl, Commerce_Exp);
+	Format(m_szDesc, 256, "  Commerce :: Lv.%d\n    %s\n     Requirement: %d Credits\n ", Commerce_Lvl, m_szProc, (Commerce_Lvl == 7 && Commerce_Exp == 10) ? 0 : Commerce_Lvl*1000+1000);
+	AddMenuItem(menu, m_szItem, m_szDesc, (Commerce_Lvl == 7 && Commerce_Exp == 10) ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
+	
+	BuildInvesProcBar(Industrial_Exp, m_szProc, 256);
+	Format(m_szItem, 128, "industrial_%d_%d", Industrial_Lvl, Industrial_Exp);
+	Format(m_szDesc, 256, "  Industrial :: Lv.%d\n    %s\n     Requirement: %d Credits\n ", Industrial_Lvl, m_szProc, (Industrial_Lvl == 10 && Industrial_Exp == 10) ? 0 : Industrial_Lvl*1000+1000);
+	AddMenuItem(menu, m_szItem, m_szDesc, (Industrial_Lvl == 10 && Industrial_Exp == 10) ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
+	
+	BuildInvesProcBar(PublicRelations_Exp, m_szProc, 256);
+	Format(m_szItem, 128, "publicrelations_%d_%d", PublicRelations_Lvl, PublicRelations_Exp);
+	Format(m_szDesc, 256, "  Public Relations :: Lv.%d\n    %s\n     Requirement: %d Credits\n ", PublicRelations_Lvl, m_szProc, (PublicRelations_Lvl == 10 && PublicRelations_Exp == 10) ? 0 : PublicRelations_Lvl*1000+500);
+	AddMenuItem(menu, m_szItem, m_szDesc, (PublicRelations_Lvl == 10 && PublicRelations_Exp == 10) ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
+	
+	SetMenuExitBackButton(menu, true);
+	SetMenuExitButton(menu, false);
+	DisplayMenu(menu, client, 0);
+}
+
+stock void BuildInvesProcBar(int iProc, char[] szBuffer, int maxLen)
+{
+	switch(iProc)
+	{
+		case  0: strcopy(szBuffer, maxLen, "  □□□□□□□□□□");
+		case  1: strcopy(szBuffer, maxLen, "  ■□□□□□□□□□");
+		case  2: strcopy(szBuffer, maxLen, "  ■■□□□□□□□□");
+		case  3: strcopy(szBuffer, maxLen, "  ■■■□□□□□□□");
+		case  4: strcopy(szBuffer, maxLen, "  ■■■■□□□□□□");
+		case  5: strcopy(szBuffer, maxLen, "  ■■■■■□□□□□");
+		case  6: strcopy(szBuffer, maxLen, "  ■■■■■■□□□□");
+		case  7: strcopy(szBuffer, maxLen, "  ■■■■■■■□□□");
+		case  8: strcopy(szBuffer, maxLen, "  ■■■■■■■■□□");
+		case  9: strcopy(szBuffer, maxLen, "  ■■■■■■■■■□");
+		case 10: strcopy(szBuffer, maxLen, "  ■Complete■");
+	}
+}
+
+public int MenuHandler_InvestmentMenu(Handle menu, MenuAction action, int client, int itemNum) 
+{
+	if(action == MenuAction_Select) 
+	{
+		char info[32];
+		GetMenuItem(menu, itemNum, info, 32);
+		
+		char m_szData[3][32];
+		ExplodeString(info, "_", m_szData, 3, 32);
+		
+		int iLvl = StringToInt(m_szData[1]);
+		int iProc = StringToInt(m_szData[2]);
+		
+		Handle hPack = CreateDataPack();
+		WritePackCell(hPack, GetClientUserId(client));
+		
+		if(StrEqual(m_szData[0], "commerce"))
+		{
+			iProc++;
+			
+			if(iProc >= 10 && iLvl < 7)
+			{
+				iLvl++;
+				iProc = 0;
+			}
+			
+			WritePackCell(hPack, 1);
+			WritePackCell(hPack, iLvl);
+			WritePackCell(hPack, iProc);
+
+			char m_szQuery[128];
+			Format(m_szQuery, 128, "UPDATE playertrack_investment SET commerce_lvl = %d, commerce_exp = %d WHERE playerid = %d", iLvl, iProc, g_eClient[client][iPlayerId]);
+			SQL_TQuery(g_hDB_csgo, SQLCallback_InvesUpgrade, m_szQuery, hPack);
+		}
+		else if(StrEqual(m_szData[0], "industrial"))
+		{
+			iProc++;
+
+			if(iProc >= 10 && iLvl < 10)
+			{
+				iLvl++;
+				iProc = 0;
+			}
+			
+			WritePackCell(hPack, 2);
+			WritePackCell(hPack, iLvl);
+			WritePackCell(hPack, iProc);
+			
+			char m_szQuery[128];
+			Format(m_szQuery, 128, "UPDATE playertrack_investment SET industrial_lvl = %d, industrial_exp = %d WHERE playerid = %d", iLvl, iProc, g_eClient[client][iPlayerId]);
+			SQL_TQuery(g_hDB_csgo, SQLCallback_InvesUpgrade, m_szQuery, hPack);
+		}
+		else if(StrEqual(m_szData[0], "publicrelations"))
+		{
+			iProc++;
+
+			if(iProc >= 10 && iLvl < 10)
+			{
+				iLvl++;
+				iProc = 0;
+			}
+			
+			WritePackCell(hPack, 3);
+			WritePackCell(hPack, iLvl);
+			WritePackCell(hPack, iProc);
+			
+			char m_szQuery[128];
+			Format(m_szQuery, 128, "UPDATE playertrack_investment SET publicrelations_lvl = %d, publicrelations_exp = %d WHERE playerid = %d", iLvl, iProc, g_eClient[client][iPlayerId]);
+			SQL_TQuery(g_hDB_csgo, SQLCallback_InvesUpgrade, m_szQuery, hPack);
+		}
+	}
+	else if(action == MenuAction_Cancel && itemNum == MenuCancel_ExitBack)
+	{
+		BuildFaithMainMenu(client);
+	}
+	else if(action == MenuAction_End)
+	{
+		CloseHandle(menu);
+	}
+}
+
+void ClientInvesUpgraded(int client, int iTyp, int iLvl, int iProc)
+{
+	char m_szQuery[128];
+
+	switch(iTyp)
+	{
+		case 1: 
+		{
+			if(iLvl == 7 && iProc == 10)
+			{
+				CG_GiveClientShare(client, 10000, "Investment Upgrade[Commerce] to Max Level");
+				Format(m_szQuery, 128, "UPDATE playertrack_investment SET share=share+%d WHERE playerid = %d", 10000, g_eClient[client][iPlayerId]);
+				CG_SaveDatabase(m_szQuery);
+				PrintToChatAll("%s  \x0C%N\x04 upgraded \x0CCommerce \x04 to Max Level(\x0C7\x04).", PLUGIN_PREFIX, client);
+			}
+			else if(iLvl > 0 && iProc == 0)
+			{
+				CG_GiveClientShare(client, iLvl*200, "Investment Upgrade[Commerce] to New Level");
+				Format(m_szQuery, 128, "UPDATE playertrack_investment SET share=share+%d WHERE playerid = %d", iLvl*200, g_eClient[client][iPlayerId]);
+				CG_SaveDatabase(m_szQuery);
+				PrintToChat(client, "%s  \x04You upgraded \x0CCommerce \x04 to New Level \x01:: \x10Level\x01: \x0E%d \x01=> \x04You earned \x0E%d \x04Share!", PLUGIN_PREFIX, iLvl, iLvl*200);
+			}
+			else
+			{
+				CG_GiveClientShare(client, iLvl*50+50, "Investment Upgrade[Commerce] to New Rate");
+				Format(m_szQuery, 128, "UPDATE playertrack_investment SET share=share+%d WHERE playerid = %d", iLvl*50+50, g_eClient[client][iPlayerId]);
+				CG_SaveDatabase(m_szQuery);
+				PrintToChat(client, "%s  \x04You upgraded \x0CCommerce \x01:: \x10Level\x01: \x0E%d  \x10Rate\x01: \x0E%d \x01=> \x04You earned \x0E%d \x04Share!", PLUGIN_PREFIX, iLvl, iProc, iLvl*50+50);
+			}
+		}
+		case 2: 
+		{
+			if(iLvl == 10 && iProc == 10)
+			{
+				CG_GiveClientShare(client, 10000, "Investment Upgrade[Industrial] to Max Level");
+				Format(m_szQuery, 128, "UPDATE playertrack_investment SET share=share+%d WHERE playerid = %d", 10000, g_eClient[client][iPlayerId]);
+				CG_SaveDatabase(m_szQuery);
+				PrintToChatAll("%s  \x0C%N\x04 upgraded \x0CIndustrial \x04 to Max Level(\x0C7\x04).", PLUGIN_PREFIX, client);
+			}
+			else if(iLvl > 0 && iProc == 0)
+			{
+				CG_GiveClientShare(client, iLvl*200, "Investment Upgrade[Industrial] to New Level");
+				Format(m_szQuery, 128, "UPDATE playertrack_investment SET share=share+%d WHERE playerid = %d", iLvl*200, g_eClient[client][iPlayerId]);
+				CG_SaveDatabase(m_szQuery);
+				PrintToChat(client, "%s  \x04You upgraded \x0CIndustrial \x04 to New Level \x01:: \x10Level\x01: \x0E%d \x01=> \x04You earned \x0E%d \x04Share!", PLUGIN_PREFIX, iLvl, iLvl*200);
+			}
+			else
+			{
+				CG_GiveClientShare(client, iLvl*50+50, "Investment Upgrade[Industrial] to New Rate");
+				Format(m_szQuery, 128, "UPDATE playertrack_investment SET share=share+%d WHERE playerid = %d", iLvl*50+50, g_eClient[client][iPlayerId]);
+				CG_SaveDatabase(m_szQuery);
+				PrintToChat(client, "%s  \x04You upgraded \x0CIndustrial \x01:: \x10Level\x01: \x0E%d  \x10Rate\x01: \x0E%d \x01=> \x04You earned \x0E%d \x04Share!", PLUGIN_PREFIX, iLvl, iProc, iLvl*50+50);
+			}
+		}
+		case 3: 
+		{
+			if(iLvl == 10 && iProc == 10)
+			{
+				CG_GiveClientShare(client, 10000, "Investment Upgrade[Public Relations] to Max Level");
+				Format(m_szQuery, 128, "UPDATE playertrack_investment SET share=share+%d WHERE playerid = %d", 10000, g_eClient[client][iPlayerId]);
+				CG_SaveDatabase(m_szQuery);
+				PrintToChatAll("%s  \x0C%N\x04 upgraded \x0CPublic Relations \x04 to Max Level(\x0C7\x04).", PLUGIN_PREFIX, client);
+			}
+			else if(iLvl > 0 && iProc == 0)
+			{
+				CG_GiveClientShare(client, iLvl*200, "Investment Upgrade[Public Relations] to New Level");
+				Format(m_szQuery, 128, "UPDATE playertrack_investment SET share=share+%d WHERE playerid = %d", iLvl*200, g_eClient[client][iPlayerId]);
+				CG_SaveDatabase(m_szQuery);
+				PrintToChat(client, "%s  \x04You upgraded \x0CPublic Relations \x04 to New Level \x01:: \x10Level\x01: \x0E%d \x01=> \x04You earned \x0E%d \x04Share!", PLUGIN_PREFIX, iLvl, iLvl*200);
+			}
+			else
+			{
+				CG_GiveClientShare(client, iLvl*50+50, "Investment Upgrade[Public Relations] to New Rate");
+				Format(m_szQuery, 128, "UPDATE playertrack_investment SET share=share+%d WHERE playerid = %d", iLvl*50+50, g_eClient[client][iPlayerId]);
+				CG_SaveDatabase(m_szQuery);
+				PrintToChat(client, "%s  \x04You upgraded \x0CPublic Relations \x01:: \x10Level\x01: \x0E%d  \x10Rate\x01: \x0E%d \x01=> \x04You earned \x0E%d \x04Share!", PLUGIN_PREFIX, iLvl, iProc, iLvl*50+50);
+			}
+		}
+	}
+
+	Format(m_szQuery, 128, "SELECT * FROM playertrack_investment WHERE playerid = %d", g_eClient[client][iPlayerId]);
+	SQL_TQuery(g_hDB_csgo, SQLCallback_InvesProc, m_szQuery, GetClientUserId(client));
 }

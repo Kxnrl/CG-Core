@@ -440,9 +440,13 @@ public void SQLCallback_SaveClientStat(Handle owner, Handle hndl, const char[] e
 	{
 		if(g_eClient[client][iDataRetry] <= 5)
 		{
-			g_eClient[client][iDataRetry]++;
-			SQL_TQuery(g_hDB_csgo, SQLCallback_SaveClientStat, g_eClient[client][szUpdateData], g_eClient[client][iUserId]);
 			LogToFileEx(LogFile, "UPDATE Client Data Failed!   Times:%d Player:\"%N\" Error Happened:%s", g_eClient[client][iDataRetry], client, error);
+			g_eClient[client][iDataRetry]++;
+
+			if(StrContains(error, "empty", false) != -1)
+				return;
+
+			SQL_TQuery(g_hDB_csgo, SQLCallback_SaveClientStat, g_eClient[client][szUpdateData], g_eClient[client][iUserId]);
 		}
 		else
 		{
@@ -606,7 +610,7 @@ public void SQLCallback_NothingCallback(Handle owner, Handle hndl, const char[] 
 	g_eClient[client][LoginProcess] = false;
 }
 
-public void SQLCallBack_SaveAdminOnlines(Handle owner, Handle hndl, const char[] error, int userid)
+public void SQLCallback_SaveAdminOnlines(Handle owner, Handle hndl, const char[] error, int userid)
 {
 	int client = GetClientOfUserId(userid);
 	
@@ -802,7 +806,16 @@ public void SQLCallback_ResetReq(Handle owner, Handle hndl, const char[] error, 
 	int client = GetClientOfUserId(userid);
 	
 	if(hndl == INVALID_HANDLE)
+	{
+		if(StrContains(error, "lost connection", false) != -1 && client && g_eClient[client][bLoaded])
+		{
+			char m_szQuery[256];
+			Format(m_szQuery, 256, "UPDATE `playertrack_player` SET reqid = 0, reqterm = 0, reqrate = 0 WHERE id = %d", g_eClient[client][iPlayerId]);
+			SQL_TQuery(g_hDB_csgo, SQLCallback_ResetReq, m_szQuery, userid);
+			return;
+		}
 		LogToFileEx(LogFile, "Reset Client Req Failed! [%N]  %s", client, error);
+	}
 	else
 	{
 		if(client && IsClientInGame(client))
@@ -1008,3 +1021,198 @@ public void SQLCallback_LilyRank(Handle owner, Handle hndl, const char[] error, 
 		LilyRankToMenu(client, hPack);
 	}
 }
+
+public void SQLCallback_InvesProc(Handle owner, Handle hndl, const char[] error, int userid)
+{
+	int client = GetClientOfUserId(userid);
+	
+	if(!client || !IsClientInGame(client))
+		return;
+	
+	if(hndl == INVALID_HANDLE)
+	{
+		PrintToChat(client, "%s  服务器中了闪光弹,请稍候再试[错误x11]", PLUGIN_PREFIX);
+		LogToFileEx(LogFile, "Investment Query %N error: %s", client, error);
+		return;
+	}
+	
+	if(SQL_FetchRow(hndl))
+	{
+		Handle hPack = CreateDataPack();
+
+		WritePackCell(hPack, SQL_FetchInt(hndl, 1));
+		WritePackCell(hPack, SQL_FetchInt(hndl, 2));
+		WritePackCell(hPack, SQL_FetchInt(hndl, 3));
+		WritePackCell(hPack, SQL_FetchInt(hndl, 4));
+		WritePackCell(hPack, SQL_FetchInt(hndl, 5));
+		WritePackCell(hPack, SQL_FetchInt(hndl, 6));
+		
+		BuildInvestmentListMenu(client, hPack);
+	}
+	else
+	{
+		char m_szQuery[128];
+		Format(m_szQuery, 128, "INSERT INTO playertrack_investment VALUES (%d, 0, 0, 0, 0, 0, 0, 0)", g_eClient[client][iPlayerId]);
+		SQL_TQuery(g_hDB_csgo, SQLCallback_InvesNew, m_szQuery, GetClientUserId(client));
+	}
+}
+
+public void SQLCallback_InvesNew(Handle owner, Handle hndl, const char[] error, int userid)
+{
+	int client = GetClientOfUserId(userid);
+	
+	if(!client || !IsClientInGame(client))
+		return;
+	
+	if(hndl == INVALID_HANDLE)
+	{
+		if(StrContains(error, "lost connection", false) != -1 && client && g_eClient[client][bLoaded])
+		{
+			char m_szQuery[128];
+			Format(m_szQuery, 128, "SELECT * FROM playertrack_investment WHERE playerid = %d", g_eClient[client][iPlayerId]);
+			SQL_TQuery(g_hDB_csgo, SQLCallback_InvesProc, m_szQuery, GetClientUserId(client));
+			return;
+		}
+		
+		PrintToChat(client, "%s  服务器中了闪光弹,请稍候再试[错误x11]", PLUGIN_PREFIX);
+		LogToFileEx(LogFile, "Investment New %N error: %s", client, error);
+		return;
+	}
+	
+	Handle hPack = CreateDataPack();
+
+	WritePackCell(hPack, 0);
+	WritePackCell(hPack, 0);
+	WritePackCell(hPack, 0);
+	WritePackCell(hPack, 0);
+	WritePackCell(hPack, 0);
+	WritePackCell(hPack, 0);
+
+	BuildInvestmentListMenu(client, hPack);
+}
+
+public void SQLCallback_InvesUpgrade(Handle owner, Handle hndl, const char[] error, Handle hPack)
+{
+	ResetPack(hPack);
+
+	int userid = ReadPackCell(hPack);
+	int iTyp = ReadPackCell(hPack);
+	int iLvl = ReadPackCell(hPack);
+	int iProc = ReadPackCell(hPack);
+	int client = GetClientOfUserId(userid);
+	
+	if(!client || !IsClientInGame(client))
+		return;
+	
+	char m_szQuery[256];
+	
+	if(hndl == INVALID_HANDLE)
+	{
+		Format(m_szQuery, 256, "SELECT * FROM playertrack_investment WHERE playerid = %d", g_eClient[client][iPlayerId]);
+		SQL_TQuery(g_hDB_csgo, SQLCallback_InvesProc, m_szQuery, GetClientUserId(client));
+		PrintToChat(client, "%s  服务器中了闪光弹,请稍候再试[错误x12]", PLUGIN_PREFIX);
+		LogToFileEx(LogFile, "Investment Upgrade %N error: %s", client, error);
+		CloseHandle(hPack);
+		return;
+	}
+	
+	char m_szAuth[32];
+	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
+	
+/*	
+	switch(iTyp)
+	{
+		case 1:
+		{
+			Format(m_szQuery, 256, "UPDATE store_players SET credits=credits-%d WHERE authid = '%s'", iLvl*1000+1000, m_szAuth[8]);
+			SQL_TQuery(g_hDB_csgo, SQLCallback_InvesCredits, m_szQuery, hPack);
+			Format(m_szQuery, 256, "INSERT INTO store_logs VALUES (DEFAULT, (SELECT id FROM store_players WHERE authid = '%s'), -%d, 'Commerce upgrade lvl_%d exp_%d', %d)", m_szAuth[8], iLvl*1000+1000, iLvl, iProc, GetTime());
+			CG_SaveDatabase(m_szQuery);
+		}
+		case 2:
+		{
+			Format(m_szQuery, 256, "UPDATE store_players SET credits=credits-%d WHERE authid = '%s'", iLvl*1000+1000, m_szAuth[8]);
+			SQL_TQuery(g_hDB_csgo, SQLCallback_InvesCredits, m_szQuery, hPack);
+			Format(m_szQuery, 256, "INSERT INTO store_logs VALUES (DEFAULT, (SELECT id FROM store_players WHERE authid = '%s'), -%d, 'Industrial upgrade lvl_%d exp_%d', %d)", m_szAuth[8], iLvl*1000+1000, iLvl, iProc, GetTime());
+			CG_SaveDatabase(m_szQuery);
+		}
+		case 3:
+		{
+			Format(m_szQuery, 256, "UPDATE store_players SET credits=credits-%d WHERE authid = '%s'", iLvl*500+1000, m_szAuth[8]);
+			SQL_TQuery(g_hDB_csgo, SQLCallback_InvesCredits, m_szQuery, hPack);
+			Format(m_szQuery, 256, "INSERT INTO store_logs VALUES (DEFAULT, (SELECT id FROM store_players WHERE authid = '%s'), -%d, 'Public Relations upgrade lvl_%d exp_%d', %d)", m_szAuth[8], iLvl*500+1000, iLvl, iProc, GetTime());
+			CG_SaveDatabase(m_szQuery);
+		}
+	}
+*/
+
+	char m_szReason[128];
+	switch(iTyp)
+	{
+		case 1:
+		{
+			Format(m_szReason, 128, "Commerce upgrade lvl_%d exp_%d", iLvl, iProc);
+			if(OnAPIStoreSetCredits(client, (iLvl*1000+1000)*-1, m_szReason, true))
+			{
+				ClientInvesUpgraded(client, iTyp, iLvl, iProc);
+			}
+			else
+			{
+				PrintToChat(client, "%s  \x04你的Credits余额不足", PLUGIN_PREFIX);
+			}
+		}
+		case 2:
+		{
+			Format(m_szReason, 128, "Industrial upgrade lvl_%d exp_%d", iLvl, iProc);
+			if(OnAPIStoreSetCredits(client, (iLvl*1000+1000)*-1, m_szReason, true))
+			{
+				ClientInvesUpgraded(client, iTyp, iLvl, iProc);
+			}
+			else
+			{
+				PrintToChat(client, "%s  \x04你的Credits余额不足", PLUGIN_PREFIX);
+			}
+		}
+		case 3:
+		{
+			Format(m_szReason, 128, "Public Relations upgrade lvl_%d exp_%d", iLvl, iProc);
+			if(OnAPIStoreSetCredits(client, (iLvl*500+1000)*-1, m_szReason, true))
+			{
+				ClientInvesUpgraded(client, iTyp, iLvl, iProc);
+			}
+			else
+			{
+				PrintToChat(client, "%s  \x04你的Credits余额不足", PLUGIN_PREFIX);
+			}
+		}
+	}
+}
+
+/*
+public void SQLCallback_InvesCredits(Handle owner, Handle hndl, const char[] error, Handle hPack)
+{
+	ResetPack(hPack);
+
+	int userid = ReadPackCell(hPack);
+	int iTyp = ReadPackCell(hPack);
+	int iLvl = ReadPackCell(hPack);
+	int iProc = ReadPackCell(hPack);
+	int client = GetClientOfUserId(userid);
+	CloseHandle(hPack);
+	
+	if(!client || !IsClientInGame(client))
+		return;
+	
+	char m_szQuery[128];
+	
+	if(hndl == INVALID_HANDLE)
+	{
+		Format(m_szQuery, 128, "SELECT * FROM playertrack_investment WHERE playerid = %d", g_eClient[client][iPlayerId]);
+		SQL_TQuery(g_hDB_csgo, SQLCallback_InvesProc, m_szQuery, GetClientUserId(client));
+		PrintToChat(client, "%s  服务器中了闪光弹,请稍候再试[错误x13]", PLUGIN_PREFIX);
+		LogToFileEx(LogFile, "Investment Credits %N error: %s", client, error);
+		return;
+	}
+	
+}
+*/

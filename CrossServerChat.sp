@@ -73,7 +73,7 @@ public void Lily_OnLilyCouple(int Neptune, int Noire)
 	CloseHandle(database);
 
 	char m_szQuery[1024];
-	Format(m_szQuery, 1024, "INSERT INTO `dz_plugin_ahome_laba` (`username`, `tousername`, `level`, `lid`, `dateline`, `content`, `color`, `url`) VALUES ('Lily System', '', 'game', 0, '%d', '%s', '', '')", GetTime(), EscapeString);
+	Format(m_szQuery, 1024, "INSERT INTO `dz_plugin_ahome_laba` (`username`, `tousername`, `level`, `lid`, `dateline`, `content`, `color`, `url`) VALUES ('Lily System', '', 'system', 0, '%d', '%s', '', '')", GetTime(), EscapeString);
 	CG_SaveForumData(m_szQuery);
 	
 	Format(finalMessage, 1024, "\x04[\x0ELily\x04]  \x07>\x05>\x0C> %s", finalMessage);
@@ -336,7 +336,7 @@ stock bool IsValidClient(client)
 //When the CLIENT (and not the MCS) connected to the MCS :
 public OnClientSocketConnected(Handle socket, any arg)
 {	
-	PrintToServer("Sucessfully connected to master chat server ! (%s:%s)", MasterServer, port);
+	//PrintToServer("Sucessfully connected to master chat server ! (%s:%s)", MasterServer, port);
 	LogMessage("Sucessfully connected to master chat server ! (%s:%s)", MasterServer, port);
 	SocketSetOption(socket, SocketSendTimeout, 4000);
 	SocketSetOption(socket, SocketReceiveTimeout, 4000);
@@ -350,8 +350,8 @@ public OnClientSocketConnected(Handle socket, any arg)
 public OnClientSocketError(Handle socket, const int errorType, const int errorNum, any ary)
 {
 	connected = false; //Client NOT connected anymore, this is very important.
-	LogError("socket error %d (errno %d)", errorType, errorNum);
-	CreateTimer(30.0, TimerReconnect); //Ask for the plugin to reconnect to the MCS in X seconds
+	LogMessage("socket error %d (errno %d)", errorType, errorNum);
+	CreateTimer(3.0, TimerReconnect); //Ask for the plugin to reconnect to the MCS in X seconds
 	CloseHandle(socket);
 }
 
@@ -383,7 +383,7 @@ public OnChildSocketReceive(Handle socket, char[] receiveData, const int dataSiz
 //Called when the MCS disconnect, force the client to reconnect :
 public OnChildSocketDisconnected(Handle socket, any hFile)
 {
-	PrintToServer("Lost connection to master chat server, reconnecting...");
+	//PrintToServer("Lost connection to master chat server, reconnecting...");
 	LogMessage("Lost connection to master chat server, reconnecting...");
 	connected = false; //Very important.
 	CreateTimer(10.0, TimerReconnect); //Reconnecting timer
@@ -411,7 +411,7 @@ stock void ConnecToMasterServer()
 	
 	connected = false;
 	globalClientSocket = SocketCreate(SOCKET_UDP, OnClientSocketError);
-	PrintToServer("Attempt to connect to %s:%s ...", MasterServer, port);
+	//PrintToServer("Attempt to connect to %s:%s ...", MasterServer, port);
 	SocketConnect(globalClientSocket, OnClientSocketConnected, OnChildSocketReceive, OnChildSocketDisconnected, MasterServer, StringToInt(port));
 	LogMessage("Attempt to connect to %s:%s ...", MasterServer, port);
 }
@@ -601,4 +601,61 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 	}
 	
 	return Plugin_Continue;
+}
+
+public void OnMapVoteEnd(const char[] map)
+{
+	if(StrContains(map, "extend", false) != -1)
+		return;
+	
+	if(StrContains(map, "change", false) != -1)
+		return;
+	
+	//if(FindPluginByFile("zombiereloaded.smx") == INVALID_HANDLE)
+	//	return;
+
+	char finalMessage[999];
+	
+	char m_szServerName[64], m_szServerTag[32];
+	GetConVarString(FindConVar("hostname"), m_szServerName, 64);
+	if(StrContains(m_szServerName, "逃跑", false ) != -1)
+		strcopy(m_szServerTag, 32, "僵尸逃跑");
+	else if(StrContains(m_szServerName, "TTT", false ) != -1)
+		strcopy(m_szServerTag, 32, "匪镇碟影");
+	else if(StrContains(m_szServerName, "MiniGames", false ) != -1)
+		strcopy(m_szServerTag, 32, "娱乐休闲");
+	else if(StrContains(m_szServerName, "JailBreak", false ) != -1)
+		strcopy(m_szServerTag, 32, "越狱搞基");
+	else if(StrContains(m_szServerName, "KreedZ", false ) != -1)
+		strcopy(m_szServerTag, 32, "Kz跳跃");
+	else if(StrContains(m_szServerName, "DeathRun", false ) != -1)
+		strcopy(m_szServerTag, 32, "死亡奔跑");
+	else if(StrContains(m_szServerName, "战役", false ) != -1)
+		strcopy(m_szServerTag, 32, "求生战役");
+	else if(StrContains(m_szServerName, "对抗", false ) != -1)
+		strcopy(m_szServerTag, 32, "求生对抗");
+	else if(StrContains(m_szServerName, "HG", false ) != -1)
+		strcopy(m_szServerTag, 32, "饥饿游戏");
+	else if(StrContains(m_szServerName, "死斗", false ) != -1)
+		strcopy(m_szServerTag, 32, "纯净死斗");
+	else if(StrContains(m_szServerName, "纯净死亡", false ) != -1)
+		strcopy(m_szServerTag, 32, "纯净死亡");
+	else if(StrContains(m_szServerName, "Riot", false ) != -1)
+		strcopy(m_szServerTag, 32, "僵尸暴动");
+	else if(StrContains(m_szServerName, "Ninja", false ) != -1)
+		strcopy(m_szServerTag, 32, "忍者行动");
+	else if(StrContains(m_szServerName, "BHop", false ) != -1)
+		strcopy(m_szServerTag, 32, "BHop连跳");
+	else if(StrContains(m_szServerName, "满十", false ) != -1)
+		strcopy(m_szServerTag, 32, "满十比赛");
+	else
+		strcopy(m_szServerTag, 32, "论坛");
+		
+	Format(finalMessage, sizeof(finalMessage), "[\x10Broadcast\x01]  \x07>\x04>\x0C>  \x04%s已更换地图为\x05 %s", m_szServerTag, map);
+
+	PrintToChatAll(finalMessage);
+
+	Format(finalMessage, sizeof(finalMessage), "%s%s", key, finalMessage);
+	LogMessage("Send message: %s", finalMessage);
+	SocketSend(globalClientSocket, finalMessage, sizeof(finalMessage));
 }

@@ -136,6 +136,6 @@ void SaveClient(int client)
 	{
 		char m_szQuery[256];
 		Format(m_szQuery, 256, "UPDATE sb_admins SET onlines=onlines+%d,lastseen=%d,today=today+%d WHERE (authid=\"STEAM_1:%s\" OR authid=\"STEAM_0:%s\")", duration, GetTime(), duration, m_szAuth[8], m_szAuth[8]);
-		SQL_TQuery(g_hDB_csgo, SQLCallBack_SaveAdminOnlines, m_szQuery, GetClientUserId(client));
+		SQL_TQuery(g_hDB_csgo, SQLCallback_SaveAdminOnlines, m_szQuery, GetClientUserId(client));
 	}
 }

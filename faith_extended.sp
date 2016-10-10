@@ -16,15 +16,23 @@ public Plugin myinfo =
 	name = " [CG] Faith Extended ",
 	author = "xQy",
 	description = "",
-	version = "1.5.1",
+	version = "1.5.2rc1",
 	url = "http://steamcommunity.com/id/_xQy_/"
 };
 
 public void OnPluginStart()
 {
-	RegConsoleCmd("sm_freset", Cmd_BuffReset);
+	RegConsoleCmd("sm_freset", Cmd_FaithReset);
+	RegConsoleCmd("sm_fbuffreset", Cmd_BuffReset);
 	RegConsoleCmd("sm_fcharge", Cmd_FaithRecharge);
 	RegConsoleCmd("sm_qm", Cmd_Signature);
+	
+	//CreateTimer(120.0, Timer_Boartcast, _, TIMER_REPEAT);
+}
+
+public Action Timer_Boartcast(Handle timer)
+{
+	PrintToChatAll("%s  \x04国庆节活动期间限时开放重置信仰(Faith)功能", PREFIX);
 }
 
 public void OnClientPostAdminCheck(int client)
@@ -43,6 +51,93 @@ public void OnClientDisconnect(int client)
 	}
 }
 
+public Action Cmd_FaithReset(int client, int args)
+{
+	if(client == 0)
+		return Plugin_Handled;
+	
+	if(CG_GetClientFaith(client) == 0)
+	{
+		PrintToChat(client, "%s  你当前没有信仰,怎么重置信仰", PREFIX);
+		return Plugin_Handled;
+	}
+	
+	if(CG_GetClientFaith(client) != 0)
+	{
+		PrintToChat(client, "%s  当前暂不开放重置信仰(Faith)功能", PREFIX);
+		return Plugin_Handled;
+	}
+	
+	Handle menu = CreateMenu(ResetFaithonfirmMenuHandler);
+	SetMenuTitle(menu, "[Planeptune]   Faith - Reset Faith\n ");
+	
+	char szItem[256];
+
+	Format(szItem, 256, "你当前的Faith为[%s] - %s \n ", szFaith_NAME[CG_GetClientFaith(client)], szFaith_NATION[CG_GetClientFaith(client)]);
+	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
+	
+	int ishare = CG_GetClientShare(client);
+
+	Format(szItem, 256, "你当前拥有Share[%d点]\n ", ishare);
+	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
+	
+	Format(szItem, 256, "我要花费10,000Credits来重置[Share也将会被清空]\n ");
+	AddMenuItem(menu, "rest", szItem);
+	
+	Format(szItem, 256, "我要花费100,000Credits来重置Faith并且保留Share\n ");
+	AddMenuItem(menu, "keep", szItem);
+	
+	SetMenuExitButton(menu, true);
+	DisplayMenu(menu, client, 0);
+	return Plugin_Handled;
+}
+
+public int ResetFaithonfirmMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 
+{
+	if(action == MenuAction_Select) 
+	{
+		char info[32];
+		GetMenuItem(menu, itemNum, info, 32);
+		
+		if(StrEqual(info, "rest"))
+		{
+			if(Store_GetClientCredits(client) < 10000)
+			{
+				PrintToChat(client, "%s  \x07你的Credits余额不足", PREFIX);
+				return;
+			}
+			PrintToChat(client, "%s  已提交你重置Faith的请求,你需要重进服务器", PREFIX);
+			LogMessage("玩家 [%N] 提交了 重置Faith 的请求", client);
+			char m_szQuery[256], auth[32];
+			GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
+			Format(m_szQuery, 256, "UPDATE `playertrack_player` SET faith = 0, share = 0 WHERE id = '%d' AND steamid = '%s'", CG_GetPlayerID(client), auth);
+			CG_SaveDatabase(m_szQuery);
+			Store_SetClientCredits(client, Store_GetClientCredits(client)-10000, "Faith重置");
+			Store_SaveClientAll(client);
+		}
+		if(StrEqual(info, "keep"))
+		{
+			if(Store_GetClientCredits(client) < 100000)
+			{
+				PrintToChat(client, "%s  \x07你的Credits余额不足", PREFIX);
+				return;
+			}
+			PrintToChat(client, "%s  已提交你重置Faith的请求,你需要重进服务器", PREFIX);
+			LogMessage("玩家 [%N] 提交了 重置Faith的请求", client);
+			char m_szQuery[256], auth[32];
+			GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
+			Format(m_szQuery, 256, "UPDATE `playertrack_player` SET faith = 0 WHERE id = '%d' AND steamid = '%s'", CG_GetPlayerID(client), auth);
+			CG_SaveDatabase(m_szQuery);
+			Store_SetClientCredits(client, Store_GetClientCredits(client)-100000, "Faith重置");
+			Store_SaveClientAll(client);
+		}
+	}
+	else if(action == MenuAction_End)
+	{
+		CloseHandle(menu);
+	}
+}
+
 public Action Cmd_BuffReset(int client, int args)
 {
 	if(client == 0)
@@ -50,7 +145,7 @@ public Action Cmd_BuffReset(int client, int args)
 	
 	if(CG_GetClientFaith(client) == 0)
 	{
-		PrintToChat(client, "%s  你当前没有Faith,怎么重置Buff", PREFIX);
+		PrintToChat(client, "%s  你当前没有信仰,怎么重置Buff", PREFIX);
 		return Plugin_Handled;
 	}
 	
@@ -59,6 +154,14 @@ public Action Cmd_BuffReset(int client, int args)
 	if(buff == 0)
 	{
 		PrintToChat(client, "%s  你当前没有Buff,不需要重置", PREFIX);
+		return Plugin_Handled;
+	}
+	
+	int ishare = CG_GetClientShare(client);
+	
+	if(ishare < 0)
+	{
+		PrintToChat(client, "%s  你当前Share为负,无法重置", PREFIX);
 		return Plugin_Handled;
 	}
 	
@@ -84,8 +187,6 @@ public Action Cmd_BuffReset(int client, int args)
 		Format(szItem, 256, "你当前的Buff为[子弹]\n 你每射出8发(ZE为20)子弹将会往你主弹夹填充2发子弹\n ");
 	
 	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
-	
-	int ishare = CG_GetClientShare(client);
 	
 	Format(szItem, 256, "重置Buff会消耗2000Credits且清空Share[%d点]\n ", ishare);
 	AddMenuItem(menu, "", szItem, ITEMDRAW_DISABLED);
