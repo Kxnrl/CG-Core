@@ -60,4 +60,7 @@ native void PA_GetGroupName(int client, char[] buffer, int maxLen);
 native void Lily_GiveExp(int client, int exp);
 native void Lily_AddLily(int Neptune, int Noire);
 
+native Handle CG_GetGameDatabase();
+native Handle CG_GetDiscuzDatabase();
+
 functag OnClientVIPCheckFunc public(client);

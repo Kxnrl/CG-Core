@@ -1,9 +1,9 @@
 #pragma newdecls required //let`s go! new syntax!!!
-//Build 354
+//Build 355
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define PLUGIN_VERSION " 5.3.7rc3 - 2016/10/08 02:46 "
+#define PLUGIN_VERSION " 5.4beta - 2016/10/15 07:13 "
 #define PLUGIN_PREFIX "[\x0EPlaneptune\x01]  "
 
 //////////////////////////////
@@ -220,6 +220,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("CG_GetSignature", Native_GetSingature);
 	CreateNative("CG_GetDiscuzUID", Native_GetDiscuzUID);
 	CreateNative("CG_GetDiscuzName", Native_GetDiscuzName);
+	CreateNative("CG_GetGameDatabase", Native_GetGameDatabase);
+	CreateNative("CG_GetDiscuzDatabase", Native_GetDiscuzDatabase);
 	CreateNative("CG_SaveDatabase", Native_SaveDatabase);
 	CreateNative("CG_SaveForumData", Native_SaveForumData);
 	CreateNative("CG_GetReqID", Native_GetReqID);
@@ -652,6 +654,16 @@ public int Native_AddLily(Handle plugin, int numParams)
 		Call_PushCell(Noire);
 		Call_Finish();
 	}
+}
+
+public int Native_GetGameDatabase(Handle plugin, int numParams)
+{
+	return view_as<int>(g_hDB_csgo);
+}
+
+public int Native_GetDiscuzDatabase(Handle plugin, int numParams)
+{
+	return view_as<int>(g_hDB_discuz);
 }
 
 //////////////////////////////
