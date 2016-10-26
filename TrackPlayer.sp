@@ -1,9 +1,9 @@
 #pragma newdecls required //let`s go! new syntax!!!
-//Build 355
+//Build 356
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define PLUGIN_VERSION " 5.4beta - 2016/10/15 07:13 "
+#define PLUGIN_VERSION " 5.4 - 2016/10/23 07:04 "
 #define PLUGIN_PREFIX "[\x0EPlaneptune\x01]  "
 
 //////////////////////////////
@@ -883,7 +883,7 @@ public Action Command_Track(int client, int args)
 		return Plugin_Handled;
 
 	char szItem[512], szAuth32[32], szAuth64[64];
-	Format(szItem, 512,"#userid   玩家姓名    uid   论坛名称   steam32   steam64    认证\n========================================================================================");
+	Format(szItem, 512,"#PlayerId   玩家姓名    UID   论坛名称   steam32   steam64    认证\n========================================================================================");
 	PrintToConsole(client, szItem);
 	
 	int connected, ingame;
@@ -900,7 +900,7 @@ public Action Command_Track(int client, int args)
 				
 				GetClientAuthId(i, AuthId_Steam2, szAuth32, 32, true);
 				GetClientAuthId(i, AuthId_SteamID64, szAuth64, 64, true);
-				Format(szItem, 512, " %d    %N    %d    %s    %s    %s    %s", GetClientUserId(i), i, g_eClient[i][iUID], g_eClient[i][szDiscuzName], szAuth32, szAuth64, g_eClient[i][szGroupName]);
+				Format(szItem, 512, " %d    %N    %d    %s    %s    %s    %s", g_eClient[i][iPlayerId], i, g_eClient[i][iUID], g_eClient[i][szDiscuzName], szAuth32, szAuth64, g_eClient[i][szGroupName]);
 				PrintToConsole(client, szItem);
 			}
 		}
