@@ -15,11 +15,11 @@ public void SetClientFaith(int client, int faith)
 	SQL_TQuery(g_hDB_csgo, SQLCallback_SetFaith, m_szQuery, GetClientUserId(client));
 }
 
-public void ShowFaithFirstMenuToClient(int client)
+public void BuildFaithFirstMenu(int client)
 {
 	//初始选择菜单
 	Handle menu = CreateMenu(MenuHandler_FaithFirstMenu);
-	SetMenuTitle(menu, "[Planeptune]   Faith - Select\n　");
+	SetMenuTitle(menu, "[CG]   Faith - Select\n　");
 	
 	AddMenuItem(menu, "", "目前系统检测到你的Faith为空[输入!fhelp了解更多]", ITEMDRAW_DISABLED);
 	AddMenuItem(menu, "", "选择1个Faith以获得Buff[暂时不能更换]", ITEMDRAW_DISABLED);
@@ -64,7 +64,7 @@ public int MenuHandler_FaithFirstMenu(Handle menu, MenuAction action, int client
 	}
 }
 
-public int FaithHelpMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 
+public int MenuHandler_FaithHelp(Handle menu, MenuAction action, int client, int itemNum) 
 {
 	
 }
@@ -73,7 +73,7 @@ public void ConfirmSelect(int client, int faith)
 {
 	//确认选择菜单
 	Handle menu = CreateMenu(MenuHandler_FaithConfirm);
-	SetMenuTitle(menu, "[Planeptune]   Faith - Confirm\n　");
+	SetMenuTitle(menu, "[CG]   Faith - Confirm\n　");
 	
 	char m_szItem[128];
 	if(faith == 1)
@@ -134,7 +134,7 @@ public int MenuHandler_FaithConfirm(Handle menu, MenuAction action, int client, 
 	}
 	else if(action == MenuAction_Cancel && itemNum == MenuCancel_ExitBack)
 	{
-		ShowFaithFirstMenuToClient(client);
+		BuildFaithFirstMenu(client);
 	}
 }
 
@@ -142,12 +142,12 @@ public void BuildFaithMainMenu(int client)
 {
 	if(!(0 < g_eClient[client][iFaith] <= FAITH_COUNTS))
 	{
-		ShowFaithFirstMenuToClient(client);
+		BuildFaithFirstMenu(client);
 		return;
 	}
 	
 	Handle menu = CreateMenu(MenuHandler_FaithMain);
-	SetMenuTitle(menu, "[Planeptune]   Faith - Main\n \n当前归属: %s - %s\n当前Share: %d\n　", szFaith_NATION[g_eClient[client][iFaith]], szFaith_NAME[g_eClient[client][iFaith]], g_eClient[client][iShare]);
+	SetMenuTitle(menu, "[CG]   Faith - Main\n \n当前归属: %s - %s\n当前Share: %d\n　", szFaith_NATION[g_eClient[client][iFaith]], szFaith_NAME[g_eClient[client][iFaith]], g_eClient[client][iShare]);
 
 	AddMenuItem(menu, "fhelp", "关于Faith系统说明");
 	AddMenuItem(menu, "share", "查看当前Share数据");
@@ -206,7 +206,7 @@ public int MenuHandler_FaithMain(Handle menu, MenuAction action, int client, int
 public void ShowAllFaithShareToClient(int client)
 {
 	Handle menu = CreateMenu(MenuHandler_FaithShowAllShare);
-	SetMenuTitle(menu, "[Planeptune]   Faith -  查看各个Faith的Share值\n　");
+	SetMenuTitle(menu, "[CG]   Faith -  查看各个Faith的Share值\n　");
 
 	float share[5];
 	share[ALLSHARE] = float(g_Share[PURPLE]+g_Share[BLACK]+g_Share[WHITE]+g_Share[GREEN]);
@@ -244,7 +244,7 @@ public int MenuHandler_FaithShowAllShare(Handle menu, MenuAction action, int cli
 public void ShowAllFaithBuffToClient(int client)
 {
 	Handle menu = CreateMenu(MenuHandler_FaithShowAllBuff);
-	SetMenuTitle(menu, "[Planeptune]   Faith -  查看各个Faith的Buff\n　");
+	SetMenuTitle(menu, "[CG]   Faith -  查看各个Faith的Buff\n　");
 	
 	char m_szItem[256];
 
@@ -291,7 +291,7 @@ void ShareRankToMenu(int client, Handle pack)
 	char m_szItem[256], sName[128];
 	Handle hMenu = CreateMenu(MenuHandler_FaithRank);
 
-	Format(m_szItem, 256, "[Planeptune]   Faith Share Rank - %s \n　", szFaith_NAME[g_eClient[client][iFaith]]);
+	Format(m_szItem, 256, "[CG]   Faith Share Rank - %s \n　", szFaith_NAME[g_eClient[client][iFaith]]);
 	SetMenuTitle(hMenu, m_szItem);
 
 	SetMenuExitButton(hMenu, true);
@@ -325,7 +325,7 @@ void CheckClientBuff(int client)
 		return;
 
 	Handle menu = CreateMenu(MenuHandler_FaithSecondBuff);
-	SetMenuTitle(menu, "[Planeptune]   Faith -  Second Buff\n　");
+	SetMenuTitle(menu, "[CG]   Faith -  Second Buff\n　");
 	
 	AddMenuItem(menu, "", "系统侦测到当前你未设置副Buff", ITEMDRAW_DISABLED);
 	AddMenuItem(menu, "", "副Buff加成为定值,不受Faith和Share影响", ITEMDRAW_DISABLED);
@@ -358,13 +358,13 @@ public int MenuHandler_FaithSecondBuff(Handle menu, MenuAction action, int clien
 void ShowSecondBuffToClient(int client)
 {
 	Handle menu = CreateMenu(MenuHandler_FaithSecondSelect);
-	SetMenuTitle(menu, "[Planeptune]   Faith -  Second Buff\n　");
+	SetMenuTitle(menu, "[CG]   Faith -  Second Buff\n　");
 	
 	AddMenuItem(menu, "1", "射速 [提高除了匕首和手雷之外枪械的射速]");
 	AddMenuItem(menu, "2", "嗜血 [造成40点伤害(ZE为800)后恢复2点HP]");
 	AddMenuItem(menu, "3", "生命 [提升当前血量和血量上限8%的生命值]");
 	AddMenuItem(menu, "4", "护甲 [几率获得重甲护甲低于10自动补到10]");
-	AddMenuItem(menu, "5", "基因 [提升!10%跳跃高度和跳跃距离的能力]");
+	AddMenuItem(menu, "5", "基因 [提升↑10%跳跃高度和跳跃距离的能力]");
 	AddMenuItem(menu, "6", "子弹 [每射击一定次数会给主弹夹补充子弹]");
 	
 	SetMenuExitBackButton(menu, true);
@@ -394,7 +394,7 @@ public int MenuHandler_FaithSecondSelect(Handle menu, MenuAction action, int cli
 void ConfirmSecondBuff(int client, int buff)
 {
 	Handle menu = CreateMenu(MenuHandler_FaithSecondConfirm);
-	SetMenuTitle(menu, "[Planeptune]   Faith -  Second Buff\n　");
+	SetMenuTitle(menu, "[CG]   Faith -  Second Buff\n　");
 	
 	if(buff == 1)
 	{
@@ -483,7 +483,7 @@ void SetClientBuff(int client, int buff)
 void BuildInvestmentMenu(int client)
 {
 	Handle menu = CreateMenu(MenuHandler_InvestmentConfirm);
-	SetMenuTitle(menu, "[Planeptune]   Faith - Investment [developer preview]\n　");
+	SetMenuTitle(menu, "[CG]   Faith - Investment [developer preview]\n　");
 	
 	AddMenuItem(menu, "", "因Invesment仍处于开发者预览功能", ITEMDRAW_DISABLED);
 	AddMenuItem(menu, "", "进入Invesment之后任意操作都是不可逆的", ITEMDRAW_DISABLED);
@@ -508,7 +508,7 @@ public int MenuHandler_InvestmentConfirm(Handle menu, MenuAction action, int cli
 		if(StrEqual(info, "sure"))
 		{
 			Handle menu2 = CreateMenu(MenuHandler_InvestmentConfirm2);
-			SetMenuTitle(menu2, "[Planeptune]   Faith - Investment [developer preview]\n　");
+			SetMenuTitle(menu2, "[CG]   Faith - Investment [developer preview]\n　");
 			
 			AddMenuItem(menu2, "", "我已经做好了承担后果的准备", ITEMDRAW_DISABLED);
 			AddMenuItem(menu2, "", "一旦出现问题后果都是我自己承担", ITEMDRAW_DISABLED);
@@ -577,7 +577,7 @@ void BuildInvestmentListMenu(int client, Handle hPack)
 	CloseHandle(hPack);
 	
 	Handle menu = CreateMenu(MenuHandler_InvestmentMenu);
-	SetMenuTitle(menu, "[Planeptune]   Faith - Investment :: Select [developer preview]\n　\n Your Credits: %d \n \n ", OnAPIStoreGetCredits(client));
+	SetMenuTitle(menu, "[CG]   Faith - Investment :: Select [developer preview]\n　\n Your Credits: %d \n \n ", OnAPIStoreGetCredits(client));
 	
 	char m_szProc[128], m_szItem[128], m_szDesc[256];
 	

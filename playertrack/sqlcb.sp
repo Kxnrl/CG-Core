@@ -16,10 +16,10 @@ void SQL_TConnect_csgo()
 
 void SQL_TConnect_discuz()
 {
-	if(g_hDB_csgo != INVALID_HANDLE)
-		CloseHandle(g_hDB_csgo);
+	if(g_hDB_discuz != INVALID_HANDLE)
+		CloseHandle(g_hDB_discuz);
 	
-	g_hDB_csgo = INVALID_HANDLE;
+	g_hDB_discuz = INVALID_HANDLE;
 	
 	if(SQL_CheckConfig("vip"))
 		SQL_TConnect(SQL_TConnect_Callback_discuz, "vip");
@@ -145,7 +145,7 @@ public void SQLCallback_GetServerIP(Handle owner, Handle hndl, const char[] erro
 		//开始查询数据库 并输出到文件 查询进程高优先级
 		char m_szQuery[256];
 		Format(m_szQuery, 256, "INSERT INTO playertrack_server (servername, serverip) VALUES ('NewServer', '%s')", g_szIP);
-		Format(g_szHostName, 128, "☞[CG社区]NewServer!");
+		Format(g_szHostName, 128, "【CG社区】NewServer!");
 		LogToFileEx(LogFile, "Not Found this server in playertrack_server , now Register this!  %s", m_szQuery);
 		SQL_TQuery(g_hDB_csgo, SQLCallback_InsertServerIP, m_szQuery, _, DBPrio_High);
 	}
@@ -154,10 +154,10 @@ public void SQLCallback_GetServerIP(Handle owner, Handle hndl, const char[] erro
 	
 	if(g_bLateLoad)
 	{
-		for(int i = 1; i <= MaxClients; ++i)
+		for(int client = 1; client <= MaxClients; ++client)
 		{
-			if(IsClientInGame(i))
-				OnClientPostAdminCheck(i);
+			if(IsClientInGame(client))
+				OnClientPostAdminCheck(client);
 		}
 	}
 }
@@ -187,7 +187,7 @@ public void SQLCallback_GetShare(Handle owner, Handle hndl, const char[] error, 
 		return;
 	}
 	
-	if(SQL_GetRowCount(hndl) > 0)
+	if(SQL_GetRowCount(hndl))
 	{
 		while(SQL_FetchRow(hndl))
 		{
@@ -201,11 +201,7 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 {
 	int client = GetClientOfUserId(userid);
 	//如果是BOT, 取消查询
-
-	if(g_eClient[client][bIsBot])
-		return;
-	
-	if(client < 1 || client > MaxClients)
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
 		return;
 	
 	g_eClient[client][iUserId] = userid;
@@ -275,7 +271,7 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 		
 		if(g_eClient[client][iFaith] == 0 && g_iServerId != 23 && g_iServerId != 24 && g_iServerId != 11 && g_iServerId != 12 && g_iServerId != 13)
 		{
-			ShowFaithFirstMenuToClient(client);
+			BuildFaithFirstMenu(client);
 		}
 
 		SetClientSignStat(client);
@@ -298,7 +294,7 @@ public void SQLCallback_GetClientDiscuzName(Handle owner, Handle hndl, const cha
 {
 	int client = GetClientOfUserId(userid);
 	
-	if(client < 1 || client > MaxClients)
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
 		return;
 	
 	g_eClient[client][iUserId] = userid;
@@ -325,7 +321,7 @@ public void SQLCallback_GetClientDiscuzName(Handle owner, Handle hndl, const cha
 		return;
 	}
 
-	if(SQL_FetchRow(hndl) && SQL_HasResultSet(hndl))
+	if(SQL_FetchRow(hndl))
 	{
 		g_eClient[client][iUID] = SQL_FetchInt(hndl, 0);
 		SQL_FetchString(hndl, 1, g_eClient[client][szDiscuzName], 128);
@@ -349,7 +345,7 @@ public void SQLCallback_CheckVIP(Handle owner, Handle hndl, const char[] error, 
 {
 	int client = GetClientOfUserId(userid);
 	
-	if(client < 1 || client > MaxClients || !IsClientConnected(client))
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
 		return;
 	
 	g_eClient[client][iUserId] = userid;
@@ -370,7 +366,7 @@ public void SQLCallback_CheckVIP(Handle owner, Handle hndl, const char[] error, 
 		return;
 	}
 
-	if(SQL_FetchRow(hndl) && SQL_HasResultSet(hndl))
+	if(SQL_FetchRow(hndl))
 	{
 		int exptime = SQL_FetchInt(hndl, 0);
 		if(exptime == 2147454847)
@@ -403,7 +399,7 @@ public void SQLCallback_InsertClientStat(Handle owner, Handle hndl, const char[]
 	//定义客户
 	int client = GetClientOfUserId(userid);
 
-	if(!client)
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
 		return;
 
 	if(hndl == INVALID_HANDLE)
@@ -461,7 +457,7 @@ public void SQLCallback_InsertPlayerStat(Handle owner, Handle hndl, const char[]
 	//定义客户
 	int client = GetClientOfUserId(userid);
 
-	if(client == 0)
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
 		return;
 
 	//SQL如果操作失败
@@ -485,7 +481,7 @@ public void SQLCallback_InsertPlayerStatFailed(Handle owner, Handle hndl, const 
 {
 	int client = GetClientOfUserId(userid);
 
-	if(client == 0)
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
 		return;
 	
 	if(hndl == INVALID_HANDLE)
@@ -509,7 +505,7 @@ public void SQLCallback_GetSigninStat(Handle owner, Handle hndl, const char[] er
 {
 	int client = GetClientOfUserId(userid);
 
-	if(!client || !IsClientInGame(client))
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
 		return;
 	
 	if(hndl == INVALID_HANDLE)
@@ -539,6 +535,9 @@ public void SQLCallback_GetSigninStat(Handle owner, Handle hndl, const char[] er
 public void SQLCallback_SignCallback(Handle owner, Handle hndl, const char[] error, int userid)
 {
 	int client = GetClientOfUserId(userid);
+	
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
+		return;
 
 	if(hndl == INVALID_HANDLE)
 	{
@@ -558,42 +557,41 @@ public void SQLCallback_SignCallback(Handle owner, Handle hndl, const char[] err
 
 public void SQLCallback_GetAdvData(Handle owner, Handle hndl, const char[] error, any data)
 {
-	if(hndl != INVALID_HANDLE)
+	if(hndl == INVALID_HANDLE)
+		return;
+	
+	if(SQL_HasResultSet(hndl))
 	{
-		if(SQL_HasResultSet(hndl))
+		//RemoveADV();
+		Handle kv = CreateKeyValues("ServerAdvertisement", "", "");
+		char FILE_PATH[256];
+		BuildPath(Path_SM, FILE_PATH, 256, "configs/ServerAdvertisement.cfg");
+		FileToKeyValues(kv, FILE_PATH);
+		//LogToFileEx(LogFile, "Set New Advertisement");
+		KvDeleteKey(kv, "Messages");
+		int Count = 0;
+		while(SQL_FetchRow(hndl))
 		{
-			//RemoveADV();
-			Handle kv = CreateKeyValues("ServerAdvertisement", "", "");
-			char FILE_PATH[256];
-			BuildPath(Path_SM, FILE_PATH, 256, "configs/ServerAdvertisement.cfg");
-			FileToKeyValues(kv, FILE_PATH);
-			//LogToFileEx(LogFile, "Set New Advertisement");
-			KvDeleteKey(kv, "Messages");
-			int Count = 0;
-			while(SQL_FetchRow(hndl))
+			char sType[4], sText[256], sCount[16];
+			SQL_FetchString(hndl, 2, sType, 4);
+			SQL_FetchString(hndl, 3, sText, 256);  // 0=ID 1=SID 2=TYPE 3=TEXT
+			IntToString(Count, sCount, 16);
+			if(KvJumpToKey(kv, "Messages", true))
 			{
-				char sType[4], sText[256], sCount[16];
-				SQL_FetchString(hndl, 2, sType, 4);
-				SQL_FetchString(hndl, 3, sText, 256);  // 0=ID 1=SID 2=TYPE 3=TEXT
-				IntToString(Count, sCount, 16);
-				if(KvJumpToKey(kv, "Messages", true))
+				if(KvJumpToKey(kv, sCount, true))
 				{
-					if(KvJumpToKey(kv, sCount, true))
-					{
-						Count++;
-						KvSetString(kv, "default", sText);
-						KvSetString(kv, "type", sType);
-						KvRewind(kv);
-						//LogToFileEx(LogFile, "New Adv: \"%s\"   \"%s\" ", sCount, sText);
-					}
+					Count++;
+					KvSetString(kv, "default", sText);
+					KvSetString(kv, "type", sType);
+					KvRewind(kv);
+					//LogToFileEx(LogFile, "New Adv: \"%s\"   \"%s\" ", sCount, sText);
 				}
 			}
-			KeyValuesToFile(kv, FILE_PATH);
-			ServerCommand("sm_reloadsadvert");
-			CloseHandle(kv);
-			kv = INVALID_HANDLE;
 		}
-		CloseHandle(hndl);
+		KeyValuesToFile(kv, FILE_PATH);
+		ServerCommand("sm_reloadsadvert");
+		CloseHandle(kv);
+		kv = INVALID_HANDLE;
 	}
 }
 
@@ -655,7 +653,7 @@ public void SQLCallback_SetFaith(Handle owner, Handle hndl, const char[] error, 
 {
 	int client = GetClientOfUserId(userid);
 	
-	if(!client || !IsClientInGame(client))
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
 		return;
 
 	if(hndl == INVALID_HANDLE)
@@ -683,7 +681,7 @@ public void SQLCallback_SetBuff(Handle owner, Handle hndl, const char[] error, i
 {
 	int client = GetClientOfUserId(userid);
 	
-	if(!client || !IsClientInGame(client))
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
 		return;
 
 	if(hndl == INVALID_HANDLE)
@@ -714,7 +712,8 @@ public void SQLCallback_FaithShareRank(Handle owner, Handle hndl, const char[] e
 	}
 	
 	int client = GetClientOfUserId(userid);
-	if(!client || !IsClientInGame(client))
+	
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
 		return;
 	
 	int m_iIndex, ishare;
@@ -805,6 +804,9 @@ public void SQLCallback_ResetReq(Handle owner, Handle hndl, const char[] error, 
 { 
 	int client = GetClientOfUserId(userid);
 	
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
+		return;
+	
 	if(hndl == INVALID_HANDLE)
 	{
 		if(StrContains(error, "lost connection", false) != -1 && client && g_eClient[client][bLoaded])
@@ -818,8 +820,7 @@ public void SQLCallback_ResetReq(Handle owner, Handle hndl, const char[] error, 
 	}
 	else
 	{
-		if(client && IsClientInGame(client))
-			PrintToConsole(client, "[Planeptune]  任务进度已重置!");
+		PrintToConsole(client, "[CG]  任务进度已重置!");
 	}
 }
 
@@ -827,12 +828,14 @@ public void SQLCallback_SaveReq(Handle owner, Handle hndl, const char[] error, i
 { 
 	int client = GetClientOfUserId(userid);
 	
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
+		return;
+	
 	if(hndl == INVALID_HANDLE)
 		LogToFileEx(LogFile, "Save Client Req Failed! [%N]  %s", client, error);
 	else
 	{
-		if(client && IsClientInGame(client))
-			PrintToConsole(client, "[Planeptune]  任务进度已保存!");
+		PrintToConsole(client, "[CG]  任务进度已保存!");
 	}
 }
 
@@ -840,12 +843,14 @@ public void SQLCallback_InsertGuild(Handle owner, Handle hndl, const char[] erro
 {
 	int client = GetClientOfUserId(userid);
 	
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
+		return;
+	
 	if(hndl == INVALID_HANDLE)
 		LogToFileEx(LogFile, "Insert Client Req Conpelete Failed! [%N](%d)  %s", client, g_eClient[client][iReqId], error);
 	else
 	{
-		if(client && IsClientInGame(client))
-			PrintToConsole(client, "[Planeptune]  任务已添加!");
+		PrintToConsole(client, "[CG]  任务已添加!");
 	}
 }
 
@@ -918,7 +923,7 @@ public void SQLCallback_CheckDivorce(Handle owner, Handle hndl, const char[] err
 {
 	int client = GetClientOfUserId(userid);
 	
-	if(!client || !IsClientInGame(client))
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
 		return;
 	
 	if(hndl == INVALID_HANDLE)
@@ -951,7 +956,7 @@ public void SQLCallback_UpdateDivorce(Handle owner, Handle hndl, const char[] er
 	ReadPackString(pack, m_szName, 64);
 	CloseHandle(pack);
 	
-	if(!client || !IsClientInGame(client))
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
 		return;
 	
 	if(hndl == INVALID_HANDLE)
@@ -988,7 +993,7 @@ public void SQLCallback_LilyRank(Handle owner, Handle hndl, const char[] error, 
 {
 	int client = GetClientOfUserId(userid);
 	
-	if(!client || !IsClientInGame(client))
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
 		return;
 	
 	if(hndl == INVALID_HANDLE)
@@ -1026,7 +1031,7 @@ public void SQLCallback_InvesProc(Handle owner, Handle hndl, const char[] error,
 {
 	int client = GetClientOfUserId(userid);
 	
-	if(!client || !IsClientInGame(client))
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
 		return;
 	
 	if(hndl == INVALID_HANDLE)
@@ -1061,7 +1066,7 @@ public void SQLCallback_InvesNew(Handle owner, Handle hndl, const char[] error, 
 {
 	int client = GetClientOfUserId(userid);
 	
-	if(!client || !IsClientInGame(client))
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
 		return;
 	
 	if(hndl == INVALID_HANDLE)
@@ -1101,8 +1106,11 @@ public void SQLCallback_InvesUpgrade(Handle owner, Handle hndl, const char[] err
 	int iProc = ReadPackCell(hPack);
 	int client = GetClientOfUserId(userid);
 	
-	if(!client || !IsClientInGame(client))
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
+	{
+		CloseHandle(hPack);
 		return;
+	}
 	
 	char m_szQuery[256];
 	
@@ -1118,33 +1126,6 @@ public void SQLCallback_InvesUpgrade(Handle owner, Handle hndl, const char[] err
 	
 	char m_szAuth[32];
 	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-	
-/*	
-	switch(iTyp)
-	{
-		case 1:
-		{
-			Format(m_szQuery, 256, "UPDATE store_players SET credits=credits-%d WHERE authid = '%s'", iLvl*1000+1000, m_szAuth[8]);
-			SQL_TQuery(g_hDB_csgo, SQLCallback_InvesCredits, m_szQuery, hPack);
-			Format(m_szQuery, 256, "INSERT INTO store_logs VALUES (DEFAULT, (SELECT id FROM store_players WHERE authid = '%s'), -%d, 'Commerce upgrade lvl_%d exp_%d', %d)", m_szAuth[8], iLvl*1000+1000, iLvl, iProc, GetTime());
-			CG_SaveDatabase(m_szQuery);
-		}
-		case 2:
-		{
-			Format(m_szQuery, 256, "UPDATE store_players SET credits=credits-%d WHERE authid = '%s'", iLvl*1000+1000, m_szAuth[8]);
-			SQL_TQuery(g_hDB_csgo, SQLCallback_InvesCredits, m_szQuery, hPack);
-			Format(m_szQuery, 256, "INSERT INTO store_logs VALUES (DEFAULT, (SELECT id FROM store_players WHERE authid = '%s'), -%d, 'Industrial upgrade lvl_%d exp_%d', %d)", m_szAuth[8], iLvl*1000+1000, iLvl, iProc, GetTime());
-			CG_SaveDatabase(m_szQuery);
-		}
-		case 3:
-		{
-			Format(m_szQuery, 256, "UPDATE store_players SET credits=credits-%d WHERE authid = '%s'", iLvl*500+1000, m_szAuth[8]);
-			SQL_TQuery(g_hDB_csgo, SQLCallback_InvesCredits, m_szQuery, hPack);
-			Format(m_szQuery, 256, "INSERT INTO store_logs VALUES (DEFAULT, (SELECT id FROM store_players WHERE authid = '%s'), -%d, 'Public Relations upgrade lvl_%d exp_%d', %d)", m_szAuth[8], iLvl*500+1000, iLvl, iProc, GetTime());
-			CG_SaveDatabase(m_szQuery);
-		}
-	}
-*/
 
 	char m_szReason[128];
 	switch(iTyp)
@@ -1187,32 +1168,3 @@ public void SQLCallback_InvesUpgrade(Handle owner, Handle hndl, const char[] err
 		}
 	}
 }
-
-/*
-public void SQLCallback_InvesCredits(Handle owner, Handle hndl, const char[] error, Handle hPack)
-{
-	ResetPack(hPack);
-
-	int userid = ReadPackCell(hPack);
-	int iTyp = ReadPackCell(hPack);
-	int iLvl = ReadPackCell(hPack);
-	int iProc = ReadPackCell(hPack);
-	int client = GetClientOfUserId(userid);
-	CloseHandle(hPack);
-	
-	if(!client || !IsClientInGame(client))
-		return;
-	
-	char m_szQuery[128];
-	
-	if(hndl == INVALID_HANDLE)
-	{
-		Format(m_szQuery, 128, "SELECT * FROM playertrack_investment WHERE playerid = %d", g_eClient[client][iPlayerId]);
-		SQL_TQuery(g_hDB_csgo, SQLCallback_InvesProc, m_szQuery, GetClientUserId(client));
-		PrintToChat(client, "%s  服务器中了闪光弹,请稍候再试[错误x13]", PLUGIN_PREFIX);
-		LogToFileEx(LogFile, "Investment Credits %N error: %s", client, error);
-		return;
-	}
-	
-}
-*/

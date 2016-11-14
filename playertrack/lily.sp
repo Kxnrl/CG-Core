@@ -66,7 +66,7 @@ bool SyncLilyData(int Neptune)
 	return false;
 }
 
-void BuildLilyMenuToClient(int client)
+void BuildLilyMenu(int client)
 {
 	//Lily主菜单
 	Handle menu = CreateMenu(MenuHandler_LilyMain);
@@ -153,7 +153,7 @@ public int MenuHandler_LilySelect(Handle menu, MenuAction action, int client, in
 			if(!target || !IsClientInGame(target) || g_eClient[target][iLilyId] != -2)
 			{
 				PrintToChat(client, "%s  你选择的对象目前不可用", PLUGIN_PREFIX);
-				BuildLilyMenuToClient(client);
+				BuildLilyMenu(client);
 				return;
 			}
 			
@@ -168,7 +168,7 @@ public int MenuHandler_LilySelect(Handle menu, MenuAction action, int client, in
 		case MenuAction_Cancel:
         {
 			if(itemNum == MenuCancel_ExitBack)
-				BuildLilyMenuToClient(client);
+				BuildLilyMenu(client);
         }
 	}
 }
@@ -273,7 +273,7 @@ void CheckingDivorce(int client)
 	if((GetTime() - g_eClient[client][iLilyDate]) < 604800)
 	{
 		PrintToChat(client, "%s  新组成Lily之后7天内不能申请解除", PLUGIN_PREFIX);
-		BuildLilyMenuToClient(client);
+		BuildLilyMenu(client);
 		return;
 	}
 
@@ -334,7 +334,7 @@ public int MenuHandler_LilyConfirmDivorce(Handle menu, MenuAction action, int cl
 			
 			if(StrEqual(info, "fuckyou", false))
 			{
-				BuildLilyMenuToClient(client);
+				BuildLilyMenu(client);
 				return;
 			}
 
@@ -363,7 +363,7 @@ public int MenuHandler_LilyConfirmDivorce(Handle menu, MenuAction action, int cl
             if(itemNum == MenuCancel_ExitBack)
             {
 				//返回之后就重铸菜单
-                BuildLilyMenuToClient(client);
+                BuildLilyMenu(client);
             }
         }
 	}
@@ -387,7 +387,7 @@ void LilyRankToMenu(int client, Handle pack)
 	Handle menu = CreateMenu(MenuHandler_LilyRank);
 
 	//标题
-	SetMenuTitle(menu, "[Planeptune]   Lily Rank \n　");
+	SetMenuTitle(menu, "[CG]   Lily Rank \n　");
 
 	int m_iRank, iCount = ReadPackCell(pack);
 
@@ -434,7 +434,7 @@ public int LilyHelpPanelHandler(Handle menu, MenuAction action, int client, int 
 {
 	if(action == MenuAction_Select)
 	{
-		BuildLilyMenuToClient(client);
+		BuildLilyMenu(client);
 	}
 	else if(action == MenuAction_End)
 	{

@@ -13,7 +13,7 @@ public void SetClientSignStat(int client)
 	}
 }
 
-public Action Timer_AllowToLogin(Handle timer, any userid)
+public Action Timer_AllowToLogin(Handle timer, int userid)
 {
 	//计时器满，允许签到
 	int client = GetClientOfUserId(userid);
@@ -33,25 +33,25 @@ public Action Timer_AllowToLogin(Handle timer, any userid)
 	g_eClient[client][hSignTimer] = INVALID_HANDLE;
 }
 
-public Action Command_Login(int client, int args) 
+public void ProcessingLogin(int client) 
 {
 	if(g_eClient[client][bTwiceLogin])
 	{
 		PrintToChat(client, "%s \x01每天只能签到1次!", PLUGIN_PREFIX);
-		return Plugin_Handled;
+		return;
 	}
 	
 	if(!g_eClient[client][bAllowLogin]) 
 	{
 		int m_iTime = (600 - (GetTime() - g_eClient[client][iConnectTime]));
 		PrintToChat(client, "%s \x01你还需要在线\x04%d\x01秒才能签到!", PLUGIN_PREFIX, m_iTime);
-		return Plugin_Handled;
+		return;
 	}
 	
 	if(g_eClient[client][LoginProcess])
 	{
 		PrintToChat(client, "%s \x01正在执行签到查询!", PLUGIN_PREFIX);
-		return Plugin_Handled;
+		return;
 	}
 
 	char m_szQuery[500];
@@ -59,6 +59,4 @@ public Action Command_Login(int client, int args)
 	SQL_TQuery(g_hDB_csgo, SQLCallback_GetSigninStat, m_szQuery, g_eClient[client][iUserId]);
 	
 	g_eClient[client][LoginProcess] = true;
-	
-	return Plugin_Handled;
 }

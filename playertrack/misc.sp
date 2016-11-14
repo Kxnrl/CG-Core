@@ -62,7 +62,7 @@ public void SettingAdver()
 	{
 		KvSetString(kv, "enable", "1");
 		KvSetFloat(kv, "Delay_between_messages", 30.0);
-		KvSetString(kv, "Advertisement_tag", "[{purple}Planeptune{default}] ^");
+		KvSetString(kv, "Advertisement_tag", "[{blue}CG{default}] ^");
 		KvSetString(kv, "Time_Format", "%H:%M:%S");
 		KvGoBack(kv);
 		KvRewind(kv);
@@ -263,7 +263,7 @@ int FindClientByPlayerId(int PlayerId)
 	return -1;
 }
 
- public int MenuHandler_MainMenu(Handle menu, MenuAction action, int client, int itemNum) 
+ public int MenuHandler_CGMainMenu(Handle menu, MenuAction action, int client, int itemNum) 
 {
 	if(action == MenuAction_Select) 
 	{

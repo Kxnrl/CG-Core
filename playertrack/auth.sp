@@ -1,4 +1,4 @@
- public int MenuHandler_AdminPAMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 
+ public int MenuHandler_PAAdminMenuHandler(Handle menu, MenuAction action, int client, int itemNum) 
 {
 	if(action == MenuAction_Select) 
 	{
@@ -27,15 +27,15 @@ void OpenSelectTargetMenu(int client)
 	Handle menu = CreateMenu(MenuHandler_PASelectTarget);
 
 	if(g_eAdmin[iType] == 1)
-		SetMenuTitle(menu, "[Planeptune]   添加临时神烦坑比\n　");
+		SetMenuTitle(menu, "[CG]   添加临时神烦坑比\n　");
 	else if(g_eAdmin[iType] == 2)
-		SetMenuTitle(menu, "[Planeptune]   添加临时小学生\n　");
+		SetMenuTitle(menu, "[CG]   添加临时小学生\n　");
 	else if(g_eAdmin[iType] == 3)
-		SetMenuTitle(menu, "[Planeptune]   撤销临时认证\n　");
+		SetMenuTitle(menu, "[CG]   撤销临时认证\n　");
 	else if(g_eAdmin[iType] == 4)
-		SetMenuTitle(menu, "[Planeptune]   重新载入认证\n　");
+		SetMenuTitle(menu, "[CG]   重新载入认证\n　");
 	else
-		SetMenuTitle(menu, "[Planeptune]   未知错误");
+		SetMenuTitle(menu, "[CG]   未知错误");
 
 	if(g_eAdmin[iType] == 1 || g_eAdmin[iType] == 2)
 	{
@@ -122,7 +122,7 @@ public int MenuHandler_PASelectTarget(Handle menu, MenuAction action, int client
 void OpenSelectTimeMenu(int client)
 {
 	Handle menu = CreateMenu(MenuHandler_PASelectTime);
-	SetMenuTitle(menu, "[Planeptune]   选择临时认证时长\n　");
+	SetMenuTitle(menu, "[CG]   选择临时认证时长\n　");
 	AddMenuItem(menu, "1800", "30 Mins");
 	AddMenuItem(menu, "3600", "1 Hour");
 	AddMenuItem(menu, "10800", "3 Hours");

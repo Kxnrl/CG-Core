@@ -60,8 +60,7 @@ public void Lily_OnLilyCouple(int Neptune, int Noire)
 	char finalMessage[1024];
 	Format(finalMessage, 1024, " \x07恭喜\x0C%N\x07和\x0C%N\x07组成了\x0ELily\x07!他们收到了来自Planeptune女神的祝福...", Neptune, Noire);
 
-	char Error[256];
-	Handle database = SQL_Connect("csgo", true, Error, 256);
+	Handle database = CG_GetDiscuzDatabase();
 	
 	if(database == INVALID_HANDLE)
 	{
@@ -70,7 +69,6 @@ public void Lily_OnLilyCouple(int Neptune, int Noire)
 	
 	char EscapeString[512];
 	SQL_EscapeString(database, finalMessage, EscapeString, 512);
-	CloseHandle(database);
 
 	char m_szQuery[1024];
 	Format(m_szQuery, 1024, "INSERT INTO `dz_plugin_ahome_laba` (`username`, `tousername`, `level`, `lid`, `dateline`, `content`, `color`, `url`) VALUES ('Lily System', '', 'system', 0, '%d', '%s', '', '')", GetTime(), EscapeString);
@@ -469,7 +467,7 @@ public Handler_DoNothing(Menu menu, MenuAction action, int param1, int param2)
 public bool UpdateMessageToDiscuz(int client, const char[] message)
 {
 	char Error[256];
-	Handle database = SQL_Connect("csgo", true, Error, 256);
+	Handle database = CG_GetDiscuzDatabase();
 	
 	if(database == INVALID_HANDLE)
 	{
@@ -479,7 +477,6 @@ public bool UpdateMessageToDiscuz(int client, const char[] message)
 	
 	char EscapeString[512];
 	SQL_EscapeString(database, message, EscapeString, 512);
-	CloseHandle(database);
 	
 	if(CG_GetDiscuzUID(client) < 1)
 	{

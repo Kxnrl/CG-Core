@@ -5,7 +5,7 @@
 
 #pragma newdecls required
 
-#define PREFIX "[\x0EPlaneptune\x01]  "
+#define PREFIX "[\x0CCG\x01]  "
 
 bool g_bListener[MAXPLAYERS+1];
 char g_szSignature[MAXPLAYERS+1][256];
@@ -69,7 +69,7 @@ public Action Cmd_FaithReset(int client, int args)
 	}
 	
 	Handle menu = CreateMenu(ResetFaithonfirmMenuHandler);
-	SetMenuTitle(menu, "[Planeptune]   Faith - Reset Faith\n ");
+	SetMenuTitle(menu, "[CG]   Faith - Reset Faith\n ");
 	
 	char szItem[256];
 
@@ -166,7 +166,7 @@ public Action Cmd_BuffReset(int client, int args)
 	}
 	
 	Handle menu = CreateMenu(ResetBuffConfirmMenuHandler);
-	SetMenuTitle(menu, "[Planeptune]   Faith - Reset Second Buff\n ");
+	SetMenuTitle(menu, "[CG]   Faith - Reset Second Buff\n ");
 
 	char szItem[256];
 
@@ -263,7 +263,7 @@ public Action Cmd_FaithRecharge(int client, int args)
 	}
 	
 	Handle menu = CreateMenu(FaithChargeMenuHandler);
-	SetMenuTitle(menu, "[Planeptune]   充值信仰 \n 你已经为%s贡献了%d点Share\n ", szFaith_NAME[CG_GetClientFaith(client)], CG_GetClientShare(client));
+	SetMenuTitle(menu, "[CG]   充值信仰 \n 你已经为%s贡献了%d点Share\n ", szFaith_NAME[CG_GetClientFaith(client)], CG_GetClientShare(client));
 	
 	AddMenuItem(menu, "20", "20点Share[400Credits]");
 	AddMenuItem(menu, "50", "50点Share[1,000Credits]");
@@ -333,7 +333,7 @@ public Action Cmd_Signature(int client, int args)
 void ShowListenerMenu(int client)
 {
 	Handle menu = CreateMenu(ListenerMenuHandler);
-	SetMenuTitle(menu, "[Planeptune^  签名设置  \n设置签名需要500Credits[首次免费] \n ");
+	SetMenuTitle(menu, "[CG^  签名设置  \n设置签名需要500Credits[首次免费] \n ");
 
 	char szItem[256];
 	
@@ -410,7 +410,7 @@ public int ListenerMenuHandler(Handle menu, MenuAction action, int client, int i
 			Store_SetClientCredits(client, Store_GetClientCredits(client)-500, "设置签名");
 			
 			char Error[256];
-			Handle database = SQL_Connect("csgo", true, Error, 256);
+			Handle database = CG_GetGameDatabase();
 			
 			if(database == INVALID_HANDLE)
 			{
@@ -423,7 +423,6 @@ public int ListenerMenuHandler(Handle menu, MenuAction action, int client, int i
 			SQL_EscapeString(database, g_szSignature[client], eSignature, 512);
 			Format(m_szQuery, 512, "UPDATE `playertrack_player` SET signature = '%s' WHERE id = '%d' and steamid = '%s'", eSignature, CG_GetPlayerID(client), auth);
 			CG_SaveDatabase(m_szQuery);
-			CloseHandle(database);
 			PrintToChat(client, "%s  已成功设置您的签名,花费了\x04500Credits", PREFIX);
 			char szPreview[256];
 			strcopy(szPreview, 256, g_szSignature[client]);

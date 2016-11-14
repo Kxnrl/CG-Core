@@ -40,7 +40,8 @@ public Action Timer_OSTimeout(Handle timer, any userid)
 {
 	//OS查询Timeout
 	int client = GetClientOfUserId(userid);
-	if(client == 0)
+	
+	if(!client)
 	{
 		return;
 	}
@@ -52,10 +53,10 @@ public Action Timer_HandleConnect(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	
-	if(client == 0 || !IsClientInGame(client))
+	if(!client || !IsClientInGame(client))
 		return Plugin_Stop;
 	
-	if(g_eClient[client][iConnectTime] == 0)
+	if(!g_eClient[client][iConnectTime])
 	{
 		g_eClient[client][iConnectTime] = GetTime();
 		return Plugin_Continue;
@@ -64,20 +65,20 @@ public Action Timer_HandleConnect(Handle timer, any userid)
 	if(g_eClient[client][hOSTimer] != INVALID_HANDLE || !g_eClient[client][bLoaded])
 		return Plugin_Continue;
 	
-	if(g_eClient[client][iPlayerId] == 0)
+	if(!g_eClient[client][iPlayerId])
 		return Plugin_Stop;
-	
+
 	//获得 客户OS|当前地图|当前日期|客户权限
-	char date[64], map[128], os[64];
+	char date[64], map[128], os[16];
 	FormatTime(date, 64, "%Y/%m/%d %H:%M:%S", GetTime());
 
 	GetCurrentMap(map, 128);
 	if(g_eClient[client][iOS] == OS_Windows)
-		strcopy(os, 64, "Windows");
+		strcopy(os, 16, "Windows");
 	else if(g_eClient[client][iOS] == OS_Mac)
-		strcopy(os, 64, "MacOS");
+		strcopy(os, 16, "MacOS");
 	else if(g_eClient[client][iOS] == OS_Linux)
-		strcopy(os, 64, "Linux");
+		strcopy(os, 16, "Linux");
 	
 	GetClientFlags(client);
 
@@ -121,7 +122,7 @@ void SaveClient(int client)
 	SQL_EscapeString(g_hDB_csgo, os, sBuffer[1], 256);
 	SQL_EscapeString(g_hDB_csgo, g_eClient[client][szAdminFlags], sBuffer[2], 256);
 	
-	if(g_eClient[client][iGroupId] != 0 && g_eClient[client][iTemp] == -1)
+	if(g_eClient[client][iGroupId] && g_eClient[client][iTemp] == -1)
 	{
 		int exp = (RoundToNearest(duration * 0.033333) + g_eClient[client][iExp]) % 1000;
 		int upl = (RoundToNearest(duration * 0.033333) + g_eClient[client][iExp]) / 1000;
