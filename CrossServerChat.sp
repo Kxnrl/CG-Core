@@ -58,7 +58,7 @@ public void OnConfigsExecuted()
 public void Lily_OnLilyCouple(int Neptune, int Noire)
 {
 	char finalMessage[1024];
-	Format(finalMessage, 1024, " \x07恭喜\x0C%N\x07和\x0C%N\x07组成了\x0ELily\x07!他们收到了来自Planeptune女神的祝福...", Neptune, Noire);
+	Format(finalMessage, 1024, " \x07恭喜\x0C%N\x07和\x0C%N\x07组成了\x0ELily\x07!", Neptune, Noire);
 
 	Handle database = CG_GetDiscuzDatabase();
 	
@@ -335,7 +335,7 @@ stock bool IsValidClient(client)
 public OnClientSocketConnected(Handle socket, any arg)
 {	
 	//PrintToServer("Sucessfully connected to master chat server ! (%s:%s)", MasterServer, port);
-	LogMessage("Sucessfully connected to master chat server ! (%s:%s)", MasterServer, port);
+	//LogMessage("Sucessfully connected to master chat server ! (%s:%s)", MasterServer, port);
 	SocketSetOption(socket, SocketSendTimeout, 4000);
 	SocketSetOption(socket, SocketReceiveTimeout, 4000);
 	
@@ -356,7 +356,7 @@ public OnClientSocketError(Handle socket, const int errorType, const int errorNu
 //When a client sent a message to the MCS OR the MCS sent a message to the client, and the MCS have to handle it :
 public OnChildSocketReceive(Handle socket, char[] receiveData, const int dataSize, any hFile)
 {
-	LogMessage("Receive data");
+	//LogMessage("Receive data");
 	if(StrContains(receiveData, key) != -1) //The message contain the security key ?
 	{
 		ReplaceString(receiveData, dataSize, key, ""); //Remove the key from the message
@@ -408,10 +408,9 @@ stock void ConnecToMasterServer()
 		return;
 	
 	connected = false;
-	globalClientSocket = SocketCreate(SOCKET_UDP, OnClientSocketError);
-	//PrintToServer("Attempt to connect to %s:%s ...", MasterServer, port);
+	globalClientSocket = SocketCreate(SOCKET_TCP, OnClientSocketError);
 	SocketConnect(globalClientSocket, OnClientSocketConnected, OnChildSocketReceive, OnChildSocketDisconnected, MasterServer, StringToInt(port));
-	LogMessage("Attempt to connect to %s:%s ...", MasterServer, port);
+	//LogMessage("Attempt to connect to %s:%s ...", MasterServer, port);
 }
 
 stock void PrintToMenuAll(char[] message)
@@ -466,7 +465,6 @@ public Handler_DoNothing(Menu menu, MenuAction action, int param1, int param2)
 
 public bool UpdateMessageToDiscuz(int client, const char[] message)
 {
-	char Error[256];
 	Handle database = CG_GetDiscuzDatabase();
 	
 	if(database == INVALID_HANDLE)
