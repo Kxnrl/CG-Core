@@ -1,0 +1,548 @@
+stock bool MySQL_Query(Handle database, SQLTCallback callback, const char[] query, any data = 0, DBPriority prio = DBPrio_Normal)
+{
+	if(database == INVALID_HANDLE)
+	{
+		if(database == g_hDB_csgo)
+		{
+			SQL_TConnect_csgo();
+		}
+		else if(database == g_hDB_discuz)
+		{
+			SQL_TConnect_discuz();
+		}
+		return false;
+	}
+	
+	SQL_TQuery(database, callback, query, data, prio);
+
+	return true;
+}
+
+stock void SetMenuTitleEx(Handle menu, const char[] fmt, any ...)
+{
+	char m_szBuffer[256];
+	VFormat(m_szBuffer, 256, fmt, 3);
+	
+	if(GetEngineVersion() == Engine_CSGO)
+		Format(m_szBuffer, 256, "%s\n　", m_szBuffer);
+	else
+	{
+		ReplaceString(m_szBuffer, 256, "\n \n", " - ");
+		ReplaceString(m_szBuffer, 256, "\n", " - ");
+	}
+	
+	SetMenuTitle(menu, m_szBuffer);
+}
+
+stock bool AddMenuItemEx(Handle menu, int style, const char[] info, const char[] display, any ...)
+{
+	char m_szBuffer[256];
+	VFormat(m_szBuffer, 256, display, 5);
+
+	if(GetEngineVersion() != Engine_CSGO)
+		ReplaceString(m_szBuffer, 256, "\n", " - ");
+
+	return AddMenuItem(menu, info, m_szBuffer, style);
+}
+
+stock bool IsValidClient(int client, bool checkBOT = false)
+{
+	if(!(1 <= client <= MaxClients))
+		return false;
+
+	if(!IsClientInGame(client))
+		return false;
+
+	if(checkBOT)
+	{
+		if(IsFakeClient(client))
+			return false;
+
+		char m_szAuth[64];
+		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32);
+
+		if(StrEqual(m_szAuth, "BOT", false))
+			return false;
+	}
+
+	return true;
+}
+
+stock int FindClientByPlayerId(int PlayerId)
+{
+	if(PlayerId < 0)
+		return -2;
+
+	for(int client = 1; client <= MaxClients; ++client)
+	{
+		if(IsClientInGame(client))
+		{
+			if(g_eClient[client][bLoaded] && g_eClient[client][iPlayerId] == PlayerId)
+			{
+				return client;
+			}
+		}
+	}
+
+	return -1;
+}
+
+stock void tPrintHintTextToAll(const char[] szMessage, any ...)
+{
+	char szBuffer[256];
+	
+	for(int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && !IsFakeClient(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(szBuffer, 256, szMessage, 2);
+			PrintHintText(i, "%s", szBuffer);
+		}
+	}
+}
+
+stock void tPrintHintText(int client, const char[] szMessage, any ...)
+{
+	char szBuffer[256];
+
+	SetGlobalTransTarget(client);
+	VFormat(szBuffer, 256, szMessage, 3);
+	PrintHintText(client, "%s", szBuffer);
+}
+
+stock void tPrintCenterTextAll(const char[] szMessage, any ...)
+{
+	char szBuffer[256];
+
+	for(int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && !IsFakeClient(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(szBuffer, 256, szMessage, 2);
+			PrintCenterText(i, "%s", szBuffer);
+		}
+	}
+}
+
+stock void tPrintCenterText(int client, const char[] szMessage, any ...)
+{
+	char szBuffer[256];
+
+	SetGlobalTransTarget(client);
+	VFormat(szBuffer, 256, szMessage, 3);
+	PrintCenterText(client, "%s", szBuffer);
+}
+
+stock void tPrintToChat(int client, const char[] szMessage, any ...)
+{
+	if(client <= 0 || client > MaxClients)
+		ThrowError("Invalid client index %d", client);
+
+	if(!IsClientInGame(client))
+		ThrowError("Client %d is not in game", client);
+
+	char szBuffer[256];
+
+	SetGlobalTransTarget(client);
+	VFormat(szBuffer, 256, szMessage, 3);
+	ReplaceColorsCode(szBuffer, 256);
+	PrintToChat(client, szBuffer);
+}
+
+stock void tPrintToChatAll(const char[] szMessage, any ...)
+{
+	char szBuffer[256];
+
+	for(int i = 1; i <= MaxClients; i++)
+	{
+		if(IsClientInGame(i) && !IsFakeClient(i))
+		{
+			SetGlobalTransTarget(i);			
+			VFormat(szBuffer, 256, szMessage, 2);
+			ReplaceColorsCode(szBuffer, 256);
+			PrintToChat(i, "%s", szBuffer);
+		}
+	}
+}
+
+stock void ReplaceColorsCode(char[] buffer, int maxLen)
+{
+	ReplaceString(buffer, maxLen, "{normal}", "\x01", false);
+	ReplaceString(buffer, maxLen, "{default}", "\x01", false);
+	ReplaceString(buffer, maxLen, "{white}", "\x01", false);
+	ReplaceString(buffer, maxLen, "{darkred}", "\x02", false);
+	ReplaceString(buffer, maxLen, "{pink}", "\x03", false);
+	ReplaceString(buffer, maxLen, "{green}", "\x04", false);
+	ReplaceString(buffer, maxLen, "{lime}", "\x05", false);
+	ReplaceString(buffer, maxLen, "{yellow}", "\x05", false);
+	ReplaceString(buffer, maxLen, "{lightgreen}", "\x06", false);
+	ReplaceString(buffer, maxLen, "{red}", "\x07", false);
+	ReplaceString(buffer, maxLen, "{gray}", "\x08", false);
+	ReplaceString(buffer, maxLen, "{grey}", "\x08", false);
+	ReplaceString(buffer, maxLen, "{olive}", "\x09", false);
+	ReplaceString(buffer, maxLen, "{orange}", "\x10", false);
+	ReplaceString(buffer, maxLen, "{purple}", "\x0E", false);
+	ReplaceString(buffer, maxLen, "{lightblue}", "\x0B", false);
+	ReplaceString(buffer, maxLen, "{blue}", "\x0C", false);
+}
+
+stock void TranslationToFile(const char[] m_szPath)
+{
+	Handle file = OpenFile(m_szPath, "w");
+	WriteFileLine(file, "\"Phrases\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"signature title\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Signature setup \\n500Credits per setup[Free for first time]\"");
+	WriteFileLine(file, "\"chi\"	\"签名设置  \\n设置签名需要500信用点[首次免费]\"");
+	WriteFileLine(file, "\"zho\"	\"簽名設置　\\n設定簽名需要500個點數[第一次免費]\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"signature now you can type\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Input your signature in chat \\n\"");
+	WriteFileLine(file, "\"chi\"	\"你现在可以按Y输入签名了 \\n \"");
+	WriteFileLine(file, "\"zho\"	\"你現在可以按Y輸入簽名了 \\n \"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"signature color codes\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Useable color codes:\\n {lightred} {yellow} {blue} {green} {orange} {purple} {pink} \\n\"");
+	WriteFileLine(file, "\"chi\"	\"可用颜色代码\\n {亮红} {黄} {蓝} {绿} {橙} {紫} {粉} \\n \"");
+	WriteFileLine(file, "\"zho\"	\"可用顏色代碼\\n {亮红} {黄} {蓝} {绿} {橙} {紫} {粉} \\n \"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"signature example\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"EXAMPLE: (blue)E{yellow}X{lightred}A{green}M{orange}P{purple}L{pink}E\"");
+	WriteFileLine(file, "\"chi\"	\"例如: {蓝}陈{红}抄{黄}封{紫}不{粉}要{绿}脸 \\n \"");
+	WriteFileLine(file, "\"zho\"	\"比如: {蓝}陈{红}抄{黄}封{紫}不{粉}要{绿}脸 \\n \"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"signature input preview\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"#format\" \"{1:s}\"");
+	WriteFileLine(file, "\"en\"	\"Inputed: \\n {1}\\n \"");
+	WriteFileLine(file, "\"chi\"	\"你当前已输入: \\n {1}\\n \"");
+	WriteFileLine(file, "\"zho\"	\"你當前已輸入: \\n {1}\\n \"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"signature input\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"#format\" \"{1:s}\"");
+	WriteFileLine(file, "\"en\"	\"Inputed: {1}\"");
+	WriteFileLine(file, "\"chi\"	\"您输入了: {1}\"");
+	WriteFileLine(file, "\"zho\"	\"你輸入了: {1}\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"signature item preview\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Preview signature\"");
+	WriteFileLine(file, "\"chi\"	\"查看预览\"");
+	WriteFileLine(file, "\"zho\"	\"查看預覽\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"signature item ok\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Complete\"");
+	WriteFileLine(file, "\"chi\"	\"我写好了\"");
+	WriteFileLine(file, "\"zho\"	\"我寫完了\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"signature you have not enough credits\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Insufficient credits\"");
+	WriteFileLine(file, "\"chi\"	\"信用点不足,不能设置签名\"");
+	WriteFileLine(file, "\"zho\"	\"點數不夠,不能設定簽名\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"signature set successful\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Signature sucessfully setup\"");
+	WriteFileLine(file, "\"chi\"	\"已成功设置您的签名,花费了{green}500信用点\"");
+	WriteFileLine(file, "\"zho\"	\"已經設定了你的簽名,花了{green}500個點數\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"signature yours\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Your signature\"");
+	WriteFileLine(file, "\"chi\"	\"您的签名\"");
+	WriteFileLine(file, "\"zho\"	\"你的簽名\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"signature free first\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Free for first set-up\"");
+	WriteFileLine(file, "\"chi\"	\"首次设置签名免费!\"");
+	WriteFileLine(file, "\"zho\"	\"第一次設定簽名免費\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"sign allow sign\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"{green}You can sign now - Type{lightred}!sign{green} in chat to sign\"");
+	WriteFileLine(file, "\"chi\"	\"{green}你现在可以签到了,按Y输入{lightred}!sign{green}来签到!\"");
+	WriteFileLine(file, "\"zho\"	\"{green}你現在可以簽到了,按Y輸入{lightred}!sign{green}來簽到!\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"sign twice sign\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"You can only sign once each day!\"");
+	WriteFileLine(file, "\"chi\"	\"每天只能签到1次!\"");
+	WriteFileLine(file, "\"zho\"	\"每天只能簽到1次!\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"sign no time\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"#format\" \"{1:d}\"");
+	WriteFileLine(file, "\"en\"	\"{green}{1}{default} more second for sign-up!\"");
+	WriteFileLine(file, "\"chi\"	\"你还需要在线{green}{1}{default}秒才能签到!\"");
+	WriteFileLine(file, "\"zho\"	\"你還需要在綫{green}{1}{default}秒才能簽到!\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"sign in processing\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Quering sign procession\"");
+	WriteFileLine(file, "\"chi\"	\"正在执行签到查询!\"");
+	WriteFileLine(file, "\"zho\"	\"正在進行簽到進程!\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"sign error\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"{darkred}Sign error - try again later\"");
+	WriteFileLine(file, "\"chi\"	\"{darkred}未知错误,请重试!\"");
+	WriteFileLine(file, "\"zho\"	\"{darkred}未知錯誤,請重試!\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"sign successful\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"#format\" \"{1:d}\"");
+	WriteFileLine(file, "\"en\"	\"{default}You had signed up today. Total signed up for {blue}{1}{default} day(s)!\"");
+	WriteFileLine(file, "\"chi\"	\"{default}签到成功,你已累计签到{blue}{1}{default}天!\"");
+	WriteFileLine(file, "\"zho\"	\"{default}簽到成功,你已經簽到了{blue}{1}{default}天!\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"system error\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"An error occupied - try again later:\"");
+	WriteFileLine(file, "\"chi\"	\"系统中闪光弹了,请重试!  错误:\"");
+	WriteFileLine(file, "\"zho\"	\"系統出錯,請重試!  錯誤:\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp married\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"#format\" \"{1:s},{2:s}\"");
+	WriteFileLine(file, "\"en\"	\"{orange}Congraulates {purple}{1}{orange} and {purple}{2}{orange} made a couple.\"");
+	WriteFileLine(file, "\"chi\"	\"{orange}恭喜{purple}{1}{orange}和{purple}{2}{orange}结成CP.\"");
+	WriteFileLine(file, "\"zho\"	\"{orange}恭喜{purple}{1}{orange}和{purple}{2}{orange}組成CP.\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp married offline\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Data saved - Awards unaviliable\"");
+	WriteFileLine(file, "\"chi\"	\"系统已保存你们的数据,但是你老婆当前离线,你不能享受新婚祝福\"");
+	WriteFileLine(file, "\"zho\"	\"系統已保存你們的檔案,但是你老婆現在離綫,你不能接受新婚祝福\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp divorce\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"#format\" \"{1:N},{2:s},{3:d}\"");
+	WriteFileLine(file, "\"en\"	\"{orange}{1}{yellow} terminated couple relationship with {orange}{2}{yellow} - Their relationship existed for{red}{3}{yellow}days\"");
+	WriteFileLine(file, "\"chi\"	\"{orange}{1}{yellow}解除了和{orange}{2}{yellow}的CP,他们的关系维持了{red}{3}{yellow}天\"");
+	WriteFileLine(file, "\"zho\"	\"{orange}{1}{yellow}解除了和{orange}{2}{yellow}的CP,他們搞基了{red}{3}{yellow}天\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp find\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Find couple\"");
+	WriteFileLine(file, "\"chi\"	\"寻找CP\"");
+	WriteFileLine(file, "\"zho\"	\"尋找CP\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp out\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Dissolute couple\"");
+	WriteFileLine(file, "\"chi\"	\"解除CP\"");
+	WriteFileLine(file, "\"zho\"	\"解除CP\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp about\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"About\"");
+	WriteFileLine(file, "\"chi\"	\"关于CP\"");
+	WriteFileLine(file, "\"zho\"	\"關於CP\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp no target\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"No one can receive request now\"");
+	WriteFileLine(file, "\"chi\"	\"当前服务器内没有人能跟你搞基\"");
+	WriteFileLine(file, "\"zho\"	\"當前服務器裏面沒有人能跟你CP\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp invalid target\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Invalid request target\"");
+	WriteFileLine(file, "\"chi\"	\"你选择的对象目前不可用\"");
+	WriteFileLine(file, "\"zho\"	\"你選擇的對象不正確\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp send\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"#format\" \"{1:N}\"");
+	WriteFileLine(file, "\"en\"	\"{purple}{1}{normal} received your request\"");
+	WriteFileLine(file, "\"chi\"	\"已将你的CP请求发送至{purple}{1}\"");
+	WriteFileLine(file, "\"zho\"	\"已經將你的CP請求發送給{purple}{1}\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp request\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Received a couple request\"");
+	WriteFileLine(file, "\"chi\"	\"您有一个CP请求\"");
+	WriteFileLine(file, "\"zho\"	\"你有一個CP請求\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp request item target\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"#format\" \"{1:N}\"");
+	WriteFileLine(file, "\"en\"	\"Received couple request from {1}\"");
+	WriteFileLine(file, "\"chi\"	\"你收到了一个来自 {1} 的CP邀请\"");
+	WriteFileLine(file, "\"zho\"	\"你收到了一個來自 {1} 的CP邀請\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp 7days\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Cannot terminate relationship in 7 days\"");
+	WriteFileLine(file, "\"chi\"	\"组成CP后7天内不能申请解除\"");
+	WriteFileLine(file, "\"zho\"	\"組成CP後7天內不能申請解開\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp buff\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Spec awards for couples\"");
+	WriteFileLine(file, "\"chi\"	\"组成CP后可以享受多种福利\"");
+	WriteFileLine(file, "\"zho\"	\"組成CP可以想說一些福利\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp confirm\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Accept this request?\"");
+	WriteFileLine(file, "\"chi\"	\"你确定要接受这个邀请吗\"");
+	WriteFileLine(file, "\"zho\"	\"你確定要接受這個邀請嗎\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp accept\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Yes\"");
+	WriteFileLine(file, "\"chi\"	\"我接受\"");
+	WriteFileLine(file, "\"zho\"	\"我接受\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp refuse\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Nope\"");
+	WriteFileLine(file, "\"chi\"	\"我拒绝\"");
+	WriteFileLine(file, "\"zho\"	\"我拒絕\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp refuse target\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"#format\" \"{1:N}\"");
+	WriteFileLine(file, "\"en\"	\"You rejected {orange}{1}{default}'s couple request\"");
+	WriteFileLine(file, "\"chi\"	\"你拒绝了{orange}{1}{default}的CP邀请\"");
+	WriteFileLine(file, "\"zho\"	\"你拒絕了{orange}{1}{default}的CP邀請\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp refuse client\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"#format\" \"{1:N}\"");
+	WriteFileLine(file, "\"en\"	\"{orange}{1}{default} had rejected your request\"");
+	WriteFileLine(file, "\"chi\"	\"{orange}{1}{default}拒绝了你的CP邀请\"");
+	WriteFileLine(file, "\"zho\"	\"{orange}{1}{default}拒絕了你的CP邀請\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp can divorce\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Cannot terminate relationship in week once you make new couple\"");
+	WriteFileLine(file, "\"chi\"	\"新组成CP之后7天内不能申请解除\"");
+	WriteFileLine(file, "\"zho\"	\"新組成CP之後7天內不能申請解開\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp your cp\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"#format\" \"{1:s}\"");
+	WriteFileLine(file, "\"en\"	\"Your couple is {1}\"");
+	WriteFileLine(file, "\"chi\"	\"你当前的CP伴侣为 {1}\"");
+	WriteFileLine(file, "\"zho\"	\"你現在的CP伴侶为 {1}\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp your days\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"#format\" \"{1:d}\"");
+	WriteFileLine(file, "\"en\"	\"Relationship exists for {1} days\"");
+	WriteFileLine(file, "\"chi\"	\"你们已组成CP {1} 天\"");
+	WriteFileLine(file, "\"zho\"	\"你們已經搞基 {1} 天\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp confirm divorce\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Terminate couple relationship?\"");
+	WriteFileLine(file, "\"chi\"	\"你确定要解除CP组合吗\"");
+	WriteFileLine(file, "\"zho\"	\"你確定要解開CP配對嗎\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp help title\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Help\"");
+	WriteFileLine(file, "\"chi\"	\"帮助菜单\"");
+	WriteFileLine(file, "\"zho\"	\"幫助菜單\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp each other\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Need true willing to make couple\"");
+	WriteFileLine(file, "\"chi\"	\"组成CP需要两厢情愿\"");
+	WriteFileLine(file, "\"zho\"	\"組成CP需要兩廂情願\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp after 7days\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Cannot disassemle couple in a week after couple created\"");
+	WriteFileLine(file, "\"chi\"	\"CP配对后7天内不能解除\"");
+	WriteFileLine(file, "\"zho\"	\"CP配對後7天內不能解除\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cp earn buff\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Couple award: limit BUFFs\"");
+	WriteFileLine(file, "\"chi\"	\"CP能为你提供一定的加成\"");
+	WriteFileLine(file, "\"zho\"	\"CP能為你提供一些BUFF\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"global menu title\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"General Menu\"");
+	WriteFileLine(file, "\"chi\"	\"主菜单\"");
+	WriteFileLine(file, "\"zho\"	\"主菜單\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"global item sure\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Yes\"");
+	WriteFileLine(file, "\"chi\"	\"我确定\"");
+	WriteFileLine(file, "\"zho\"	\"我確定\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"global item refuse\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"No\"");
+	WriteFileLine(file, "\"chi\"	\"我拒绝\"");
+	WriteFileLine(file, "\"zho\"	\"我拒絕\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cmd onlines\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"#format\" \"{1:N},{2:d},{3:d},{4:d},{5:d}\"");
+	WriteFileLine(file, "\"en\"	\"Player {green}{1}{default}: You had played {blue}{2}{default}hours {blue}{3}{default}minute in our server(For {red}{4}{default} time(s)), have connected for {blue}{5}{default} minute(s) this time\"");
+	WriteFileLine(file, "\"chi\"	\"尊贵的CG玩家{green}{1}{default},你已经在CG社区进行了{blue}{2}{default}小时{blue}{3}{default}分钟的游戏({red}{4}{default}次连线),本次游戏时长{blue}{5}{default}分钟\"");
+	WriteFileLine(file, "\"zho\"	\"尊貴的CG玩家{green}{1}{default},你已經在CG社區進行了{blue}{2}{default}小時{blue}{3}{default}分鐘的遊戲({red}{4}{default}次連線),本次遊戲時長{blue}{5}{default}分鐘\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"check console\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Check console output\"");
+	WriteFileLine(file, "\"chi\"	\"请查看控制台输出\"");
+	WriteFileLine(file, "\"zho\"	\"請查看控制臺輸出\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"cmd track\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"#format\" \"{1:d},{2:d}\"");
+	WriteFileLine(file, "\"en\"	\"{green}{1}{default} player in-game / {red}{2}{default} connected\"");
+	WriteFileLine(file, "\"chi\"	\"当前已在服务器内{green}{1}{default}人,已建立连接的玩家{red}{2}{default}人\"");
+	WriteFileLine(file, "\"zho\"	\"當前已在伺服器內{green}{1}{default}人,已建立連線的玩家{red}{2}{default}人\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"main store desc\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Store [PlayerSkins/NameTag/Etc]\"");
+	WriteFileLine(file, "\"chi\"	\"打开商店菜单[购买皮肤/名字颜色/翅膀等道具]\"");
+	WriteFileLine(file, "\"zho\"	\"打開商店菜單[購買皮膚/名字顏色/翅膀等道具]\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"main cp desc\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Couple [Couple options]\"");
+	WriteFileLine(file, "\"chi\"	\"打开CP菜单[进行CP配对/加成等功能]\"");
+	WriteFileLine(file, "\"zho\"	\"打開CP菜單[進行搞基配對/加成等功能]\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"main music desc\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Playlist [MOTD BGMs]\"");
+	WriteFileLine(file, "\"chi\"	\"打开CG电台[可以点播歌曲/收听电台]\"");
+	WriteFileLine(file, "\"zho\"	\"打開CG電臺[可以點播歌曲/收聽電臺]\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"main sign desc\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Sign [Sign for daliy award]\"");
+	WriteFileLine(file, "\"chi\"	\"进行每日签到[签到可以获得相应的奖励]\"");
+	WriteFileLine(file, "\"zho\"	\"進行每日簽到[簽到可以獲得一些獎勵]\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"main vip desc\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"VIP Member options\"");
+	WriteFileLine(file, "\"chi\"	\"打开VIP菜单[年费/永久VIP可用]\"");
+	WriteFileLine(file, "\"zho\"	\"打開VIP菜單[年費/永久VIP可用]\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "}");
+	CloseHandle(file);
+}

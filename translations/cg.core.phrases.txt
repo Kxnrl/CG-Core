@@ -1,0 +1,408 @@
+"Phrases"
+{
+	"signature title"
+	{
+		"en"	"Signature setup \n500Credits per setup[Free for first time]"
+		"chi"	"签名设置  \n设置签名需要500信用点[首次免费]"
+		"zho"	"簽名設置　\n設定簽名需要500個點數[第一次免費]"
+	}
+	
+	"signature now you can type"
+	{
+		"en"	"Input your signature in chat \n"
+		"chi"	"你现在可以按Y输入签名了 \n "
+		"zho"	"你現在可以按Y輸入簽名了 \n "
+	}
+	
+	"signature color codes"
+	{
+		"en"	"Useable color codes:\n {lightred} {yellow} {blue} {green} {orange} {purple} {pink} \n"
+		"chi"	"可用颜色代码\n {亮红} {黄} {蓝} {绿} {橙} {紫} {粉} \n "
+		"zho"	"可用顏色代碼\n {亮红} {黄} {蓝} {绿} {橙} {紫} {粉} \n "
+	}
+	
+	"signature example"
+	{
+		"en"	"EXAMPLE: (blue)E{yellow}X{lightred}A{green}M{orange}P{purple}L{pink}E"
+		"chi"	"例如: {蓝}陈{红}抄{黄}封{紫}不{粉}要{绿}脸 \n "
+		"zho"	"比如: {蓝}陈{红}抄{黄}封{紫}不{粉}要{绿}脸 \n "
+	}
+	
+	"signature input preview"
+	{
+		"#format" "{1:s}"
+		"en"	"Inputed: \n {1}\n "
+		"chi"	"你当前已输入: \n {1}\n "
+		"zho"	"你當前已輸入: \n {1}\n "
+	}
+	
+	"signature input"
+	{
+		"#format" "{1:s}"
+		"en"	"Inputed: {1}"
+		"chi"	"您输入了: {1}"
+		"zho"	"你輸入了: {1}"
+	}
+	
+	"signature item preview"
+	{
+		"en"	"Preview signature"
+		"chi"	"查看预览"
+		"zho"	"查看預覽"
+	}
+	
+	"signature item ok"
+	{
+		"en"	"Complete"
+		"chi"	"我写好了"
+		"zho"	"我寫完了"
+	}
+	
+	"signature you have not enough credits"
+	{
+		"en"	"Insufficient credits"
+		"chi"	"信用点不足,不能设置签名"
+		"zho"	"點數不夠,不能設定簽名"
+	}
+	
+	"signature set successful"
+	{
+		"en"	"Signature sucessfully setup"
+		"chi"	"已成功设置您的签名,花费了{green}500信用点"
+		"zho"	"已經設定了你的簽名,花了{green}500個點數"
+	}
+	
+	"signature yours"
+	{
+		"en"	"Your signature"
+		"chi"	"您的签名"
+		"zho"	"你的簽名"
+	}
+	
+	"signature free first"
+	{
+		"en"	"Free for first set-up"
+		"chi"	"首次设置签名免费!"
+		"zho"	"第一次設定簽名免費"
+	}
+	
+	"sign allow sign"
+	{
+		"en"	"{green}You can sign now - Type{lightred}!sign{green} in chat to sign"
+		"chi"	"{green}你现在可以签到了,按Y输入{lightred}!sign{green}来签到!"
+		"zho"	"{green}你現在可以簽到了,按Y輸入{lightred}!sign{green}來簽到!"
+	}
+	
+	"sign twice sign"
+	{
+		"en"	"You can only sign once each day!"
+		"chi"	"每天只能签到1次!"
+		"zho"	"每天只能簽到1次!"
+	}
+	
+	"sign no time"
+	{
+		"#format" "{1:d}"
+		"en"	"{green}{1}{default} more second for sign-up!"
+		"chi"	"你还需要在线{green}{1}{default}秒才能签到!"
+		"zho"	"你還需要在綫{green}{1}{default}秒才能簽到!"
+	}
+	
+	"sign in processing"
+	{
+		"en"	"Quering sign procession"
+		"chi"	"正在执行签到查询!"
+		"zho"	"正在進行簽到進程!"
+	}
+	
+	"sign error"
+	{
+		"en"	"{darkred}Sign error - try again later"
+		"chi"	"{darkred}未知错误,请重试!"
+		"zho"	"{darkred}未知錯誤,請重試!"
+	}
+	
+	"sign successful"
+	{
+		"#format" "{1:d}"
+		"en"	"{default}You had signed up today. Total signed up for {blue}{1}{default} day(s)!"
+		"chi"	"{default}签到成功,你已累计签到{blue}{1}{default}天!"
+		"zho"	"{default}簽到成功,你已經簽到了{blue}{1}{default}天!"
+	}
+	
+	"system error"
+	{
+		"en"	"An error occupied - try again later:"
+		"chi"	"系统中闪光弹了,请重试!  错误:"
+		"zho"	"系統出錯,請重試!  錯誤:"
+	}
+	
+	"cp married"
+	{
+		"#format" "{1:s},{2:s}"
+		"en"	"{orange}Congraulates {purple}{1}{orange} and {purple}{2}{orange} made a couple."
+		"chi"	"{orange}恭喜{purple}{1}{orange}和{purple}{2}{orange}结成CP."
+		"zho"	"{orange}恭喜{purple}{1}{orange}和{purple}{2}{orange}組成CP."
+	}
+	
+	"cp married offline"
+	{
+		"en"	"Data saved - Awards unaviliable"
+		"chi"	"系统已保存你们的数据,但是你老婆当前离线,你不能享受新婚祝福"
+		"zho"	"系統已保存你們的檔案,但是你老婆現在離綫,你不能接受新婚祝福"
+	}
+	
+	"cp divorce"
+	{
+		"#format" "{1:N},{2:s},{3:d}"
+		"en"	"{orange}{1}{yellow} terminated couple relationship with {orange}{2}{yellow} - Their relationship existed for{red}{3}{yellow}days"
+		"chi"	"{orange}{1}{yellow}解除了和{orange}{2}{yellow}的CP,他们的关系维持了{red}{3}{yellow}天"
+		"zho"	"{orange}{1}{yellow}解除了和{orange}{2}{yellow}的CP,他們搞基了{red}{3}{yellow}天"
+	}
+	
+	"cp find"
+	{
+		"en"	"Find couple"
+		"chi"	"寻找CP"
+		"zho"	"尋找CP"
+	}
+	
+	"cp out"
+	{
+		"en"	"Dissolute couple"
+		"chi"	"解除CP"
+		"zho"	"解除CP"
+	}
+	
+	"cp about"
+	{
+		"en"	"About"
+		"chi"	"关于CP"
+		"zho"	"關於CP"
+	}
+	
+	"cp no target"
+	{
+		"en"	"No one can receive request now"
+		"chi"	"当前服务器内没有人能跟你搞基"
+		"zho"	"當前服務器裏面沒有人能跟你CP"
+	}
+	
+	"cp invalid target"
+	{
+		"en"	"Invalid request target"
+		"chi"	"你选择的对象目前不可用"
+		"zho"	"你選擇的對象不正確"
+	}
+	
+	"cp send"
+	{
+		"#format" "{1:N}"
+		"en"	"{purple}{1}{normal} received your request"
+		"chi"	"已将你的CP请求发送至{purple}{1}"
+		"zho"	"已經將你的CP請求發送給{purple}{1}"
+	}
+	
+	"cp request"
+	{
+		"en"	"Received a couple request"
+		"chi"	"您有一个CP请求"
+		"zho"	"你有一個CP請求"
+	}
+	
+	"cp request item target"
+	{
+		"#format" "{1:N}"
+		"en"	"Received couple request from {1}"
+		"chi"	"你收到了一个来自 {1} 的CP邀请"
+		"zho"	"你收到了一個來自 {1} 的CP邀請"
+	}
+	
+	"cp 7days"
+	{
+		"en"	"Cannot terminate relationship in 7 days"
+		"chi"	"组成CP后7天内不能申请解除"
+		"zho"	"組成CP後7天內不能申請解開"
+	}
+	
+	"cp buff"
+	{
+		"en"	"Spec awards for couples"
+		"chi"	"组成CP后可以享受多种福利"
+		"zho"	"組成CP可以想說一些福利"
+	}
+	
+	"cp confirm"
+	{
+		"en"	"Accept this request?"
+		"chi"	"你确定要接受这个邀请吗"
+		"zho"	"你確定要接受這個邀請嗎"
+	}
+	
+	"cp accept"
+	{
+		"en"	"Yes"
+		"chi"	"我接受"
+		"zho"	"我接受"
+	}
+	
+	"cp refuse"
+	{
+		"en"	"Nope"
+		"chi"	"我拒绝"
+		"zho"	"我拒絕"
+	}
+	
+	"cp refuse target"
+	{
+		"#format" "{1:N}"
+		"en"	"You rejected {orange}{1}{default}'s couple request"
+		"chi"	"你拒绝了{orange}{1}{default}的CP邀请"
+		"zho"	"你拒絕了{orange}{1}{default}的CP邀請"
+	}
+	
+	"cp refuse client"
+	{
+		"#format" "{1:N}"
+		"en"	"{orange}{1}{default} had rejected your request"
+		"chi"	"{orange}{1}{default}拒绝了你的CP邀请"
+		"zho"	"{orange}{1}{default}拒絕了你的CP邀請"
+	}
+	
+	"cp can divorce"
+	{
+		"en"	"Cannot terminate relationship in week once you make new couple"
+		"chi"	"新组成CP之后7天内不能申请解除"
+		"zho"	"新組成CP之後7天內不能申請解開"
+	}
+	
+	"cp your cp"
+	{
+		"#format" "{1:s}"
+		"en"	"Your couple is {1}"
+		"chi"	"你当前的CP伴侣为 {1}"
+		"zho"	"你現在的CP伴侶为 {1}"
+	}
+	
+	"cp your days"
+	{
+		"#format" "{1:d}"
+		"en"	"Relationship exists for {1} days"
+		"chi"	"你们已组成CP {1} 天"
+		"zho"	"你們已經搞基 {1} 天"
+	}
+	
+	"cp confirm divorce"
+	{
+		"en"	"Terminate couple relationship?"
+		"chi"	"你确定要解除CP组合吗"
+		"zho"	"你確定要解開CP配對嗎"
+	}
+	
+	"cp help title"
+	{
+		"en"	"Help"
+		"chi"	"帮助菜单"
+		"zho"	"幫助菜單"
+	}
+	
+	"cp each other"
+	{
+		"en"	"Need true willing to make couple"
+		"chi"	"组成CP需要两厢情愿"
+		"zho"	"組成CP需要兩廂情願"
+	}
+	
+	"cp after 7days"
+	{
+		"en"	"Cannot disassemle couple in a week after couple created"
+		"chi"	"CP配对后7天内不能解除"
+		"zho"	"CP配對後7天內不能解除"
+	}
+	
+	"cp earn buff"
+	{
+		"en"	"Couple award: limit BUFFs"
+		"chi"	"CP能为你提供一定的加成"
+		"zho"	"CP能為你提供一些BUFF"
+	}
+	
+	"global menu title"
+	{
+		"en"	"General Menu"
+		"chi"	"主菜单"
+		"zho"	"主菜單"
+	}
+	
+	"global item sure"
+	{
+		"en"	"Yes"
+		"chi"	"我确定"
+		"zho"	"我確定"
+	}
+	
+	"global item refuse"
+	{
+		"en"	"No"
+		"chi"	"我拒绝"
+		"zho"	"我拒絕"
+	}
+	
+	"cmd onlines"
+	{
+		"#format" "{1:N},{2:d},{3:d},{4:d}"
+		"en"	"Player {green}{1}{default}: You had played blue}{2}{default}hours {blue}{3}{default}minute in our server(For {red}{4}{default} time(s)), have connected for {blue}{5}{default} minute(s) this time"
+		"chi"	"尊贵的CG玩家{green}{1}{default},你已经在CG社区进行了{blue}{2}{default}小时{blue}{3}{default}分钟的游戏({red}{4}{default}次连线),本次游戏时长{blue}{5}{default}分钟"
+		"zho"	"尊貴的CG玩家{green}{1}{default},你已經在CG社區進行了{blue}{2}{default}小時{blue}{3}{default}分鐘的遊戲({red}{4}{default}次連線),本次遊戲時長{blue}{5}{default}分鐘"
+	}
+	
+	"check console"
+	{
+		"en"	"Check console output"
+		"chi"	"请查看控制台输出"
+		"zho"	"請查看控制臺輸出"
+	}
+	
+	"cmd track"
+	{
+		"#format" "{1:d},{2:d}"
+		"en"	"{green}{1}{default} player in-game / {red}{2}{default} connected"
+		"chi"	"当前已在服务器内{green}{1}{default}人,已建立连接的玩家{red}{2}{default}人"
+		"zho"	"當前已在伺服器內{green}{1}{default}人,已建立連線的玩家{red}{2}{default}人"
+	}
+	
+	"main store desc"
+	{
+		"en"	"Store [PlayerSkins/NameTag/Etc]"
+		"chi"	"打开商店菜单[购买皮肤/名字颜色/翅膀等道具]"
+		"zho"	"打開商店菜單[購買皮膚/名字顏色/翅膀等道具]"
+	}
+	
+	"main cp desc"
+	{
+		"en"	"Couple [Couple options]"
+		"chi"	"打开CP菜单[进行CP配对/加成等功能]"
+		"zho"	"打開CP菜單[進行搞基配對/加成等功能]"
+	}
+	
+	"main music desc"
+	{
+		"en"	"Playlist [MOTD BGMs]"
+		"chi"	"打开CG电台[可以点播歌曲/收听电台]"
+		"zho"	"打開CG電臺[可以點播歌曲/收聽電臺]"
+	}
+	
+	"main sign desc"
+	{
+		"en"	"Sign [Sign for daliy award]"
+		"chi"	"进行每日签到[签到可以获得相应的奖励]"
+		"zho"	"進行每日簽到[簽到可以獲得一些獎勵]"
+	}
+	
+	"main vip desc"
+	{
+		"en"	"VIP Member options"
+		"chi"	"打开VIP菜单[年费/永久VIP可用]"
+		"zho"	"打開VIP菜單[年費/永久VIP可用]"
+	}
+}

@@ -1,55 +1,7 @@
 //////////////////////////////
 //	TRACK CLIENT ANALYTICS	//
 //////////////////////////////
-public void OnOSQueried(QueryCookie cookie, int client, ConVarQueryResult result, const char[] cvarName, const char[] cvarValue)
-{
-	//如果是无效操作
-	if(g_eClient[client][hOSTimer] == INVALID_HANDLE)
-	{
-		return; // Timed out
-	}
-	
-	//获得查询结果
-	if(result == ConVarQuery_NotFound)
-	{
-		g_eClient[client][iOSQuery]++;
-		if(g_eClient[client][iOSQuery] >= view_as<int>(OS_Total))
-		{
-			CloseHandle(g_eClient[client][hOSTimer]);
-			g_eClient[client][hOSTimer] = INVALID_HANDLE;
-		}
-		return;
-	}
-	else
-	{
-		for(int i = 0; i < view_as<int>(OS_Total); i++)
-		{
-			if(StrEqual(cvarName, g_szOSConVar[i]))
-			{
-				g_eClient[client][iOS] = view_as<OS>(i);		//g_eClient[client][iOS] = OS:i;
-				break;
-			}
-		}
-		
-		CloseHandle(g_eClient[client][hOSTimer]);
-		g_eClient[client][hOSTimer] = INVALID_HANDLE;
-	}
-}
-
-public Action Timer_OSTimeout(Handle timer, any userid)
-{
-	//OS查询Timeout
-	int client = GetClientOfUserId(userid);
-	
-	if(!client)
-	{
-		return;
-	}
-	
-	g_eClient[client][hOSTimer] = INVALID_HANDLE;
-}
-
-public Action Timer_HandleConnect(Handle timer, any userid)
+public Action Timer_HandleConnect(Handle timer, int userid)
 {
 	int client = GetClientOfUserId(userid);
 	
@@ -62,28 +14,20 @@ public Action Timer_HandleConnect(Handle timer, any userid)
 		return Plugin_Continue;
 	}
 
-	if(g_eClient[client][hOSTimer] != INVALID_HANDLE || !g_eClient[client][bLoaded])
+	if(!g_eClient[client][bLoaded])
 		return Plugin_Continue;
 	
 	if(!g_eClient[client][iPlayerId])
 		return Plugin_Stop;
 
 	//获得 客户OS|当前地图|当前日期|客户权限
-	char date[64], map[128], os[16];
+	char date[64], map[128];
 	FormatTime(date, 64, "%Y/%m/%d %H:%M:%S", GetTime());
 
 	GetCurrentMap(map, 128);
-	if(g_eClient[client][iOS] == OS_Windows)
-		strcopy(os, 16, "Windows");
-	else if(g_eClient[client][iOS] == OS_Mac)
-		strcopy(os, 16, "MacOS");
-	else if(g_eClient[client][iOS] == OS_Linux)
-		strcopy(os, 16, "Linux");
-	
-	GetClientFlags(client);
 
-	Format(g_eClient[client][szInsertData], 512, "INSERT INTO `playertrack_analytics` (`playerid`, `connect_time`, `connect_date`, `serverid`, `map`, `flags`, `ip`, `os`) VALUES ('%d', '%d', '%s', '%d', '%s', '%s', '%s', '%s')", g_eClient[client][iPlayerId], g_eClient[client][iConnectTime], date, g_iServerId, map, g_eClient[client][szAdminFlags], g_eClient[client][szIP], os);
-	SQL_TQuery(g_hDB_csgo, SQLCallback_InsertPlayerStat, g_eClient[client][szInsertData], g_eClient[client][iUserId]);
+	Format(g_eClient[client][szInsertData], 512, "INSERT INTO `playertrack_analytics` (`playerid`, `connect_time`, `connect_date`, `serverid`, `map`, `flags`, `ip`) VALUES ('%d', '%d', '%s', '%d', '%s', '%s', '%s')", g_eClient[client][iPlayerId], g_eClient[client][iConnectTime], date, g_iServerId, map, g_eClient[client][szAdminFlags], g_eClient[client][szIP]);
+	MySQL_Query(g_hDB_csgo, SQLCallback_InsertPlayerStat, g_eClient[client][szInsertData], g_eClient[client][iUserId]);
 
 	return Plugin_Stop;
 }
@@ -99,44 +43,24 @@ void SaveClient(int client)
 		duration = 0;
 	else
 		duration = GetTime() - g_eClient[client][iConnectTime];
-	
-	//处理Share值
-	int share = duration/180 + g_eClient[client][iGetShare];
-	
-	char os[64];
-	if(g_eClient[client][iOS] == OS_Windows) 
-		strcopy(os, 64, "Windows");
-	else if(g_eClient[client][iOS] == OS_Mac) 
-		strcopy(os, 64, "MacOS");
-	else if(g_eClient[client][iOS] == OS_Linux) 
-		strcopy(os, 64, "Linux");
 
 	//获得客户名字
-	char username[128], m_szAuth[32];
-	GetClientName(client, username, 128);
+	char username[64], m_szAuth[32];
+	GetClientName(client, username, 64);
 	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);	
 
 	//开始SQL查询操作
-	char sBuffer[3][256];
-	SQL_EscapeString(g_hDB_csgo, username, sBuffer[0], 256);	
-	SQL_EscapeString(g_hDB_csgo, os, sBuffer[1], 256);
-	SQL_EscapeString(g_hDB_csgo, g_eClient[client][szAdminFlags], sBuffer[2], 256);
-	
-	if(g_eClient[client][iGroupId] && g_eClient[client][iTemp] == -1)
-	{
-		int exp = (RoundToNearest(duration * 0.033333) + g_eClient[client][iExp]) % 1000;
-		int upl = (RoundToNearest(duration * 0.033333) + g_eClient[client][iExp]) / 1000;
-		Format(g_eClient[client][szUpdateData], 1024, "UPDATE playertrack_player AS a, playertrack_analytics AS b SET a.name = '%s', a.onlines = a.onlines+%d, a.lastip = '%s', a.lasttime = '%d', a.os = '%s', a.flags = '%s', a.number = a.number+1, a.share = a.share+%d, a.exp = '%d', a.level = a.level+%d, a.reqid = %d, a.reqterm = %d, a.reqrate = %d, a.lilyexp = %d, b.duration = '%d' WHERE a.id = '%d' AND b.id = '%d' AND a.steamid = '%s' AND b.playerid = '%d'", sBuffer[0], duration, g_eClient[client][szIP], GetTime(), sBuffer[1], sBuffer[2], share, exp, upl, g_eClient[client][iReqId], g_eClient[client][iReqTerm], g_eClient[client][iReqRate], g_eClient[client][iLilyExp], duration, g_eClient[client][iPlayerId], g_eClient[client][iAnalyticsId], m_szAuth, g_eClient[client][iPlayerId]);
-	}
-	else
-		Format(g_eClient[client][szUpdateData], 1024, "UPDATE playertrack_player AS a, playertrack_analytics AS b SET a.name = '%s', a.onlines = a.onlines+%d, a.lastip = '%s', a.lasttime = '%d', a.os = '%s', a.flags = '%s', a.number = a.number+1, a.share = a.share+%d, a.reqid = %d, a.reqterm = %d, a.reqrate = %d, a.lilyexp = %d, b.duration = '%d' WHERE a.id = '%d' AND b.id = '%d' AND a.steamid = '%s' AND b.playerid = '%d'", sBuffer[0], duration, g_eClient[client][szIP], GetTime(), sBuffer[1], sBuffer[2], share, g_eClient[client][iReqId], g_eClient[client][iReqTerm], g_eClient[client][iReqRate], g_eClient[client][iLilyExp], duration, g_eClient[client][iPlayerId], g_eClient[client][iAnalyticsId], m_szAuth, g_eClient[client][iPlayerId]);
+	char m_szBuffer[128];
+	SQL_EscapeString(g_hDB_csgo, username, m_szBuffer, 128);	
 
-	SQL_TQuery(g_hDB_csgo, SQLCallback_SaveClientStat, g_eClient[client][szUpdateData], g_eClient[client][iUserId]);
+	Format(g_eClient[client][szUpdateData], 512, "UPDATE playertrack_player AS a, playertrack_analytics AS b SET a.name = '%s', a.onlines = a.onlines+%d, a.lastip = '%s', a.lasttime = '%d', a.number = a.number+1, a.flags = '%s', b.duration = '%d' WHERE a.id = '%d' AND b.id = '%d' AND a.steamid = '%s' AND b.playerid = '%d'", m_szBuffer, duration, g_eClient[client][szIP], GetTime(), g_eClient[client][szAdminFlags], duration, g_eClient[client][iPlayerId], g_eClient[client][iAnalyticsId], m_szAuth, g_eClient[client][iPlayerId]);
+
+	MySQL_Query(g_hDB_csgo, SQLCallback_SaveClientStat, g_eClient[client][szUpdateData], g_eClient[client][iUserId]);
 
 	if(GetUserFlagBits(client) & ADMFLAG_CHANGEMAP)
 	{
 		char m_szQuery[256];
 		Format(m_szQuery, 256, "UPDATE sb_admins SET onlines=onlines+%d,lastseen=%d,today=today+%d WHERE (authid=\"STEAM_1:%s\" OR authid=\"STEAM_0:%s\")", duration, GetTime(), duration, m_szAuth[8], m_szAuth[8]);
-		SQL_TQuery(g_hDB_csgo, SQLCallback_SaveAdminOnlines, m_szQuery, GetClientUserId(client));
+		MySQL_Query(g_hDB_csgo, SQLCallback_SaveAdminOnlines, m_szQuery, GetClientUserId(client));
 	}
 }
