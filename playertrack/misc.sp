@@ -1,3 +1,63 @@
+void GetNowDate()
+{
+	int m_iPast = GetTime() % 86400;
+	g_iNewDayLeft = 86400 - m_iPast - 1;
+	
+	char m_szDate[32];
+	FormatTime(m_szDate, 64, "%Y%m%d", GetTime());
+	g_iNowDate = StringToInt(m_szDate);
+}
+
+void BuildTempLogFile()
+{
+	BuildPath(Path_SM, g_szTempFile, 128, "data/core.track.kv.txt");
+	
+	if(g_hKeyValue != INVALID_HANDLE)
+		CloseHandle(g_hKeyValue);
+	
+	g_hKeyValue = CreateKeyValues("core_track", "", "");
+	
+	FileToKeyValues(g_hKeyValue, g_szTempFile);
+	
+	while(KvGotoFirstSubKey(g_hKeyValue, true))
+	{
+		char m_szAuthId[32], m_szQuery[512], m_szIp[16], m_szFlag[32];
+		KvGetSectionName(g_hKeyValue, m_szAuthId, 32);
+		
+		int m_iPlayerId = KvGetNum(g_hKeyValue, "PlayerId", 0);
+		int m_iConnect = KvGetNum(g_hKeyValue, "Connect", 0);
+		int m_iTrackId = KvGetNum(g_hKeyValue, "TrackID", 0);
+		KvGetString(g_hKeyValue, "IP", m_szIp, 16, "127.0.0.1");
+		int m_iLastTime = KvGetNum(g_hKeyValue, "LastTime", 0);
+		KvGetString(g_hKeyValue, "Flag", m_szFlag, 32, "CG玩家");
+		int m_iOnlines = m_iLastTime - m_iConnect;
+		Format(m_szQuery, 512, "UPDATE playertrack_player AS a, playertrack_analytics AS b SET a.onlines = a.onlines+%d, a.lastip = '%s', a.lasttime = '%d', a.number = a.number+1, a.flags = '%s', b.duration = '%d' WHERE a.id = '%d' AND b.id = '%d' AND a.steamid = '%s' AND b.playerid = '%d'", m_iOnlines, m_szIp, m_iLastTime, m_szFlag, m_iOnlines, m_iPlayerId, m_iTrackId, m_szAuthId, m_iPlayerId);
+		
+		Handle data = CreateDataPack();
+		WritePackString(data, m_szQuery);
+		WritePackString(data, m_szAuthId);
+		WritePackCell(data, m_iPlayerId);
+		WritePackCell(data, m_iConnect);
+		WritePackCell(data, m_iTrackId);
+		WritePackString(data, m_szIp);
+		WritePackCell(data, m_iLastTime);
+		WritePackString(data, m_szFlag);
+		ResetPack(data);
+		MySQL_Query(g_hDB_csgo, SQLCallback_SaveTempLog, m_szQuery, data);
+		
+		if(KvDeleteThis(g_hKeyValue))
+		{
+			char m_szAfter[32];
+			KvGetSectionName(g_hKeyValue, m_szAfter, 32);
+			if(StrContains(m_szAfter, "STEAM", false) != -1)
+				KvGoBack(g_hKeyValue);
+		}
+	}
+	
+	KvRewind(g_hKeyValue);
+	KeyValuesToFile(g_hKeyValue, g_szTempFile);
+}
+
 void LoadTranstion()
 {
 	char m_szPath[128];
@@ -29,7 +89,6 @@ void SettingAdver()
 		KvSetFloat(kv, "Delay_between_messages", 30.0);
 		KvSetString(kv, "Advertisement_tag", "[{blue}CG{default}] ^");
 		KvSetString(kv, "Time_Format", "%H:%M:%S");
-		KvGoBack(kv);
 		KvRewind(kv);
 		KeyValuesToFile(kv, FILE_PATH);
 	}
@@ -144,17 +203,17 @@ void GetClientFlags(int client)
 	//Main判定
 	if(StrEqual(m_szAuth, "STEAM_1:1:44083262"))
 	{
-		strcopy(g_eClient[client][szAdminFlags], 64, "CG玩家");
+		strcopy(g_eClient[client][szAdminFlags], 64, "CTO");
 	}
 	//狗管理权限为 CVAR
 	else if(flags & ADMFLAG_CONVARS)
 	{
-		strcopy(g_eClient[client][szAdminFlags], 64, "管理员");
+		strcopy(g_eClient[client][szAdminFlags], 64, "CEO");
 	}
 	//狗OP权限为 CHANGEMAP
 	else if(flags & ADMFLAG_CHANGEMAP)
 	{
-		strcopy(g_eClient[client][szAdminFlags], 64, "服务器OP");
+		strcopy(g_eClient[client][szAdminFlags], 64, "OP");
 	}
 	//永久VIP权限为 Custom5
 	else if(flags & ADMFLAG_CUSTOM5)

@@ -178,6 +178,7 @@ stock void ReplaceColorsCode(char[] buffer, int maxLen)
 	ReplaceString(buffer, maxLen, "{lime}", "\x05", false);
 	ReplaceString(buffer, maxLen, "{yellow}", "\x05", false);
 	ReplaceString(buffer, maxLen, "{lightgreen}", "\x06", false);
+	ReplaceString(buffer, maxLen, "{lightred}", "\x07", false);
 	ReplaceString(buffer, maxLen, "{red}", "\x07", false);
 	ReplaceString(buffer, maxLen, "{gray}", "\x08", false);
 	ReplaceString(buffer, maxLen, "{grey}", "\x08", false);

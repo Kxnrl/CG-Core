@@ -1,6 +1,41 @@
 //////////////////////////////
 //	TRACK CLIENT ANALYTICS	//
 //////////////////////////////
+public Action Timer_Tracking(Handle timer)
+{
+	g_iNewDayLeft--;
+	if(g_iNewDayLeft == 0)
+		OnNewDay();
+	
+	for(int client = 1; client <= MaxClients; ++client)
+	{
+		if(!IsValidClient(client, false))
+			continue;
+		
+		if(!g_eClient[client][bLoaded])
+			continue;
+
+		if(g_eClient[client][iAnalyticsId] < 1)
+			continue;
+		
+		char m_szAuth[32];
+		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
+
+		KvJumpToKey(g_hKeyValue, m_szAuth, true);
+		
+		KvSetNum(g_hKeyValue, "PlayerId", g_eClient[client][iPlayerId]);
+		KvSetNum(g_hKeyValue, "Connect", g_eClient[client][iConnectTime]);
+		KvSetNum(g_hKeyValue, "TrackID", g_eClient[client][iAnalyticsId]);
+		KvSetString(g_hKeyValue, "IP", g_eClient[client][szIP]);
+		KvSetNum(g_hKeyValue, "LastTime", GetTime());
+		KvSetString(g_hKeyValue, "Flag", g_eClient[client][szAdminFlags]);
+		
+		KvRewind(g_hKeyValue);
+	}
+
+	KeyValuesToFile(g_hKeyValue, g_szTempFile);
+}
+
 public Action Timer_HandleConnect(Handle timer, int userid)
 {
 	int client = GetClientOfUserId(userid);
@@ -56,11 +91,11 @@ void SaveClient(int client)
 	Format(g_eClient[client][szUpdateData], 512, "UPDATE playertrack_player AS a, playertrack_analytics AS b SET a.name = '%s', a.onlines = a.onlines+%d, a.lastip = '%s', a.lasttime = '%d', a.number = a.number+1, a.flags = '%s', b.duration = '%d' WHERE a.id = '%d' AND b.id = '%d' AND a.steamid = '%s' AND b.playerid = '%d'", m_szBuffer, duration, g_eClient[client][szIP], GetTime(), g_eClient[client][szAdminFlags], duration, g_eClient[client][iPlayerId], g_eClient[client][iAnalyticsId], m_szAuth, g_eClient[client][iPlayerId]);
 
 	MySQL_Query(g_hDB_csgo, SQLCallback_SaveClientStat, g_eClient[client][szUpdateData], g_eClient[client][iUserId]);
-
-	if(GetUserFlagBits(client) & ADMFLAG_CHANGEMAP)
+	
+	if(KvJumpToKey(g_hKeyValue, m_szAuth))
 	{
-		char m_szQuery[256];
-		Format(m_szQuery, 256, "UPDATE sb_admins SET onlines=onlines+%d,lastseen=%d,today=today+%d WHERE (authid=\"STEAM_1:%s\" OR authid=\"STEAM_0:%s\")", duration, GetTime(), duration, m_szAuth[8], m_szAuth[8]);
-		MySQL_Query(g_hDB_csgo, SQLCallback_SaveAdminOnlines, m_szQuery, GetClientUserId(client));
+		KvDeleteThis(g_hKeyValue);
+		KvRewind(g_hKeyValue);
+		KeyValuesToFile(g_hKeyValue, g_szTempFile);
 	}
 }

@@ -313,7 +313,7 @@ public int MenuHandler_CPConfirmDivorce(Handle menu, MenuAction action, int clie
 
 			//确认离婚之后更新数据库
 			char m_szQuery[256];
-			Format(m_szQuery, 256, "UPDATE `playertrack_player` SET lilyid = '-2', lilyrank = 0, lilyexp = 0, lilydate = 0 where id = %d or lilyid = %d", g_eClient[client][iPlayerId], g_eClient[client][iPlayerId]);
+			Format(m_szQuery, 256, "UPDATE `playertrack_player` SET lilyid = '-2', lilydate = 0 where id = %d or lilyid = %d", g_eClient[client][iPlayerId], g_eClient[client][iPlayerId]);
 			MySQL_Query(g_hDB_csgo, SQLCallback_UpdateDivorce, m_szQuery, m_hPack);
 		}
 		case MenuAction_End:

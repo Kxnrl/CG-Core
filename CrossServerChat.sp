@@ -7,7 +7,7 @@
 
 #define PLUGIN_AUTHOR 	"maoling ( xQy )"
 #define PLUGIN_VERSION 	"1.4"
-#define PLUGIN_TAG		"[\x0C小喇叭\x01] "
+#define PLUGIN_TAG		"[\x0C小喇叭\x01]  "
 #define PLAYER_GAGED 	1
 #define PLAYER_UNGAGED 	0
 #define DISCONNECTSTR	"DISCONNECTMEPLSTHX"
@@ -20,9 +20,6 @@
 #define CHAT_SYMBOL '#'
 
 Handle globalClientSocket;
-
-int gagState[MAXPLAYERS+1];
-
 bool connected;
 
 public Plugin myinfo = 
@@ -174,7 +171,7 @@ public Action Command_PubMessage(client, args)
 		return Plugin_Handled;
 	
 	Store_SetClientCredits(client, Store_GetClientCredits(client)-500, "发送小喇叭");
-	PrintToChat(client, "\x01 \x04[Store]  \x01你花费\x04500Credits\x01发送了一条小喇叭");
+	PrintToChat(client, "\x01 \x04[Store]  \x01你花费\x04500信用点\x01发送了一条小喇叭");
 
 	PrintToChatAll(finalMessage);
 
@@ -207,7 +204,10 @@ public Action Command_SrvMessage(client, args)
 		else if(StrContains(m_szServerName, "JaliBreak", false ) != -1)
 			strcopy(m_szServerTag, 32, "越狱搞基");
 		else if(StrContains(m_szServerName, "KreedZ", false ) != -1)
-			strcopy(m_szServerTag, 32, "Kz跳跃");
+			if(StrContains(m_szServerName, "1#", false ) != -1)
+				strcopy(m_szServerTag, 32, "Kz跳跃1#");
+			else
+				strcopy(m_szServerTag, 32, "Kz跳跃2#");
 		else if(StrContains(m_szServerName, "DeathRun", false ) != -1)
 			strcopy(m_szServerTag, 32, "死亡奔跑");
 		else if(StrContains(m_szServerName, "战役", false ) != -1)
@@ -300,7 +300,7 @@ public Action Command_PnlMessage(client, args)
 	Format(finalMessage, sizeof(finalMessage), "[\x02大\x04喇\x0C叭\x01]  \x04%N\x01 :   \x07%s", client, message);
 	
 	Store_SetClientCredits(client, Store_GetClientCredits(client)-5000, "发送大喇叭");
-	PrintToChat(client, "\x01 \x04[Store]  \x01你花费\x045000Credits\x01发送了一条小喇叭");
+	PrintToChat(client, "\x01 \x04[Store]  \x01你花费\x045000信用点\x01发送了一条小喇叭");
 
 	PrintToMenuAll(finalMessage);
 
@@ -367,7 +367,7 @@ public OnChildSocketReceive(Handle socket, char[] receiveData, const int dataSiz
 		else //The message is a simple message, print it.
 		{
 			PrintToServer(receiveData);
-			if(StrContains(receiveData, "[\x02小\x04喇\x0C叭\x01]", false) != -1)
+			if(StrContains(receiveData, "[\x02小\x04喇\x0C叭\x01]", false) != -1 || StrContains(receiveData, "Broadcast", false) != -1)
 				PrintToChatAll(receiveData);
 			else
 			{
@@ -469,7 +469,7 @@ public bool UpdateMessageToDiscuz(int client, const char[] message)
 	
 	if(database == INVALID_HANDLE)
 	{
-		PrintToChat(client, "[\x0EPlaneptune\x01]  服务器当前未准备就绪");
+		PrintToChat(client, "[\x0CCG\x01]  服务器当前未准备就绪");
 		return false;
 	}
 	
@@ -478,7 +478,7 @@ public bool UpdateMessageToDiscuz(int client, const char[] message)
 	
 	if(CG_GetDiscuzUID(client) < 1)
 	{
-		PrintToChat(client, "[\x0EPlaneptune\x01]  未注册论坛不能发送喇叭");
+		PrintToChat(client, "[\x0CCG\x01]  未注册论坛不能发送喇叭");
 		return false;
 	}
 	
@@ -552,10 +552,13 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 			strcopy(m_szServerTag, 32, "匪镇碟影");
 		else if(StrContains(m_szServerName, "MiniGames", false ) != -1)
 			strcopy(m_szServerTag, 32, "娱乐休闲");
-		else if(StrContains(m_szServerName, "JailBreak", false ) != -1)
+		else if(StrContains(m_szServerName, "JaliBreak", false ) != -1)
 			strcopy(m_szServerTag, 32, "越狱搞基");
 		else if(StrContains(m_szServerName, "KreedZ", false ) != -1)
-			strcopy(m_szServerTag, 32, "Kz跳跃");
+			if(StrContains(m_szServerName, "1#", false ) != -1)
+				strcopy(m_szServerTag, 32, "Kz跳跃1#");
+			else
+				strcopy(m_szServerTag, 32, "Kz跳跃2#");
 		else if(StrContains(m_szServerName, "DeathRun", false ) != -1)
 			strcopy(m_szServerTag, 32, "死亡奔跑");
 		else if(StrContains(m_szServerName, "战役", false ) != -1)
@@ -585,7 +588,7 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 			return Plugin_Stop;
 		
 		Store_SetClientCredits(client, Store_GetClientCredits(client)-500, "发送小喇叭");
-		PrintToChat(client, "\x01 \x04[Store]  \x01你花费\x04500Credits\x01发送了一条小喇叭");
+		PrintToChat(client, "\x01 \x04[Store]  \x01你花费\x04500信用点\x01发送了一条小喇叭");
 
 		PrintToChatAll(finalMessage);
 
@@ -619,10 +622,13 @@ public void OnMapVoteEnd(const char[] map)
 		strcopy(m_szServerTag, 32, "匪镇碟影");
 	else if(StrContains(m_szServerName, "MiniGames", false ) != -1)
 		strcopy(m_szServerTag, 32, "娱乐休闲");
-	else if(StrContains(m_szServerName, "JailBreak", false ) != -1)
+	else if(StrContains(m_szServerName, "JaliBreak", false ) != -1)
 		strcopy(m_szServerTag, 32, "越狱搞基");
 	else if(StrContains(m_szServerName, "KreedZ", false ) != -1)
-		strcopy(m_szServerTag, 32, "Kz跳跃");
+		if(StrContains(m_szServerName, "1#", false ) != -1)
+			strcopy(m_szServerTag, 32, "Kz跳跃1#");
+		else
+			strcopy(m_szServerTag, 32, "Kz跳跃2#");
 	else if(StrContains(m_szServerName, "DeathRun", false ) != -1)
 		strcopy(m_szServerTag, 32, "死亡奔跑");
 	else if(StrContains(m_szServerName, "战役", false ) != -1)

@@ -541,16 +541,18 @@ public void SQLCallback_GetAdvData(Handle owner, Handle hndl, const char[] error
 		int Count = 0;
 		while(SQL_FetchRow(hndl))
 		{
-			char m_szType[4], m_szText[256], m_szCount[16];
+			char m_szType[4], m_szText_EN[256], m_szText_CN[256], m_szCount[16];
 			SQL_FetchString(hndl, 2, m_szType, 4);
-			SQL_FetchString(hndl, 3, m_szText, 256);  // 0=ID 1=SID 2=TYPE 3=TEXT
+			SQL_FetchString(hndl, 3, m_szText_EN, 256);  // 0=ID 1=SID 2=TYPE 3=EN 4=CN
+			SQL_FetchString(hndl, 4, m_szText_CN, 256);
 			IntToString(Count, m_szCount, 16);
 			if(KvJumpToKey(kv, "Messages", true))
 			{
 				if(KvJumpToKey(kv, m_szCount, true))
 				{
 					Count++;
-					KvSetString(kv, "default", m_szText);
+					KvSetString(kv, "default", m_szText_EN);
+					KvSetString(kv, "trans", m_szText_CN);
 					KvSetString(kv, "type", m_szType);
 					KvRewind(kv);
 				}
@@ -744,4 +746,22 @@ public void SQLCallback_UpdateDivorce(Handle owner, Handle hndl, const char[] er
 	Call_PushCell(client);
 	Call_PushCell(m_iPartner);
 	Call_Finish();
+}
+
+public void SQLCallback_SaveTempLog(Handle owner, Handle hndl, const char[] error, any data)
+{
+	if(hndl == INVALID_HANDLE)
+	{
+		char m_szAuthId[32], m_szQuery[512], m_szIp[16], m_szFlag[32];
+		ReadPackString(data, m_szQuery, 512);
+		ReadPackString(data, m_szAuthId, 32);
+		int m_iPlayerId = ReadPackCell(data);
+		int m_iConnect = ReadPackCell(data);
+		int m_iTrackId = ReadPackCell(data);
+		ReadPackString(data, m_szIp, 32);
+		int m_iLastTime = ReadPackCell(data);
+		ReadPackString(data, m_szFlag, 32);
+
+		LogToFileEx(g_szLogFile, " \n------------------------------------------------------------------------------\nAuthId: %s\nPlayerId: %d\nConnect: %d\nTrackId: %d\nIP: %s\nLastTime: %d\nFlag: %s\nQuery: %s\n------------------------------------------------------------------------------", m_szAuthId, m_iPlayerId, m_iConnect, m_iTrackId, m_szIp, m_iLastTime, m_szFlag, m_szQuery);
+	}
 }

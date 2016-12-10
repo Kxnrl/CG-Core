@@ -1,9 +1,9 @@
 #pragma newdecls required //let`s go! new syntax!!!
-//Build 359
+//Build 360
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define PLUGIN_VERSION " 6.0 - 2016/12/07 02:39 "
+#define PLUGIN_VERSION " 6.0.1rc2 - 2016/12/11 04:41 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 10027
 
@@ -14,7 +14,7 @@
 #include <cg_core>
 
 //////////////////////////////
-//			ENUMS			//
+//			ENUMS			// 
 //////////////////////////////
 //玩家数据
 enum Clients
@@ -68,7 +68,9 @@ Handle g_fwdOnAPIStoreGetCredits;
 Handle g_fwdOnClientOnClientVipChecked;
 Handle g_fwdOnCPCouple;
 Handle g_fwdOnCPDivorce;
+Handle g_fwqOnNewDay;
 Handle g_hCVAR;
+Handle g_hKeyValue;
 
 //enum
 Clients g_eClient[MAXPLAYERS+1][Clients];
@@ -77,10 +79,13 @@ Clients g_eClient[MAXPLAYERS+1][Clients];
 int g_iServerId = -1;
 int g_iConnect_csgo;
 int g_iConnect_discuz;
+int g_iNewDayLeft;
+int g_iNowDate;
 bool g_bLateLoad;
 char g_szIP[64];
 char g_szHostName[256];
 char g_szLogFile[128];
+char g_szTempFile[128];
 
 //////////////////////////////
 //			MODULES			//
@@ -110,8 +115,14 @@ public Plugin myinfo =
 //////////////////////////////
 public void OnPluginStart()
 {
+	//检查日期
+	GetNowDate();
+	
 	//建立Log文件
 	BuildPath(Path_SM, g_szLogFile, 128, "logs/Core.log");
+	
+	//建立临时储存文件
+	BuildTempLogFile();
 
 	//锁定ConVar
 	g_hCVAR = FindConVar("sv_hibernate_when_empty");
@@ -148,6 +159,10 @@ public void OnPluginStart()
 	g_fwdOnClientAuthLoaded = CreateGlobalForward("PA_OnClientLoaded", ET_Ignore, Param_Cell);
 	g_fwdOnCPCouple = CreateGlobalForward("CP_OnCPCouple", ET_Ignore, Param_Cell, Param_Cell);
 	g_fwdOnCPDivorce = CreateGlobalForward("CP_OnCPDivorce", ET_Ignore, Param_Cell, Param_Cell);
+	g_fwqOnNewDay = CreateGlobalForward("CG_OnNewDay", ET_Ignore, Param_Cell);
+	
+	//建立监听Timer
+	CreateTimer(1.0, Timer_Tracking, _, TIMER_REPEAT);
 }
 
 public void OnPluginEnd()
@@ -268,6 +283,18 @@ int OnAPIStoreGetCredits(int client)
 	Call_Finish(result);
 
 	return result;
+}
+
+void OnNewDay()
+{
+	char m_szDate[32];
+	FormatTime(m_szDate, 64, "%Y%m%d", GetTime());
+	g_iNowDate = StringToInt(m_szDate);
+	
+	//Call Forward
+	Call_StartForward(g_fwqOnNewDay);
+	Call_PushCell(g_iNowDate);
+	Call_Finish();
 }
 
 public int Native_GetServerID(Handle plugin, int numParams)
