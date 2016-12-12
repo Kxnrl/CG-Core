@@ -64,12 +64,13 @@ public Action Command_Menu(int client, int args)
 {
 	//创建CG玩家主菜单
 	Handle menu = CreateMenu(MenuHandler_CGMainMenu);
-	SetMenuTitleEx(menu, "[CG]   主菜单");
+	SetMenuTitleEx(menu, "[CG]  %t", "global menu title");
 
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "store", "%t", "main store desc");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "lily", "%t", "main cp desc");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "music", "%t", "main music desc");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "sign", "%t", "main sign desc");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "auth", "%t", "main auth desc");
 	AddMenuItemEx(menu, g_eClient[client][iVipType] > 1 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "vip", "%t", "main vip desc");
 
 	SetMenuExitButton(menu, true);
@@ -124,5 +125,47 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 	
 	BuildListenerMenu(client);
 
+	return Plugin_Handled;
+}
+
+public Action Command_GetAuth(int client, int args)
+{
+	if(!g_eClient[client][bLoaded])
+		return Plugin_Handled;
+
+	if(g_eClient[client][iGroupId] == 9000 || g_eClient[client][iGroupId] == 9001)
+		return Plugin_Handled;
+	
+	if(g_eClient[client][iGroupId] > 0)
+	{
+		tPrintToChat(client, "%s  {green}%t", PLUGIN_PREFIX, "you are already Auth Player")
+		return Plugin_Handled;
+	}
+	
+	//创建CG玩家主菜单
+	Handle menu = CreateMenu(MenuHandler_GetAuth);
+	SetMenuTitleEx(menu, "[CG]  %t [Auth name Only SChinese]", "auth menu title");
+
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT,    "1", "[僵尸逃跑] 断后达人");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT,    "2", "[僵尸逃跑] 指挥大佬");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT,    "3", "[僵尸逃跑] 僵尸克星");
+	
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "101", "[匪镇谍影] 职业侦探");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "102", "[匪镇谍影]   心机婊");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "103", "[匪镇谍影]  TTT影帝");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "104", "[匪镇谍影] 赌命狂魔");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "105", "[匪镇谍影] 杰出公民");
+	
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "201", "[娱乐休闲] 娱乐挂壁");
+	
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "301", "[混战休闲] 首杀无敌");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "302", "[混战休闲] 混战指挥");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "303", "[混战休闲] 爆头狂魔");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "304", "[混战休闲] 助攻之神");
+
+	SetMenuExitBackButton(menu, true);
+	SetMenuExitButton(menu, true);
+	DisplayMenu(menu, client, 0);
+	
 	return Plugin_Handled;
 }

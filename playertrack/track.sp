@@ -61,7 +61,7 @@ public Action Timer_HandleConnect(Handle timer, int userid)
 
 	GetCurrentMap(map, 128);
 
-	Format(g_eClient[client][szInsertData], 512, "INSERT INTO `playertrack_analytics` (`playerid`, `connect_time`, `connect_date`, `serverid`, `map`, `flags`, `ip`) VALUES ('%d', '%d', '%s', '%d', '%s', '%s', '%s')", g_eClient[client][iPlayerId], g_eClient[client][iConnectTime], date, g_iServerId, map, g_eClient[client][szAdminFlags], g_eClient[client][szIP]);
+	Format(g_eClient[client][szInsertData], 512, "INSERT INTO `playertrack_analytics` (`playerid`, `connect_time`, `connect_date`, `serverid`, `map`, `ip`) VALUES ('%d', '%d', '%s', '%d', '%s', '%s')", g_eClient[client][iPlayerId], g_eClient[client][iConnectTime], date, g_iServerId, map, g_eClient[client][szIP]);
 	MySQL_Query(g_hDB_csgo, SQLCallback_InsertPlayerStat, g_eClient[client][szInsertData], g_eClient[client][iUserId]);
 
 	return Plugin_Stop;

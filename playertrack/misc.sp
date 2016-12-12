@@ -6,6 +6,8 @@ void GetNowDate()
 	char m_szDate[32];
 	FormatTime(m_szDate, 64, "%Y%m%d", GetTime());
 	g_iNowDate = StringToInt(m_szDate);
+	
+	LogMessage("CG Server: On New Date %s", m_szDate);
 }
 
 void BuildTempLogFile()
@@ -32,7 +34,7 @@ void BuildTempLogFile()
 		KvGetString(g_hKeyValue, "Flag", m_szFlag, 32, "CG玩家");
 		int m_iOnlines = m_iLastTime - m_iConnect;
 		Format(m_szQuery, 512, "UPDATE playertrack_player AS a, playertrack_analytics AS b SET a.onlines = a.onlines+%d, a.lastip = '%s', a.lasttime = '%d', a.number = a.number+1, a.flags = '%s', b.duration = '%d' WHERE a.id = '%d' AND b.id = '%d' AND a.steamid = '%s' AND b.playerid = '%d'", m_iOnlines, m_szIp, m_iLastTime, m_szFlag, m_iOnlines, m_iPlayerId, m_iTrackId, m_szAuthId, m_iPlayerId);
-		
+
 		Handle data = CreateDataPack();
 		WritePackString(data, m_szQuery);
 		WritePackString(data, m_szAuthId);
@@ -289,12 +291,34 @@ public int MenuHandler_CGMainMenu(Handle menu, MenuAction action, int client, in
 			FakeClientCommand(client, "sm_music");
 		else if(strcmp(info, "sign") == 0)
 			FakeClientCommand(client, "sm_sign");
+		else if(strcmp(info, "auth") == 0)
+			FakeClientCommand(client, "sm_rz");
 		else if(strcmp(info, "vip") == 0)
 			FakeClientCommand(client, "sm_vip");
 	}
 	else if(action == MenuAction_End)
 	{
 		CloseHandle(menu);
+	}
+}
+
+public int MenuHandler_GetAuth(Handle menu, MenuAction action, int client, int itemNum) 
+{
+	if(action == MenuAction_Select) 
+	{
+		char info[32];
+		GetMenuItem(menu, itemNum, info, 32);
+		
+		CheckClientAuthTerm(client, StringToInt(info));
+	}
+	else if(action == MenuAction_End)
+	{
+		CloseHandle(menu);
+	}
+	else if(action == MenuAction_Cancel)
+	{
+		if(itemNum == MenuCancel_ExitBack)
+			FakeClientCommand(client, "sm_cg");
 	}
 }
 

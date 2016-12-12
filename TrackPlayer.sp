@@ -3,9 +3,9 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define PLUGIN_VERSION " 6.0.1rc2 - 2016/12/11 04:41 "
+#define PLUGIN_VERSION " 6.1 - 2016/12/13 00:15 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
-#define TRANSDATASIZE 10027
+#define TRANSDATASIZE 10896
 
 //////////////////////////////
 //			INCLUDES		//
@@ -28,6 +28,7 @@ enum Clients
 	iPlayerId,
 	iNumber,
 	iOnline,
+	iVitality,
 	iLastseen,
 	iDataRetry,
 	iAnalyticsId,
@@ -59,6 +60,10 @@ enum Clients
 //Handles
 Handle g_hDB_csgo;
 Handle g_hDB_discuz;
+Handle g_hCVAR;
+Handle g_hKeyValue;
+
+//Forwards
 Handle g_fwdOnServerLoaded;
 Handle g_fwdOnClientDailySign;
 Handle g_fwdOnClientDataLoaded;
@@ -69,8 +74,7 @@ Handle g_fwdOnClientOnClientVipChecked;
 Handle g_fwdOnCPCouple;
 Handle g_fwdOnCPDivorce;
 Handle g_fwqOnNewDay;
-Handle g_hCVAR;
-Handle g_hKeyValue;
+Handle g_fwqOnCheckAuthTerm;
 
 //enum
 Clients g_eClient[MAXPLAYERS+1][Clients];
@@ -90,6 +94,7 @@ char g_szTempFile[128];
 //////////////////////////////
 //			MODULES			//
 //////////////////////////////
+#include "playertrack/auth.sp"
 #include "playertrack/cmds.sp"
 #include "playertrack/lily.sp"
 #include "playertrack/misc.sp"
@@ -104,7 +109,7 @@ char g_szTempFile[128];
 public Plugin myinfo = 
 {
 	name = " [CG] - Core ",
-	author = "maoling ( xQy )",
+	author = "Kyle",
 	description = "Player Tracker System",
 	version = PLUGIN_VERSION,
 	url = "http://steamcommunity.com/id/_xQy_/"
@@ -141,7 +146,7 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_qiandao", Command_Login);
 	RegConsoleCmd("sm_online", Command_Online);
 	RegConsoleCmd("sm_track", Command_Track);
-	RegConsoleCmd("sm_rz", Command_Track);
+	RegConsoleCmd("sm_rz", Command_GetAuth);
 	RegConsoleCmd("sm_cp", Command_CP);
 	RegConsoleCmd("sm_lily", Command_CP);
 	RegConsoleCmd("sm_cg", Command_Menu);
@@ -160,6 +165,7 @@ public void OnPluginStart()
 	g_fwdOnCPCouple = CreateGlobalForward("CP_OnCPCouple", ET_Ignore, Param_Cell, Param_Cell);
 	g_fwdOnCPDivorce = CreateGlobalForward("CP_OnCPDivorce", ET_Ignore, Param_Cell, Param_Cell);
 	g_fwqOnNewDay = CreateGlobalForward("CG_OnNewDay", ET_Ignore, Param_Cell);
+	g_fwqOnCheckAuthTerm = CreateGlobalForward("CG_OnCheckAuthTerm", ET_Event, Param_Cell, Param_Cell);
 	
 	//建立监听Timer
 	CreateTimer(1.0, Timer_Tracking, _, TIMER_REPEAT);
@@ -181,6 +187,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	//创建API
 	CreateNative("CG_GetServerID", Native_GetServerID);
 	CreateNative("CG_GetOnlines", Native_GetOnlines);
+	CreateNative("CG_GetVitality", Native_GetVitality);
 	CreateNative("CG_GetLastseen", Native_GetLastseen);
 	CreateNative("CG_GetPlayerID", Native_GetPlayerID);
 	CreateNative("CG_GetSignature", Native_GetSingature);
@@ -285,11 +292,25 @@ int OnAPIStoreGetCredits(int client)
 	return result;
 }
 
+bool OnCheckAuthTerm(int client, int AuthId) 
+{
+	bool result;
+	
+	//Call Forward
+	Call_StartForward(g_fwqOnCheckAuthTerm);
+	Call_PushCell(client);
+	Call_PushCell(AuthId);
+	Call_Finish(result);
+
+	return result;
+}
+
 void OnNewDay()
 {
 	char m_szDate[32];
 	FormatTime(m_szDate, 64, "%Y%m%d", GetTime());
 	g_iNowDate = StringToInt(m_szDate);
+	LogMessage("CG Server: On New Date %s", m_szDate);
 	
 	//Call Forward
 	Call_StartForward(g_fwqOnNewDay);
@@ -305,6 +326,11 @@ public int Native_GetServerID(Handle plugin, int numParams)
 public int Native_GetOnlines(Handle plugin, int numParams)
 {
 	return g_eClient[GetNativeCell(1)][iOnline];
+}
+
+public int Native_GetVitality(Handle plugin, int numParams)
+{
+	return g_eClient[GetNativeCell(1)][iVitality];
 }
 
 public int Native_GetLastseen(Handle plugin, int numParams)
@@ -479,7 +505,7 @@ public void OnClientPostAdminCheck(int client)
 
 	char m_szAuth[32], m_szQuery[256];
 	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-	Format(m_szQuery, 256, "SELECT id, onlines, lasttime, number, signature, signnumber, signtime, groupid, groupname, lilyid, lilydate FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
+	Format(m_szQuery, 256, "SELECT id, onlines, lasttime, number, signature, signnumber, signtime, groupid, groupname, lilyid, lilydate, active FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
 	MySQL_Query(g_hDB_csgo, SQLCallback_GetClientStat, m_szQuery, g_eClient[client][iUserId], DBPrio_High);
 }
 
@@ -536,6 +562,7 @@ public void InitializingClient(int client)
 	g_eClient[client][iPlayerId] = 0;
 	g_eClient[client][iNumber] = 0;
 	g_eClient[client][iOnline] = 0;
+	g_eClient[client][iVitality] = 0
 	g_eClient[client][iLastseen] = 0;
 	g_eClient[client][iDataRetry] = 0;
 	g_eClient[client][iAnalyticsId] = -1;

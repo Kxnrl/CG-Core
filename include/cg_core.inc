@@ -10,6 +10,7 @@ forward void CG_OnNewDay(int date);
 
 native  int CG_GetServerID();
 native  int CG_GetOnlines(int client);
+native  int CG_GetVitality(int client);
 native  int CG_GetLastseen(int client);
 native  int CG_GetPlayerID(int client);
 native  int CG_GetDiscuzUID(int client);
