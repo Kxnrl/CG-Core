@@ -167,6 +167,29 @@ stock void tPrintToChatAll(const char[] szMessage, any ...)
 	}
 }
 
+stock bool TalentAvailable()
+{
+	if(FindPluginByFile("talent.smx"))
+		return true;
+
+	return false;
+}
+
+stock void PrepareUrl(int width, int height, char[] m_szUrl)
+{
+	Format(m_szUrl, 192, "https://csgogamers.com/webplugin.php?width=%d&height=%d&url=%s", width, height, m_szUrl);
+}
+
+stock void ShowHiddenMOTDPanel(int client, char[] url, int type)
+{
+	Handle m_hKv = CreateKeyValues("data");
+	KvSetString(m_hKv, "title", "ShowHiddenMOTDPanel");
+	KvSetNum(m_hKv, "type", type);
+	KvSetString(m_hKv, "msg", url);
+	ShowVGUIPanel(client, "info", m_hKv, false);
+	CloseHandle(m_hKv);
+}
+
 stock void ReplaceColorsCode(char[] buffer, int maxLen)
 {
 	ReplaceString(buffer, maxLen, "{normal}", "\x01", false);
@@ -526,11 +549,11 @@ stock void TranslationToFile(const char[] m_szPath)
 	WriteFileLine(file, "\"chi\"	\"打开CP菜单[进行CP配对/加成等功能]\"");
 	WriteFileLine(file, "\"zho\"	\"打開CP菜單[進行搞基配對/加成等功能]\"");
 	WriteFileLine(file, "}");
-	WriteFileLine(file, "\"main music desc\"");
+	WriteFileLine(file, "\"main talent desc\"");
 	WriteFileLine(file, "{");
-	WriteFileLine(file, "\"en\"	\"Playlist [MOTD BGMs]\"");
-	WriteFileLine(file, "\"chi\"	\"打开CG电台[可以点播歌曲/收听电台]\"");
-	WriteFileLine(file, "\"zho\"	\"打開CG電臺[可以點播歌曲/收聽電臺]\"");
+	WriteFileLine(file, "\"en\"	\"Talent Menu [Increase ability]\"");
+	WriteFileLine(file, "\"chi\"	\"打开天赋菜单[选择/分配你的天赋]\"");
+	WriteFileLine(file, "\"zho\"	\"打開天賦菜單[選取/分配你的天賦]\"");
 	WriteFileLine(file, "}");
 	WriteFileLine(file, "\"main sign desc\"");
 	WriteFileLine(file, "{");
@@ -579,6 +602,12 @@ stock void TranslationToFile(const char[] m_szPath)
 	WriteFileLine(file, "\"en\"	\"Querying...\"");
 	WriteFileLine(file, "\"chi\"	\"正在查询...\"");
 	WriteFileLine(file, "\"zho\"	\"正在查詢...\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"type in console\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Type in Console\"");
+	WriteFileLine(file, "\"chi\"	\"请在控制台中输入\"");
+	WriteFileLine(file, "\"zho\"	\"在操作臺中輸入\"");
 	WriteFileLine(file, "}");
 	WriteFileLine(file, "}");
 	CloseHandle(file);

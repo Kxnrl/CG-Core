@@ -1,11 +1,11 @@
 #pragma newdecls required //let`s go! new syntax!!!
-//Build 360
+//Build 365
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define PLUGIN_VERSION " 6.1 - 2016/12/13 00:15 "
+#define PLUGIN_VERSION " 6.1.2 - 2016/12/16 07:53 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
-#define TRANSDATASIZE 10896
+#define TRANSDATASIZE 11023
 
 //////////////////////////////
 //			INCLUDES		//
@@ -41,7 +41,7 @@ enum Clients
 	bool:bListener,
 	bool:bAllowLogin,
 	bool:bTwiceLogin,
-	bool:LoginProcess,
+	bool:bLoginProc,
 	String:szIP[32],
 	String:szGroupName[64],
 	String:szSignature[256],
@@ -108,11 +108,11 @@ char g_szTempFile[128];
 //////////////////////////////
 public Plugin myinfo = 
 {
-	name = " [CG] - Core ",
-	author = "Kyle",
+	name		= " [CG] - Core ",
+	author		= "Kyle",
 	description = "Player Tracker System",
-	version = PLUGIN_VERSION,
-	url = "http://steamcommunity.com/id/_xQy_/"
+	version		= PLUGIN_VERSION,
+	url			= "http://steamcommunity.com/id/_xQy_/"
 };
 
 //////////////////////////////
@@ -204,6 +204,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("PA_GetGroupName", Native_GetGroupName);
 	CreateNative("CP_GetPartner", Native_GetCPPartner);
 	CreateNative("CP_GetDate", Native_GetCPDate);
+	CreateNative("CG_ShowNormalMotd", Native_ShowNormalMotd);
+	CreateNative("CG_ShowHiddenMotd", Native_ShowHiddenMotd);
+	CreateNative("CG_RemoveMotd", Native_RemoveMotd);
 
 	g_fwdOnClientOnClientVipChecked = CreateForward(ET_Ignore, Param_Cell);
 	CreateNative("HookClientVIPChecked", Native_HookClientOnClientVipChecked);
@@ -452,6 +455,48 @@ public int Native_GetDiscuzDatabase(Handle plugin, int numParams)
 	return view_as<int>(g_hDB_discuz);
 }
 
+public int Native_ShowNormalMotd(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	QueryClientConVar(client, "cl_disablehtmlmotd", view_as<ConVarQueryFinished>(OnGetClientCVAR), client);
+	int width = GetNativeCell(2)-12;
+	int height = GetNativeCell(3)-80;
+	char m_szUrl[192];
+	if(GetNativeString(4, m_szUrl, 192) == SP_ERROR_NONE)
+	{
+		PrepareUrl(width, height, m_szUrl);
+		ShowMOTDPanel(client, "CSGOGAMERS Motd", m_szUrl, MOTDPANEL_TYPE_URL);
+		return true;
+	}
+	else
+	{
+		ShowHiddenMOTDPanel(client, "about:blank", MOTDPANEL_TYPE_URL);
+		return false;
+	}
+}
+
+public int Native_ShowHiddenMotd(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	QueryClientConVar(client, "cl_disablehtmlmotd", view_as<ConVarQueryFinished>(OnGetClientCVAR), client);
+
+	char m_szUrl[192];
+	if(GetNativeString(4, m_szUrl, 192) == SP_ERROR_NONE)
+		return false;
+	else
+		ShowHiddenMOTDPanel(client, m_szUrl, MOTDPANEL_TYPE_URL);
+	
+	return true;
+}
+
+public int Native_RemoveMotd(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	QueryClientConVar(client, "cl_disablehtmlmotd", view_as<ConVarQueryFinished>(OnGetClientCVAR), client);
+	ShowHiddenMOTDPanel(client, "about:blank", MOTDPANEL_TYPE_URL);
+	return true;
+}
+
 //////////////////////////////
 //			HOOK CONVAR		//
 //////////////////////////////
@@ -551,7 +596,7 @@ public void InitializingClient(int client)
 {
 	g_eClient[client][bLoaded] = false;
 	g_eClient[client][bListener] = false;
-	g_eClient[client][LoginProcess] = false;
+	g_eClient[client][bLoginProc] = false;
 	g_eClient[client][bAllowLogin] = false;
 	g_eClient[client][bTwiceLogin] = false;
 	g_eClient[client][iUserId] = GetClientUserId(client);

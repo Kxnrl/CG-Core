@@ -482,7 +482,7 @@ public void SQLCallback_GetSigninStat(Handle owner, Handle hndl, const char[] er
 	if(hndl == INVALID_HANDLE)
 	{
 		tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "sign error");
-		g_eClient[client][LoginProcess] = false;
+		g_eClient[client][bLoginProc] = false;
 		LogToFileEx(g_szLogFile, "Get SigninStat Failed client: %N error: %s", client, error);
 		return;
 	}
@@ -513,7 +513,7 @@ public void SQLCallback_SignCallback(Handle owner, Handle hndl, const char[] err
 	if(hndl == INVALID_HANDLE)
 	{
 		tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "sign error");
-		g_eClient[client][LoginProcess] = false;
+		g_eClient[client][bLoginProc] = false;
 		LogToFileEx(g_szLogFile, "UPDATE Client Sign Failed! Client:%N Query:%s", client, error);
 		return;
 	}
@@ -522,7 +522,7 @@ public void SQLCallback_SignCallback(Handle owner, Handle hndl, const char[] err
 	g_eClient[client][iSignTime] = GetTime();
 	tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "sign successful", g_eClient[client][iSignNum]);
 	g_eClient[client][bTwiceLogin] = true;
-	g_eClient[client][LoginProcess] = false;
+	g_eClient[client][bLoginProc] = false;
 	OnClientSignSucessed(client);
 }
 
@@ -575,7 +575,7 @@ public void SQLCallback_NothingCallback(Handle owner, Handle hndl, const char[] 
 	}
 	
 	int client = GetClientOfUserId(userid);
-	g_eClient[client][LoginProcess] = false;
+	g_eClient[client][bLoginProc] = false;
 }
 
 public void SQLCallback_SaveDatabase(Handle owner, Handle hndl, const char[] error, any data)

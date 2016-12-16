@@ -68,7 +68,7 @@ public Action Command_Menu(int client, int args)
 
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "store", "%t", "main store desc");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "lily", "%t", "main cp desc");
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "music", "%t", "main music desc");
+	AddMenuItemEx(menu, TalentAvailable() ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "talent", "%t", "main talent desc");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "sign", "%t", "main sign desc");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "auth", "%t", "main auth desc");
 	AddMenuItemEx(menu, g_eClient[client][iVipType] > 1 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "vip", "%t", "main vip desc");

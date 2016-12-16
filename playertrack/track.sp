@@ -36,6 +36,12 @@ public Action Timer_Tracking(Handle timer)
 	KeyValuesToFile(g_hKeyValue, g_szTempFile);
 }
 
+public void OnGetClientCVAR(QueryCookie cookie, int client, ConVarQueryResult result, char [] cvarName, char [] cvarValue)
+{
+	if(StringToInt(cvarValue) > 0)
+		tPrintToChat(client, " %t:   \x04cl_disablehtmlmotd 0", "type in console");
+}
+
 public Action Timer_HandleConnect(Handle timer, int userid)
 {
 	int client = GetClientOfUserId(userid);

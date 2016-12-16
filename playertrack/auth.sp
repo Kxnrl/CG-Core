@@ -24,7 +24,7 @@ public void CheckClientAuthTerm(int client, int AuthId)
 		return;
 	}
 	
-	tPrintToChat(client, "%s  {blue}%t", "querying");
+	tPrintToChat(client, "%s  {blue}%t", PLUGIN_PREFIX, "querying");
 	
 	if(OnCheckAuthTerm(client, AuthId))
 	{

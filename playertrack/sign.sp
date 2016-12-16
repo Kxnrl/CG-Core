@@ -48,7 +48,7 @@ public void ProcessingLogin(int client)
 		return;
 	}
 	
-	if(g_eClient[client][LoginProcess])
+	if(g_eClient[client][bLoginProc])
 	{
 		tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "sign in processing");
 		return;
@@ -58,5 +58,5 @@ public void ProcessingLogin(int client)
 	Format(m_szQuery, 256, "SELECT signnumber,signtime FROM playertrack_player WHERE id = %d ", g_eClient[client][iPlayerId]);
 	MySQL_Query(g_hDB_csgo, SQLCallback_GetSigninStat, m_szQuery, g_eClient[client][iUserId]);
 	
-	g_eClient[client][LoginProcess] = true;
+	g_eClient[client][bLoginProc] = true;
 }

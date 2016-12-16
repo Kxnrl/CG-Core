@@ -287,8 +287,8 @@ public int MenuHandler_CGMainMenu(Handle menu, MenuAction action, int client, in
 			FakeClientCommand(client, "sm_force");
 		else if(strcmp(info, "lily") == 0)
 			FakeClientCommand(client, "sm_lily");
-		else if(strcmp(info, "music") == 0)
-			FakeClientCommand(client, "sm_music");
+		else if(strcmp(info, "talent") == 0)
+			FakeClientCommand(client, "sm_talent");
 		else if(strcmp(info, "sign") == 0)
 			FakeClientCommand(client, "sm_sign");
 		else if(strcmp(info, "auth") == 0)
