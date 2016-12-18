@@ -68,10 +68,17 @@ public Action Command_Menu(int client, int args)
 
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "store", "%t", "main store desc");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "lily", "%t", "main cp desc");
-	AddMenuItemEx(menu, TalentAvailable() ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "talent", "%t", "main talent desc");
+	AddMenuItemEx(menu, TalentAvailable() ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "talent", "%t", TalentAvailable() ? "main talent desc" : "main talent not allow");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "sign", "%t", "main sign desc");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "auth", "%t", "main auth desc");
 	AddMenuItemEx(menu, g_eClient[client][iVipType] > 1 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "vip", "%t", "main vip desc");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "rule", "%t", "main rule desc");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "group", "%t", "main group desc");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "forum", "%t", "main forum desc");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "music", "%t", "main music desc");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "radio", "%t", "main radio desc");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "online", "%t", "main online desc");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "setrp", "%t", "main setrp desc");
 
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 0);

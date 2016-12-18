@@ -17,7 +17,7 @@ public Action Timer_Tracking(Handle timer)
 
 		if(g_eClient[client][iAnalyticsId] < 1)
 			continue;
-		
+
 		char m_szAuth[32];
 		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
 

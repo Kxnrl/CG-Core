@@ -2,6 +2,7 @@
 #include <socket>
 #include <cg_core>
 #include <store>
+#include <csc>
 
 #pragma newdecls required 
 
@@ -22,6 +23,38 @@ public Plugin myinfo =
     version		= "1.5",
     url			= "http://steamcommunity.com/id/_xQy_/"
 };
+
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
+{
+	CreateNative("CG_Broadcast", Native_Broadcast);
+	
+	return APLRes_Success;
+}
+
+public int Native_Broadcast(Handle plugin, int numParams)
+{
+	char m_szContent[512];
+	if(GetNativeString(2, m_szContent, 512) == SP_ERROR_NONE)
+	{
+		if(GetNativeCell(1))
+		{
+			Handle db = CG_GetDiscuzDatabase();
+			char m_szSQL[512], m_szEsc[512], m_szQuery[1024];
+			strcopy(m_szSQL, 512, m_szContent);
+			PrepareString(m_szSQL, 512);
+			SQL_EscapeString(db, m_szSQL, m_szEsc, 512);
+			Format(m_szQuery, 1024, "INSERT INTO `dz_plugin_ahome_laba` (`username`, `tousername`, `level`, `lid`, `dateline`, `content`, `color`, `url`) VALUES ('Broadcast System', '', 'system', 0, '%d', '%s', '', '')", GetTime(), m_szEsc);
+			CG_SaveForumData(m_szQuery);
+		}
+		
+		char m_szFinalMsg[1024];
+		Format(m_szFinalMsg, 1024, "[\x10Broadcast\x01]  \x07>\x04>\x0C>  \x05%s", m_szContent);
+		PrintToChatAll(m_szFinalMsg);
+
+		Format(m_szFinalMsg, 1024, "%s%s", key, m_szFinalMsg);
+		SocketSend(globalClientSocket, m_szFinalMsg, 1024);
+	}
+}
 
 public void OnPluginStart()
 {

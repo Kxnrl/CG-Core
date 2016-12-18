@@ -1,11 +1,11 @@
 #pragma newdecls required //let`s go! new syntax!!!
-//Build 365
+//Build 368
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define PLUGIN_VERSION " 6.1.2 - 2016/12/16 07:53 "
+#define PLUGIN_VERSION " 6.1.3rc3 - 2016/12/17 05:05 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
-#define TRANSDATASIZE 11023
+#define TRANSDATASIZE 12349
 
 //////////////////////////////
 //			INCLUDES		//
@@ -70,7 +70,7 @@ Handle g_fwdOnClientDataLoaded;
 Handle g_fwdOnClientAuthLoaded;
 Handle g_fwdOnAPIStoreSetCredits;
 Handle g_fwdOnAPIStoreGetCredits;
-Handle g_fwdOnClientOnClientVipChecked;
+Handle g_fwdOnClientVipChecked;
 Handle g_fwdOnCPCouple;
 Handle g_fwdOnCPDivorce;
 Handle g_fwqOnNewDay;
@@ -86,7 +86,7 @@ int g_iConnect_discuz;
 int g_iNewDayLeft;
 int g_iNowDate;
 bool g_bLateLoad;
-char g_szIP[64];
+char g_szIP[32];
 char g_szHostName[256];
 char g_szLogFile[128];
 char g_szTempFile[128];
@@ -208,12 +208,12 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("CG_ShowHiddenMotd", Native_ShowHiddenMotd);
 	CreateNative("CG_RemoveMotd", Native_RemoveMotd);
 
-	g_fwdOnClientOnClientVipChecked = CreateForward(ET_Ignore, Param_Cell);
-	CreateNative("HookClientVIPChecked", Native_HookClientOnClientVipChecked);
+	g_fwdOnClientVipChecked = CreateForward(ET_Ignore, Param_Cell);
+	CreateNative("HookClientVIPChecked", Native_HookOnClientVipChecked);
 
 	//读取服务器IP地址
 	int ip = GetConVarInt(FindConVar("hostip"));
-	Format(g_szIP, 64, "%d.%d.%d.%d:%d", ((ip & 0xFF000000) >> 24) & 0xFF, ((ip & 0x00FF0000) >> 16) & 0xFF, ((ip & 0x0000FF00) >>  8) & 0xFF, ((ip & 0x000000FF) >>  0) & 0xFF, GetConVarInt(FindConVar("hostport")));
+	Format(g_szIP, 32, "%d.%d.%d.%d:%d", ((ip & 0xFF000000) >> 24) & 0xFF, ((ip & 0x00FF0000) >> 16) & 0xFF, ((ip & 0x0000FF00) >>  8) & 0xFF, ((ip & 0x000000FF) >>  0) & 0xFF, GetConVarInt(FindConVar("hostport")));
 
 	g_bLateLoad = late;
 
@@ -263,7 +263,7 @@ void OnClientVipChecked(int client)
 	GetClientFlags(client);
 
 	//Call Forward
-	Call_StartForward(g_fwdOnClientOnClientVipChecked);
+	Call_StartForward(g_fwdOnClientVipChecked);
 	Call_PushCell(client);
 	Call_Finish();
 }
@@ -385,9 +385,9 @@ public int Native_GetVipType(Handle plugin, int numParams)
 	return g_eClient[GetNativeCell(1)][iVipType];
 }
 
-public int Native_HookClientOnClientVipChecked(Handle plugin, int numParams)
+public int Native_HookOnClientVipChecked(Handle plugin, int numParams)
 {
-	AddToForward(g_fwdOnClientOnClientVipChecked, plugin, GetNativeCell(1));
+	AddToForward(g_fwdOnClientVipChecked, plugin, GetNativeCell(1));
 }
 
 public int Native_SaveDatabase(Handle plugin, int numParams)

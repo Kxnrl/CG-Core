@@ -299,8 +299,8 @@ public void SQLCallback_GetClientDiscuzName(Handle owner, Handle hndl, const cha
 		
 		OnClientDataLoaded(client);
 		
-		char m_szQuery[128];
-		Format(m_szQuery, 128, "SELECT exptime, isyear FROM dz_dc_vip WHERE uid = %d", g_eClient[client][iUID]);
+		char m_szQuery[256];
+		Format(m_szQuery, 256, "SELECT exptime, isyear FROM dz_dc_vip WHERE uid = %d", g_eClient[client][iUID]);
 		MySQL_Query(g_hDB_discuz, SQLCallback_CheckVIP, m_szQuery, g_eClient[client][iUserId]);
 	}
 	else

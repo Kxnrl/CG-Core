@@ -203,14 +203,19 @@ void GetClientFlags(int client)
 	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
 
 	//Main判定
-	if(StrEqual(m_szAuth, "STEAM_1:1:44083262"))
+	if(g_eClient[client][iGroupId] == 9999)
 	{
 		strcopy(g_eClient[client][szAdminFlags], 64, "CTO");
 	}
-	//狗管理权限为 CVAR
-	else if(flags & ADMFLAG_CONVARS)
+	//狗管理CEO
+	else if(g_eClient[client][iGroupId] == 9998)
 	{
 		strcopy(g_eClient[client][szAdminFlags], 64, "CEO");
+	}
+	//狗管理CIO
+	else if(g_eClient[client][iGroupId] == 9992)
+	{
+		strcopy(g_eClient[client][szAdminFlags], 64, "CIO");
 	}
 	//狗OP权限为 CHANGEMAP
 	else if(flags & ADMFLAG_CHANGEMAP)
@@ -220,17 +225,17 @@ void GetClientFlags(int client)
 	//永久VIP权限为 Custom5
 	else if(flags & ADMFLAG_CUSTOM5)
 	{
-		strcopy(g_eClient[client][szAdminFlags], 64, "永久VIP");
+		strcopy(g_eClient[client][szAdminFlags], 64, "SVIP");
 	}
 	//年费VIP权限为 Custom6
 	else if(flags & ADMFLAG_CUSTOM6)
 	{
-		strcopy(g_eClient[client][szAdminFlags], 64, "年费VIP");
+		strcopy(g_eClient[client][szAdminFlags], 64, "AVIP");
 	}
 	//月费VIP权限为 Custom2
 	else if(flags & ADMFLAG_CUSTOM2)
 	{
-		strcopy(g_eClient[client][szAdminFlags], 64, "月费VIP");
+		strcopy(g_eClient[client][szAdminFlags], 64, "MVIP");
 	}
 	//以上都不是则为普通玩家
 	else
@@ -283,8 +288,6 @@ public int MenuHandler_CGMainMenu(Handle menu, MenuAction action, int client, in
 		
 		if(strcmp(info, "store") == 0)
 			FakeClientCommand(client, "sm_store");
-		else if(strcmp(info, "faith") == 0)
-			FakeClientCommand(client, "sm_force");
 		else if(strcmp(info, "lily") == 0)
 			FakeClientCommand(client, "sm_lily");
 		else if(strcmp(info, "talent") == 0)
@@ -295,6 +298,20 @@ public int MenuHandler_CGMainMenu(Handle menu, MenuAction action, int client, in
 			FakeClientCommand(client, "sm_rz");
 		else if(strcmp(info, "vip") == 0)
 			FakeClientCommand(client, "sm_vip");
+		else if(strcmp(info, "rule") == 0)
+			FakeClientCommand(client, "sm_rules");
+		else if(strcmp(info, "group") == 0)
+			FakeClientCommand(client, "sm_group");
+		else if(strcmp(info, "forum") == 0)
+			FakeClientCommand(client, "sm_forum");
+		else if(strcmp(info, "music") == 0)
+			FakeClientCommand(client, "sm_music");
+		else if(strcmp(info, "radio") == 0)
+			FakeClientCommand(client, "sm_radio");
+		else if(strcmp(info, "online") == 0)
+			FakeClientCommand(client, "sm_online");
+		else if(strcmp(info, "setrp") == 0)
+			FakeClientCommand(client, "sm_setrp");
 	}
 	else if(action == MenuAction_End)
 	{

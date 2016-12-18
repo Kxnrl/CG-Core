@@ -601,7 +601,7 @@ public void VerifyInsert(Handle owner, Handle hndl, const char[] error, any data
 
 	if(hndl == INVALID_HANDLE || error[0])
 	{
-		LogToFile(logFile, "Verify Insert m_szQuery Failed: %s", error);
+		LogToFile(logFile, "Verify Insert Query Failed: %s", error);
 		int admin = ReadPackCell(dataPack);
 		ReadPackCell(dataPack); // target
 		ReadPackCell(dataPack); // admin userid
@@ -893,7 +893,7 @@ public void ServerInfoCallback(Handle owner, Handle hndl, const char[] error, an
 {
 	if(error[0] || hndl	== INVALID_HANDLE)
 	{
-		LogToFile(logFile, "Server Select m_szQuery Failed: %s", error);
+		LogToFile(logFile, "Server Select Query Failed: %s", error);
 		return;
 	}
 	
@@ -907,15 +907,12 @@ public void ErrorCheckCallback(Handle owner, Handle hndl, const char[] error, an
 {
 	if(error[0])
 	{
-		LogToFile(logFile, "m_szQuery Failed: %s", error);
+		LogToFile(logFile, "Query Failed: %s", error);
 	}
 }
 
 public void VerifyBan(Handle owner, Handle hndl, const char[] error, any userid)
 {
-	char clientName[128];
-	char clientAuth[128];
-	char clientIp[128];
 	int client = GetClientOfUserId(userid);
 	
 	if(!client)
@@ -923,10 +920,13 @@ public void VerifyBan(Handle owner, Handle hndl, const char[] error, any userid)
 
 	if(hndl == INVALID_HANDLE)
 	{
-		LogToFile(logFile, "Verify Ban m_szQuery Failed: %s", error);
+		LogToFile(logFile, "Verify Ban Query Failed: %s", error);
 		PlayerRecheck[client] = CreateTimer(30.0, ClientRecheck, client);
 		return;
 	}
+	char clientName[128];
+	char clientAuth[128];
+	char clientIp[128];
 	GetClientIP(client, clientIp, 128);
 	GetClientAuthId(client, AuthId_Steam2, clientAuth, 128);
 	GetClientName(client, clientName, 128);
@@ -946,9 +946,7 @@ public void VerifyBan(Handle owner, Handle hndl, const char[] error, any userid)
 		SQL_FetchString(hndl, 4, banType, 32);
 		
 		SQL_EscapeString(g_hDatabase, clientName, Name, 128);
-		FormatEx(m_szQuery, 512, "INSERT INTO sb_banlog (sid ,time ,name ,bid) VALUES (%d, UNIX_TIMESTAMP(), '%s', %d)",
-				g_iServerId, Name, clientAuth[8], clientIp, SQL_FetchInt(hndl, 0));
-
+		FormatEx(m_szQuery, 512, "INSERT INTO sb_banlog (sid ,time ,name ,bid) VALUES (%d, UNIX_TIMESTAMP(), '%s', %d)", g_iServerId, Name, clientAuth[8], clientIp, SQL_FetchInt(hndl, 0));
 		
 		SQL_TQuery(g_hDatabase, ErrorCheckCallback, m_szQuery, client, DBPrio_High);
 		FormatEx(buffer, 40, "banid 5 %s", clientAuth);
@@ -1327,7 +1325,6 @@ public int Native_SBAddBan(Handle plugin, int numParams)
 
 	char Query[256];
 	FormatEx(Query, 256, "SELECT bid FROM sb_bans WHERE type = 0 AND authid = '%s' AND (length = 0 OR ends > UNIX_TIMESTAMP()) AND RemoveType IS NULL", authid);
-	
 	SQL_TQuery(g_hDatabase, SelectAddbanCallback, Query, dataPack, DBPrio_High);
 }
 
@@ -1608,8 +1605,7 @@ public Action OnLogAction(Handle source, Identity ident, int client, int target,
 		ReplaceString(m_sMsg, 256, "added ban", "封禁离线玩家");
 		char emsg[512];
 		SQL_EscapeString(g_hDatabase, m_sMsg, emsg, 512);
-
-		FormatEx(m_szQuery, 512, "INSERT INTO `sb_adminlog` VALUES (DEFAULT,(SELECT aid FROM `sb_admins` WHERE authid = '%s'), %d,'%s',DEFAULT);", m_szClientauth, g_iServerId, emsg);
+		FormatEx(m_szQuery, 512, "INSERT INTO `sb_adminlog` VALUES (DEFAULT,(SELECT IF((SELECT aid FROM `sb_admins` WHERE authid = '%s')>0,(SELECT aid FROM `sb_admins` WHERE authid = '%s'),-1) FROM `sb_admins` WHERE authid = '%s'),%d,'%s',DEFAULT);", m_szClientauth, m_szClientauth, g_iServerId, emsg);
 		SQL_TQuery(g_hDatabase, SQLCallback_CheckAdminLog, m_szQuery);
 	}
 	else
@@ -1650,7 +1646,7 @@ public Action OnLogAction(Handle source, Identity ident, int client, int target,
 		ReplaceString(m_sMsg, 256, "added ban", "封禁离线玩家");
 		char emsg[512];
 		SQL_EscapeString(g_hDatabase, m_sMsg, emsg, 512);
-		FormatEx(m_szQuery, 512, "INSERT INTO `sb_adminlog` VALUES (DEFAULT,(SELECT aid FROM `sb_admins` WHERE authid = '%s'),%d,'%s',DEFAULT);", m_szClientauth, g_iServerId, emsg);
+		FormatEx(m_szQuery, 512, "INSERT INTO `sb_adminlog` VALUES (DEFAULT,(SELECT IF((SELECT aid FROM `sb_admins` WHERE authid = '%s')>0,(SELECT aid FROM `sb_admins` WHERE authid = '%s'),-1) FROM `sb_admins` WHERE authid = '%s'),%d,'%s',DEFAULT);", m_szClientauth, m_szClientauth, g_iServerId, emsg);
 		SQL_TQuery(g_hDatabase, SQLCallback_CheckAdminLog, m_szQuery);
 	}
 

@@ -1,6 +1,6 @@
 forward void CG_OnServerLoaded();
 forward void CG_OnClientDailySign(int client);
-forward void CG_OnClientDataLoaded(int client);
+forward void CG_OnClientLoaded(int client);
 forward void PA_OnClientLoaded(int client);
 forward void CP_OnCPCouple(int Neptune, int Noire);
 forward void CP_OnCPDivorce(int Neptune, int Noire);
@@ -18,7 +18,7 @@ native  int VIP_GetVipType(int client);
 native  int PA_GetGroupID(int client);
 native  int CP_GetPartner(int client);
 native  int CP_GetDate(int client);
-native  int HookClientOnClientVipChecked(OnClientVIPCheckFunc func);
+native  int HookClientVIPChecked(OnClientVIPCheckFunc func);
 native bool VIP_IsClientVIP(int client);
 native bool CG_ShowNormalMotd(int client, int width, int height, char[] url);
 native bool CG_ShowHiddenMotd(int client, char[] url);
@@ -33,4 +33,4 @@ native void PA_GetGroupName(int client, char[] buffer, int maxLen);
 native Handle CG_GetGameDatabase();
 native Handle CG_GetDiscuzDatabase();
 
-functag OnClientVIPCheckFunc public(client);
+functag OnClientVIPCheckFunc public (client);
