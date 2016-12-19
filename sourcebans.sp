@@ -74,10 +74,10 @@ int g_iServerId = -1;
 
 public Plugin myinfo =
 {
-	name		= "SourceBans",
-	author		= "SourceBans Development Team, Sarabveer(VEER™), maoling (shAna.xQy)",
+	name		= "SourceBans - [CG] Community Edition",
+	author		= "SourceBans Development Team, Sarabveer(VEER™), maoling (xQy)",
 	description	= "Advanced ban management for the Source engine",
-	version		= "2.0+dev - [CG] Community Edition",
+	version		= "2.0+dev-2",
 	url			= "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -946,7 +946,7 @@ public void VerifyBan(Handle owner, Handle hndl, const char[] error, any userid)
 		SQL_FetchString(hndl, 4, banType, 32);
 		
 		SQL_EscapeString(g_hDatabase, clientName, Name, 128);
-		FormatEx(m_szQuery, 512, "INSERT INTO sb_banlog (sid ,time ,name ,bid) VALUES (%d, UNIX_TIMESTAMP(), '%s', %d)", g_iServerId, Name, clientAuth[8], clientIp, SQL_FetchInt(hndl, 0));
+		FormatEx(m_szQuery, 512, "INSERT INTO sb_banlog (sid ,time ,name, ip ,bid) VALUES (%d, UNIX_TIMESTAMP(), '%s', %d)", g_iServerId, Name, clientAuth[8], clientIp, SQL_FetchInt(hndl, 0));
 		
 		SQL_TQuery(g_hDatabase, ErrorCheckCallback, m_szQuery, client, DBPrio_High);
 		FormatEx(buffer, 40, "banid 5 %s", clientAuth);
