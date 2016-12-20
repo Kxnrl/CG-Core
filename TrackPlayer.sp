@@ -1,9 +1,9 @@
 #pragma newdecls required //let`s go! new syntax!!!
-//Build 368
+//Build 369
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define PLUGIN_VERSION " 6.1.3rc3 - 2016/12/17 05:05 "
+#define PLUGIN_VERSION " 6.1.3rc4 - 2016/12/21 01:37 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12349
 

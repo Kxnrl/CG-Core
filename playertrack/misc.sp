@@ -312,6 +312,8 @@ public int MenuHandler_CGMainMenu(Handle menu, MenuAction action, int client, in
 			FakeClientCommand(client, "sm_online");
 		else if(strcmp(info, "setrp") == 0)
 			FakeClientCommand(client, "sm_setrp");
+		else if(strcmp(info, "setrp") == 0)
+			FakeClientCommand(client, "sm_hd");
 	}
 	else if(action == MenuAction_End)
 	{

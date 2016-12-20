@@ -79,6 +79,7 @@ public Action Command_Menu(int client, int args)
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "radio", "%t", "main radio desc");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "online", "%t", "main online desc");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "setrp", "%t", "main setrp desc");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "huodo", "新年活动");
 
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 0);

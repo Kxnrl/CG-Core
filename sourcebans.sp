@@ -72,12 +72,15 @@ bool g_bConnecting = false;
 
 int g_iServerId = -1;
 
+/* Ban Type */
+g_iBanType[MAXPLAYERS+1];
+
 public Plugin myinfo =
 {
 	name		= "SourceBans - [CG] Community Edition",
 	author		= "SourceBans Development Team, Sarabveer(VEER™), maoling (xQy)",
 	description	= "Advanced ban management for the Source engine",
-	version		= "2.0+dev-2",
+	version		= "2.0+dev-4",
 	url			= "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -103,7 +106,7 @@ public void OnPluginStart()
 	
 	CvarHostIp = FindConVar("hostip");
 
-	RegServerCmd("sm_rehash",sm_rehash,"Reload SQL admins");
+	RegServerCmd("Server_Rehash", Server_Rehash, "Reload SQL admins");
 
 	RegAdminCmd("sm_ban", CommandBan, ADMFLAG_BAN, "sm_ban <#userid|name> <minutes|0> [reason]", "sourcebans");
 	RegAdminCmd("sb_reload", _CmdReload, ADMFLAG_RCON, "Reload sourcebans config and ban reason menu options", "sourcebans");
@@ -225,6 +228,7 @@ public void OnClientDisconnect(int client)
 		PlayerRecheck[client] = INVALID_HANDLE;
 	}
 	g_ownReasons[client] = false;
+	g_iBanType[client] = 0;
 }
 
 public bool OnClientConnect(int client, char[] rejectmsg, int maxlen)
@@ -241,17 +245,9 @@ public void OnClientAuthorized(int client, const char[] auth)
 		return;
 	}
 
-	char bantype[32];
-	if(FindPluginByFile("ct.smx")) strcopy(bantype, 32, "匪镇谍影封禁");
-	if(FindPluginByFile("mg_stats.smx")) strcopy(bantype, 32, "娱乐休闲封禁");
-	if(FindPluginByFile("sm_hosties.smx")) strcopy(bantype, 32, "越狱搞基封禁");
-	if(FindPluginByFile("zombiereloaded.smx")) strcopy(bantype, 32, "僵尸逃跑封禁");
-	if(FindPluginByFile("deathmatch.smx") || FindPluginByFile("public_ext.smx") || FindPluginByFile("warmod.smx")) strcopy(bantype, 32, "竞技模式封禁");
-	if(FindPluginByFile("KZTimerGlobal.smx")) strcopy(bantype, 32, "KZ跳跃封禁");
-
 	char m_szQuery[512], ip[16];
 	GetClientIP(client, ip, 16);
-	FormatEx(m_szQuery, 512, "SELECT bid, ends, length, reason, btype FROM sb_bans WHERE ((type = 0 AND authid REGEXP '^STEAM_[0-9]:%s$') OR (type = 1 AND ip = '%s')) AND (length = '0' OR ends > UNIX_TIMESTAMP()) AND (RemoveType IS NULL) AND (btype = '全服封禁' OR btype = '%s')", auth[8], ip, bantype);
+	FormatEx(m_szQuery, 512, "SELECT bid, ends, length, reason, sid, btype FROM sb_bans WHERE ((type = 0 AND authid REGEXP '^STEAM_[0-9]:%s$') OR (type = 1 AND ip = '%s')) AND (length = '0' OR ends > UNIX_TIMESTAMP()) AND (RemoveType IS NULL)", auth[8], ip);
 	SQL_TQuery(g_hDatabase, VerifyBan, m_szQuery, GetClientUserId(client), DBPrio_High);
 }
 
@@ -355,7 +351,7 @@ public Action CommandBan(int client, int args)
 	return Plugin_Handled;
 }
 
-public Action sm_rehash(int args)
+public Action Server_Rehash(int args)
 {
 	DumpAdminCache(AdminCache_Groups,true);
 	DumpAdminCache(AdminCache_Overrides, true);
@@ -410,7 +406,9 @@ public int ReasonSelected(Handle menu, MenuAction action, int param1, int param2
 			return;
 		}
 		if(g_BanTarget[param1] != -1 && g_BanTime[param1] != -1)
+		{
 			PrepareBan(param1, g_BanTarget[param1], g_BanTime[param1], info, 128);
+		}
 	}
 	else if(action == MenuAction_Cancel && param2 == MenuCancel_Disconnected)
 	{
@@ -519,10 +517,35 @@ public int MenuHandler_BanTimeList(Handle menu, MenuAction action, int param1, i
 	else if(action == MenuAction_Select)
 	{
 		char info[32];
-		
 		GetMenuItem(menu, param2, info, 32);
 		g_BanTime[param1] = StringToInt(info);
+		
+		if((GetUserFlagBits(param1) & ADMFLAG_BAN) && (GetUserFlagBits(param1) & ADMFLAG_CONVARS))
+		{
+			Handle btypeMenu = CreateMenu(MenuHandler_BanType);
+			SetMenuTitle(btypeMenu, "选择封禁类型:\n ");
+			AddMenuItem(btypeMenu, "0", "模式封禁");
+			AddMenuItem(btypeMenu, "1", "单服封禁");
+			AddMenuItem(btypeMenu, "2", "全服封禁");
+			SetMenuExitButton(btypeMenu, false);
+			DisplayMenu(btypeMenu, param1, 0);
+		}
+		else
+			DisplayMenu(ReasonMenuHandle, param1, MENU_TIME_FOREVER);
+	}
+}
 
+public int MenuHandler_BanType(Handle menu, MenuAction action, int param1, int param2)
+{
+	if(action == MenuAction_End)
+	{
+		CloseHandle(menu);
+	}
+	else if(action == MenuAction_Select)
+	{
+		char info[32];
+		GetMenuItem(menu, param2, info, 32);
+		g_iBanType[param1] = StringToInt(info);
 		DisplayMenu(ReasonMenuHandle, param1, MENU_TIME_FOREVER);
 	}
 }
@@ -928,9 +951,9 @@ public void VerifyBan(Handle owner, Handle hndl, const char[] error, any userid)
 	char clientAuth[128];
 	char clientIp[128];
 	GetClientIP(client, clientIp, 128);
-	GetClientAuthId(client, AuthId_Steam2, clientAuth, 128);
+	GetClientAuthId(client, AuthId_Steam2, clientAuth, 128, true);
 	GetClientName(client, clientName, 128);
-	if(SQL_GetRowCount(hndl) > 0 && SQL_FetchRow(hndl))
+	if(SQL_GetRowCount(hndl) && SQL_FetchRow(hndl))
 	{
 		char buffer[40];
 		char Name[128];
@@ -938,25 +961,34 @@ public void VerifyBan(Handle owner, Handle hndl, const char[] error, any userid)
 		char KickMsg[256];
 		char Reason[128];
 		char Expired[128];
-		char banType[32];
+		char bType[32];
+		char bantype[32];
+		if(FindPluginByFile("ct.smx")) strcopy(bantype, 32, "匪镇谍影封禁");
+		if(FindPluginByFile("mg_stats.smx")) strcopy(bantype, 32, "娱乐休闲封禁");
+		if(FindPluginByFile("sm_hosties.smx")) strcopy(bantype, 32, "越狱搞基封禁");
+		if(FindPluginByFile("zombiereloaded.smx")) strcopy(bantype, 32, "僵尸逃跑封禁");
+		if(FindPluginByFile("deathmatch.smx") || FindPluginByFile("public_ext.smx") || FindPluginByFile("warmod.smx")) strcopy(bantype, 32, "竞技模式封禁");
+		if(FindPluginByFile("KZTimerGlobal.smx")) strcopy(bantype, 32, "KZ跳跃封禁");
 		
 		int StartTime = SQL_FetchInt(hndl, 1);
 		int Length = SQL_FetchInt(hndl, 2);
 		SQL_FetchString(hndl, 3, Reason, 128);
-		SQL_FetchString(hndl, 4, banType, 32);
-		
-		SQL_EscapeString(g_hDatabase, clientName, Name, 128);
-		FormatEx(m_szQuery, 512, "INSERT INTO sb_banlog (sid ,time ,name, ip ,bid) VALUES (%d, UNIX_TIMESTAMP(), '%s', %d)", g_iServerId, Name, clientAuth[8], clientIp, SQL_FetchInt(hndl, 0));
-		
-		SQL_TQuery(g_hDatabase, ErrorCheckCallback, m_szQuery, client, DBPrio_High);
-		FormatEx(buffer, 40, "banid 5 %s", clientAuth);
-		ServerCommand(buffer);
-		if(Length != 0)
-			FormatTime(Expired, 128, "%Y.%m.%d %H:%M:%S", StartTime+Length);
-		else
-			FormatEx(Expired, 128, "永久封禁");
-		FormatEx(KickMsg, 256, "你已被: %s[原因:%s][到期时间:%s]  请登陆 https://csgogamers.com/banned/ 查看详细信息", banType, Reason, Expired);
-		KickClient(client, KickMsg);
+		int sid = SQL_FetchInt(hndl, 4);
+		SQL_FetchString(hndl, 5, bType, 32);
+		if(StrEqual(bType, "全服封禁") || StrEqual(bType, bantype) || (StrEqual(bType, "单服封禁") && sid == g_iServerId))
+		{
+			SQL_EscapeString(g_hDatabase, clientName, Name, 128);
+			FormatEx(m_szQuery, 512, "INSERT INTO sb_banlog VALUES (%d, UNIX_TIMESTAMP(), '%s', '%s', %d)", g_iServerId, Name, clientAuth[8], clientIp, SQL_FetchInt(hndl, 0));
+			SQL_TQuery(g_hDatabase, ErrorCheckCallback, m_szQuery, client, DBPrio_High);
+			FormatEx(buffer, 40, "banid 2 %s", clientAuth);
+			ServerCommand(buffer);
+			if(Length != 0)
+				FormatTime(Expired, 128, "%Y.%m.%d %H:%M:%S", StartTime+Length);
+			else
+				FormatEx(Expired, 128, "永久封禁");
+			FormatEx(KickMsg, 256, "你已被: %s[原因:%s][到期时间:%s]  请登陆 https://csgogamers.com/banned/ 查看详细信息", bType, Reason, Expired);
+			KickClient(client, KickMsg);
+		}
 		return;
 	}
 
@@ -1358,7 +1390,7 @@ public bool CreateBan(int client, int target, int time, char[] reason)
 		strcopy(adminIp, 24, ServerIp);
 	} else {
 		GetClientIP(admin, adminIp, 24);
-		GetClientAuthId(admin, AuthId_Steam2, adminAuth, 128);
+		GetClientAuthId(admin, AuthId_Steam2, adminAuth, 128, true);
 	}
 
 
@@ -1366,7 +1398,7 @@ public bool CreateBan(int client, int target, int time, char[] reason)
 
 	GetClientName(target, name, 128);
 	GetClientIP(target, ip, 24);
-	if(!GetClientAuthId(target, AuthId_Steam2, auth, 128))
+	if(!GetClientAuthId(target, AuthId_Steam2, auth, 128, true))
 		return false;
 
 	int userid = admin ? GetClientUserId(admin) : 0;
@@ -1395,10 +1427,13 @@ public bool CreateBan(int client, int target, int time, char[] reason)
 		if(g_hDatabase != INVALID_HANDLE)
 		{
 			UTIL_InsertBan(time, name, auth, ip, reason, adminAuth, adminIp, dataPack);
-		} else {
+		} else
+		{
 			UTIL_InsertTempBan(time, name, auth, ip, reason, adminAuth, adminIp, dataPack);
 		}
-	} else {
+	}
+	else
+	{
 		PlayerDataPack[admin] = dataPack;
 		DisplayMenu(ReasonMenuHandle, admin, MENU_TIME_FOREVER);
 		PrintToChat(admin, "%s %t", Prefix, "Check Menu");
@@ -1409,27 +1444,49 @@ public bool CreateBan(int client, int target, int time, char[] reason)
 
 stock void UTIL_InsertBan(int time, const char[] Name, const char[] Authid, const char[] Ip, const char[] Reason, const char[] AdminAuthid, const char[] AdminIp, Handle Pack)
 {
-	char banName[128];
-	char banReason[256];
-	char m_szQuery[1024];
+	char banName[128], banReason[256], m_szQuery[1024], country[4], bantype[32];
 	SQL_EscapeString(g_hDatabase, Name, banName, 128);
 	SQL_EscapeString(g_hDatabase, Reason, banReason, 256);
-	char country[4];
 	GeoipCode2(Ip, country);
-	char bantype[32];
-	strcopy(bantype, 32, "全服封禁");
-	if(FindPluginByFile("ct.smx")) strcopy(bantype, 32, "匪镇谍影封禁");
-	if(FindPluginByFile("mg_stats.smx")) strcopy(bantype, 32, "娱乐休闲封禁");
-	if(FindPluginByFile("sm_hosties.smx")) strcopy(bantype, 32, "越狱搞基封禁");
-	if(FindPluginByFile("zombiereloaded.smx")) strcopy(bantype, 32, "僵尸逃跑封禁");
-	if(FindPluginByFile("deathmatch.smx") || FindPluginByFile("public_ext.smx") || FindPluginByFile("warmod.smx")) strcopy(bantype, 32, "竞技模式封禁");
-	if(FindPluginByFile("KZTimerGlobal.smx")) strcopy(bantype, 32, "KZ跳跃封禁");
+	int admin = FindClientBySteamId(AdminAuthid);
+	switch(g_iBanType[admin])
+	{
+		case 0:
+		{
+			if(FindPluginByFile("ct.smx")) strcopy(bantype, 32, "匪镇谍影封禁");
+			if(FindPluginByFile("mg_stats.smx")) strcopy(bantype, 32, "娱乐休闲封禁");
+			if(FindPluginByFile("sm_hosties.smx")) strcopy(bantype, 32, "越狱搞基封禁");
+			if(FindPluginByFile("zombiereloaded.smx")) strcopy(bantype, 32, "僵尸逃跑封禁");
+			if(FindPluginByFile("deathmatch.smx") || FindPluginByFile("public_ext.smx") || FindPluginByFile("warmod.smx")) strcopy(bantype, 32, "竞技模式封禁");
+			if(FindPluginByFile("KZTimerGlobal.smx")) strcopy(bantype, 32, "KZ跳跃封禁");
+		}
+		case 1:
+		{
+			strcopy(bantype, 32, "单服封禁");
+		}
+		case 2:
+		{
+			strcopy(bantype, 32, "全服封禁");
+		}
+	}
+	
 	FormatEx(m_szQuery, 1024, "INSERT INTO sb_bans (ip, authid, name, created, ends, length, reason, aid, adminIp, sid, btype, country) VALUES \
 						('%s', '%s', '%s', UNIX_TIMESTAMP(), UNIX_TIMESTAMP() + %d, %d, '%s', IFNULL((SELECT aid FROM sb_admins WHERE authid = '%s' OR authid REGEXP '^STEAM_[0-9]:%s$'),'0'), '%s', \
 						%d, '%s', '%s')",
 						Ip, Authid, banName, (time*60), (time*60), banReason, AdminAuthid, AdminAuthid[8], AdminIp, g_iServerId, bantype, country);
 
 	SQL_TQuery(g_hDatabase, VerifyInsert, m_szQuery, Pack, DBPrio_High);
+}
+
+stock int FindClientBySteamId(const char[] steamid)
+{
+	char m_szAuth[32];
+	for(int client  = 1; client <= MaxClients; ++client)
+		if(IsClientAuthorized(client) && GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true))
+			if(StrEqual(m_szAuth, steamid))
+				return client;
+			
+	return 0;
 }
 
 stock void UTIL_InsertTempBan(int time, const char[] name, const char[] auth, const char[] ip, const char[] reason, const char[] adminAuth, const char[] adminIp, Handle dataPack)
@@ -1563,8 +1620,8 @@ public Action OnLogAction(Handle source, Identity ident, int client, int target,
 	if(target >= 1 && client != target)
 	{
 		char m_szClientauth[32], m_szTargetauth[32], m_szQuery[512], m_sMsg[256], m_szClientid[128], m_szTargetid[128], m_szTmp[32], m_szTmp2[128];
-		GetClientAuthId(client, AuthId_Steam2, m_szClientauth, 32);
-		GetClientAuthId(target, AuthId_Steam2, m_szTargetauth, 32);
+		GetClientAuthId(client, AuthId_Steam2, m_szClientauth, 32, true);
+		GetClientAuthId(target, AuthId_Steam2, m_szTargetauth, 32, true);
 		Format(m_szClientid, 128, "\"%N<%d><%s><>\"", client, GetClientUserId(client), m_szClientauth);
 		Format(m_szTargetid, 128, "\"%N<%d><%s><>\"", target, GetClientUserId(target), m_szTargetauth);
 		Format(m_szTmp2, 128, "%s", m_szTargetid);
@@ -1605,16 +1662,16 @@ public Action OnLogAction(Handle source, Identity ident, int client, int target,
 		ReplaceString(m_sMsg, 256, "added ban", "封禁离线玩家");
 		char emsg[512];
 		SQL_EscapeString(g_hDatabase, m_sMsg, emsg, 512);
-		FormatEx(m_szQuery, 512, "INSERT INTO `sb_adminlog` VALUES (DEFAULT,(SELECT IF((SELECT aid FROM `sb_admins` WHERE authid = '%s')>0,(SELECT aid FROM `sb_admins` WHERE authid = '%s'),-1) FROM `sb_admins` WHERE authid = '%s'),%d,'%s',DEFAULT);", m_szClientauth, m_szClientauth, g_iServerId, emsg);
+		Format(m_szQuery, 512, "INSERT INTO `sb_adminlog` VALUES (DEFAULT, (IF((SELECT aid FROM `sb_admins` WHERE authid = '%s')>0,(SELECT aid FROM `sb_admins` WHERE authid = '%s'),-1)),%d,'%s',DEFAULT);", m_szClientauth, m_szClientauth, g_iServerId, emsg);
 		SQL_TQuery(g_hDatabase, SQLCallback_CheckAdminLog, m_szQuery);
 	}
 	else
 	{
 		char m_szClientauth[32], m_szQuery[512], m_sMsg[256], m_szClientid[128];
-		GetClientAuthId(client, AuthId_Steam2, m_szClientauth, 32);
+		GetClientAuthId(client, AuthId_Steam2, m_szClientauth, 32, true);
 		Format(m_szClientid, 128, "\"%N<%d><%s><>\"", client, GetClientUserId(client), m_szClientauth);
 		Format(m_sMsg, 256, "%s", message);
-		ReplaceString(m_sMsg, 256, m_szClientid, "");
+		ReplaceString(m_sMsg, 256, m_szClientid, "自己");
 		ReplaceString(m_sMsg, 256, "slayed", "处死");
 		ReplaceString(m_sMsg, 256, "slapped", "拍打");
 		ReplaceString(m_sMsg, 256, "ignited", "点燃");
@@ -1646,7 +1703,7 @@ public Action OnLogAction(Handle source, Identity ident, int client, int target,
 		ReplaceString(m_sMsg, 256, "added ban", "封禁离线玩家");
 		char emsg[512];
 		SQL_EscapeString(g_hDatabase, m_sMsg, emsg, 512);
-		FormatEx(m_szQuery, 512, "INSERT INTO `sb_adminlog` VALUES (DEFAULT,(SELECT IF((SELECT aid FROM `sb_admins` WHERE authid = '%s')>0,(SELECT aid FROM `sb_admins` WHERE authid = '%s'),-1) FROM `sb_admins` WHERE authid = '%s'),%d,'%s',DEFAULT);", m_szClientauth, m_szClientauth, g_iServerId, emsg);
+		Format(m_szQuery, 512, "INSERT INTO `sb_adminlog` VALUES (DEFAULT, (IF((SELECT aid FROM `sb_admins` WHERE authid = '%s')>0,(SELECT aid FROM `sb_admins` WHERE authid = '%s'),-1)),%d,'%s',DEFAULT);", m_szClientauth, m_szClientauth, g_iServerId, emsg);
 		SQL_TQuery(g_hDatabase, SQLCallback_CheckAdminLog, m_szQuery);
 	}
 
