@@ -758,7 +758,7 @@ public void SelectAddbanCallback(Handle owner, Handle hndl, const char[] error, 
 
 	FormatEx(m_szQuery, 512, "INSERT INTO sb_bans (authid, name, created, ends, length, reason, aid, adminIp, sid, btype, country) VALUES \
 						('%s', '%s', UNIX_TIMESTAMP(), UNIX_TIMESTAMP() + %d, %d, '%s', (SELECT aid FROM sb_admins WHERE authid = '%s' OR authid REGEXP '^STEAM_[0-9]:%s$'), '%s', \
-						%d, '%s', 'unknown')",
+						%d, '%s', 'cn')",
 						authid, nickName, (minutes*60), (minutes*60), banReason, adminAuth, adminAuth[8], adminIp, g_iServerId, bantype);
 
 	SQL_TQuery(g_hDatabase, InsertAddbanCallback, m_szQuery, data, DBPrio_High);

@@ -129,10 +129,10 @@ public int MenuHandler_CPSelect(Handle menu, MenuAction action, int client, int 
 			CloseHandle(menu);
 		}
 		case MenuAction_Cancel:
-        {
+		{
 			if(itemNum == MenuCancel_ExitBack)
 				BuildCPMenu(client);
-        }
+		}
 	}
 }
 
