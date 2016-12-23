@@ -149,7 +149,7 @@ public Action Command_GetAuth(int client, int args)
 		tPrintToChat(client, "%s  {green}%t", PLUGIN_PREFIX, "you are already Auth Player")
 		return Plugin_Handled;
 	}
-	
+
 	//创建CG玩家主菜单
 	Handle menu = CreateMenu(MenuHandler_GetAuth);
 	SetMenuTitleEx(menu, "[CG]  %t [Auth name Only SChinese]", "auth menu title");

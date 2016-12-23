@@ -1,9 +1,9 @@
 #pragma newdecls required //let`s go! new syntax!!!
-//Build 369
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define PLUGIN_VERSION " 6.1.3rc4 - 2016/12/21 01:37 "
+#define Build 371
+#define PLUGIN_VERSION " 6.1.3rc6 - 2016/12/23 15:08 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12349
 
@@ -481,11 +481,11 @@ public int Native_ShowHiddenMotd(Handle plugin, int numParams)
 	QueryClientConVar(client, "cl_disablehtmlmotd", view_as<ConVarQueryFinished>(OnGetClientCVAR), client);
 
 	char m_szUrl[192];
-	if(GetNativeString(4, m_szUrl, 192) == SP_ERROR_NONE)
+	if(GetNativeString(2, m_szUrl, 192) != SP_ERROR_NONE)
 		return false;
-	else
-		ShowHiddenMOTDPanel(client, m_szUrl, MOTDPANEL_TYPE_URL);
-	
+
+	ShowHiddenMOTDPanel(client, m_szUrl, MOTDPANEL_TYPE_URL);
+
 	return true;
 }
 
