@@ -1,13 +1,10 @@
 void GetNowDate()
 {
-	int m_iPast = GetTime() % 86400;
-	g_iNewDayLeft = 86400 - m_iPast - 1;
-	
 	char m_szDate[32];
 	FormatTime(m_szDate, 64, "%Y%m%d", GetTime());
-	g_iNowDate = StringToInt(m_szDate);
-	
-	LogMessage("CG Server: On New Date %s", m_szDate);
+	int iDate = StringToInt(m_szDate);
+	if(iDate > g_iNowDate)
+		OnNewDay(iDate);
 }
 
 void BuildTempLogFile()

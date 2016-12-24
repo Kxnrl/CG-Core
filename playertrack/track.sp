@@ -3,10 +3,8 @@
 //////////////////////////////
 public Action Timer_Tracking(Handle timer)
 {
-	g_iNewDayLeft--;
-	if(g_iNewDayLeft == 0)
-		OnNewDay();
-	
+	GetNowDate();
+
 	for(int client = 1; client <= MaxClients; ++client)
 	{
 		if(!IsValidClient(client, false))

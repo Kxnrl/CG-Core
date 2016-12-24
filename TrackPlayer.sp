@@ -2,8 +2,8 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 371
-#define PLUGIN_VERSION " 6.1.3rc6 - 2016/12/23 15:08 "
+#define Build 372
+#define PLUGIN_VERSION " 6.1.3rc7 - 2016/12/24 09:05 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12349
 
@@ -83,7 +83,6 @@ Clients g_eClient[MAXPLAYERS+1][Clients];
 int g_iServerId = -1;
 int g_iConnect_csgo;
 int g_iConnect_discuz;
-int g_iNewDayLeft;
 int g_iNowDate;
 bool g_bLateLoad;
 char g_szIP[32];
@@ -120,9 +119,6 @@ public Plugin myinfo =
 //////////////////////////////
 public void OnPluginStart()
 {
-	//检查日期
-	GetNowDate();
-	
 	//建立Log文件
 	BuildPath(Path_SM, g_szLogFile, 128, "logs/Core.log");
 	
@@ -308,13 +304,11 @@ bool OnCheckAuthTerm(int client, int AuthId)
 	return result;
 }
 
-void OnNewDay()
+void OnNewDay(int iDate)
 {
-	char m_szDate[32];
-	FormatTime(m_szDate, 64, "%Y%m%d", GetTime());
-	g_iNowDate = StringToInt(m_szDate);
-	LogMessage("CG Server: On New Date %s", m_szDate);
-	
+	g_iNowDate = iDate;
+	LogMessage("CG Server: On New Date %d", g_iNowDate);
+
 	//Call Forward
 	Call_StartForward(g_fwqOnNewDay);
 	Call_PushCell(g_iNowDate);
