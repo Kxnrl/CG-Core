@@ -13,7 +13,7 @@ public Action Command_Online(int client, int args)
 	int m_iHours = g_eClient[client][iOnline] / 3600;
 	int m_iMins = g_eClient[client][iOnline] % 3600;
 	int t_iMins = (GetTime() - g_eClient[client][iConnectTime]) / 60;
-	tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "cmd onlines", client, m_iHours, m_iMins, g_eClient[client][iNumber], t_iMins);
+	tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "cmd onlines", client, m_iHours, m_iMins/60, g_eClient[client][iNumber], t_iMins);
 }
 
 public Action Command_Track(int client, int args)
