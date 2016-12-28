@@ -1,6 +1,7 @@
 #include <cg_core>
 #include <maoling>
-#include <diamond>
+#include <store>
+#include <csc>
 
 #define PREFIX "[\x10新年快乐\x01]  "
 
@@ -43,6 +44,7 @@ public int Native_SetClientDiamond(Handle plugin, int numParams)
 			Format(m_szQuery, 256, "UPDATE `playertrack_diamonds` SET `diamonds` = `diamonds` + '%d' WHERE `playerid` = '%d' AND `dzid` = '%d' AND `steamid` = '%s'", diff, CG_GetPlayerID(client), CG_GetDiscuzUID(client), m_szAuth);
 			SQL_TQuery(g_hDatabase, SQLCallback_SaveClient, m_szQuery, GetClientUserId(client));
 			PrintToChat(client, "%s  \x04你%s了\x10 %d钻石 \x04当前剩余\x01: \x10 %d钻石", PREFIX, (diff >= 0) ? "获得" : "失去", diff, g_iDiamonds[client]);
+			LoadClient(client); //prevent hack
 			return true;
 		}
 		return false;
@@ -94,7 +96,8 @@ void BuildMainMenu(int client)
 
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "view", "查看活动");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "earn", "查看奖励");
-	AddMenuItemEx(menu, g_bPackage[client] ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "pkge", "领取礼包");
+	AddMenuItemEx(menu, g_iDiamonds[client] >= 200 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "keys", "兑换钥匙%s", g_iDiamonds[client] >= 200 ? "[可兑换]" : "[钻石不足]");
+	AddMenuItemEx(menu, g_bPackage[client] ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "pkge", "领取礼包%s", g_bPackage[client] ? "" : "[已领取]");
 
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 0);
@@ -108,6 +111,8 @@ public int MenuHandler_MainMenu(Handle menu, MenuAction action, int client, int 
 		GetMenuItem(menu, itemNum, info, 32);
 		if(StrEqual(info, "view"))
 			BuildViewMenu(client);
+		else if(StrEqual(info, "keys"))
+			QueryKeyCount(client);
 		else
 			PrintToChat(client, "%s  \x04Coming soon...", PREFIX);
 	}
@@ -115,6 +120,90 @@ public int MenuHandler_MainMenu(Handle menu, MenuAction action, int client, int 
 	{
 		CloseHandle(menu);
 	}
+}
+
+void QueryKeyCount(int client)
+{
+	if(!IsAllowClient(client) || !g_bLoaded[client])
+		return;
+	
+	char m_szQuery[128], date[32];
+	FormatTime(date, 32, "%Y%m%d", GetTime());
+	Format(m_szQuery, 128, "SELECT * FROM playertrack_keys WHERE date = '%s'", date);
+	SQL_TQuery(g_hDatabase, SQLCallback_QueryKeys, m_szQuery, GetClientUserId(client));
+}
+
+void RaffleKey(int client)
+{
+	PrintToChat(client, "%s  Coming Soon...", PREFIX);
+}
+
+void BuildKeysMenu(int client, int keys)
+{
+	if(!IsAllowClient(client) || !g_bLoaded[client])
+		return;
+
+	Handle menu = CreateMenu(MenuHandler_KeysMenu);
+	SetMenuTitleEx(menu, "[CG]  新年活动 - 兑换CSGO钥匙\n钻石: %d\n今日剩余兑换数量: %d", g_iDiamonds[client], keys);
+
+	AddMenuItemEx(menu, keys > 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "0", "兑换一把CSGO钥匙[200钻石]%s", keys > 0 ? "" : "明天再来吧");
+	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "1", "抽奖一把CSGO钥匙[20钻石]");
+	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "2", "参与CSGO钥匙夺宝[10钻石]");
+
+	SetMenuExitBackButton(menu, true);
+	SetMenuExitButton(menu, true);
+	DisplayMenu(menu, client, 0);
+}
+
+public int MenuHandler_KeysMenu(Handle menu, MenuAction action, int client, int itemNum) 
+{
+	if(action == MenuAction_Select) 
+	{
+		if(!IsAllowClient(client) || !g_bLoaded[client])
+			return;
+
+		char info[32], name[32];
+		GetMenuItem(menu, itemNum, info, 32, _, name, 32);
+		
+		if(StrEqual(info, "0"))
+		{
+			PrintToChat(client, "%s  正在处理...", PREFIX);
+			char m_szAuth[32], m_szQuery[256];
+			GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
+			Format(m_szQuery, 256, "SELECT `diamonds` FROM `playertrack_diamonds` WHERE `playerid` = '%d' AND `dzid` = '%d' AND `steamid` = '%s' ORDER BY `playerid` ASC LIMIT 1;", CG_GetPlayerID(client), CG_GetDiscuzUID(client), m_szAuth);
+			SQL_TQuery(g_hDatabase, SQLCallback_ExchangeKey, m_szQuery, GetClientUserId(client));
+		}
+		else if(StrEqual(info, "1"))
+			RaffleKey(client);
+		else if(StrEqual(info, "1"))
+			RaffleKey(client);
+	}
+	else if(action == MenuAction_End)
+	{
+		CloseHandle(menu);
+	}
+	else if(action == MenuAction_Cancel)
+	{
+		if(itemNum == MenuCancel_ExitBack)
+			BuildMainMenu(client);
+	}
+}
+
+void ExchangeKey(int client)
+{
+	if(!IsAllowClient(client) || !g_bLoaded[client])
+		return;
+	
+	if(g_iDiamonds[client] < 200)
+	{
+		PrintToChat(client, "%s  你的钻石不足", PREFIX);
+		return;
+	}
+	
+	char m_szAuth[32], m_szQuery[256];
+	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
+	Format(m_szQuery, 256, "UPDATE `playertrack_diamonds` SET `diamonds` = `diamonds` - '200' WHERE `playerid` = '%d' AND `dzid` = '%d' AND `steamid` = '%s' ORDER BY `playerid` ASC LIMIT 1;", CG_GetPlayerID(client), CG_GetDiscuzUID(client), m_szAuth);
+	SQL_TQuery(g_hDatabase, SQLCallback_RefreshKey, m_szQuery, GetClientUserId(client));
 }
 
 void BuildViewMenu(int client)
@@ -341,6 +430,100 @@ public void SQLCallback_SaveClient(Handle owner, Handle hndl, const char[] error
 	{
 		LogError("SaveClient: %N  Error: %s", client, error);
 	}
+}
+
+public void SQLCallback_QueryKeys(Handle owner, Handle hndl, const char[] error, int userid)
+{
+	int client = GetClientOfUserId(userid);
+	
+	if(!IsValidClient(client) || !IsAllowClient(client))
+		return;
+
+	if(hndl == INVALID_HANDLE)
+	{
+		LogError("QueryKeys: %N  Error: %s", client, error);
+		return;
+	}
+	
+	if(!SQL_HasResultSet(hndl))
+		return;
+
+	int left = 30 - SQL_GetRowCount(hndl);
+	BuildKeysMenu(client, left);
+}
+
+public void SQLCallback_RefreshKey(Handle owner, Handle hndl, const char[] error, int userid)
+{
+	int client = GetClientOfUserId(userid);
+	
+	if(!IsValidClient(client) || !IsAllowClient(client))
+		return;
+	
+	if(hndl == INVALID_HANDLE)
+	{
+		PrintToChat(client, "%s  \x07位置错误0x04\x01,请稍后在试...", PREFIX);
+		LogError("RefreshKey: %N  Error: %s", client, error);
+		return;
+	}
+
+	g_iDiamonds[client] -= 200;
+
+	char m_szAuth[32], m_szQuery[256], date[32];
+	FormatTime(date, 32, "%Y%m%d", GetTime());
+	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
+	Format(m_szQuery, 256, "INSERT INTO `playertrack_keys` (`playerid`, `dzid`, `steamid`, `date`, `time`) VALUES ('%d', '%d', '%s', '%s', '%d');", CG_GetPlayerID(client), CG_GetDiscuzUID(client), m_szAuth, date, GetTime());
+	SQL_TQuery(g_hDatabase, SQLCallback_PorcKey, m_szQuery, GetClientUserId(client));
+}
+
+public void SQLCallback_PorcKey(Handle owner, Handle hndl, const char[] error, int userid)
+{
+	int client = GetClientOfUserId(userid);
+	
+	if(!IsValidClient(client) || !IsAllowClient(client))
+		return;
+	
+	if(hndl == INVALID_HANDLE)
+	{
+		int rdm = GetRandomInt(100000, 999999);
+		PrintToChat(client, "%s  \x07后台处理请求失败,请立即按下F12保存此截图\x01[\x0Cid\x01: \x04%d\x01]", PREFIX, rdm);
+		LogError("client %N  id %d", client, rdm);
+		LogError("ExchangeKey: %N  Error: %s", client, error);
+		return;
+	}
+
+	char fmt[256];
+	Format(fmt, 256, "%s  \x0C%N\x04使用活动钻石兑换了一把CSGO钥匙", PREFIX, client);
+	CG_Broadcast(false, fmt);
+
+	char m_szQuery[256], m_szName[64];
+	CG_GetDiscuzName(client, m_szName, 64);
+	Format(m_szQuery, 256, "INSERT INTO `dz_plugin_ahome_laba` (`username`, `tousername`, `level`, `lid`, `dateline`, `content`, `color`, `url`) VALUES ('%s', '', 'game', 0, '%d', '使用活动钻石兑换了一把CSGO钥匙', '', '')", m_szName, GetTime());
+	CG_SaveForumData(m_szQuery);
+
+	PrintToChat(client, "%s  \x04兑换成功,你兑换了一个CSGO钥匙", PREFIX);
+	PrintToChat(client, "%s  \x04为保证奖品发放,若未在论坛填写steam交易链接,请及时填写", PREFIX);
+}
+
+public void SQLCallback_ExchangeKey(Handle owner, Handle hndl, const char[] error, int userid)
+{
+	int client = GetClientOfUserId(userid);
+	
+	if(!IsValidClient(client) || !IsAllowClient(client))
+		return;
+	
+	if(hndl == INVALID_HANDLE)
+	{
+		LogError("ExchangeKey: %N  Error: %s", client, error);
+		return;
+	}
+	
+	if(SQL_FetchRow(hndl))
+	{
+		g_iDiamonds[client] = SQL_FetchInt(hndl, 0);
+		ExchangeKey(client);
+	}
+	else
+		PrintToChat(client, "%s  \x07未知错误0x06", PREFIX);
 }
 
 stock bool IsAllowClient(int client)

@@ -520,18 +520,14 @@ public int MenuHandler_BanTimeList(Handle menu, MenuAction action, int param1, i
 		GetMenuItem(menu, param2, info, 32);
 		g_BanTime[param1] = StringToInt(info);
 		
-		if((GetUserFlagBits(param1) & ADMFLAG_BAN) && (GetUserFlagBits(param1) & ADMFLAG_CONVARS))
-		{
-			Handle btypeMenu = CreateMenu(MenuHandler_BanType);
-			SetMenuTitle(btypeMenu, "选择封禁类型:\n ");
-			AddMenuItem(btypeMenu, "0", "模式封禁");
-			AddMenuItem(btypeMenu, "1", "单服封禁");
-			AddMenuItem(btypeMenu, "2", "全服封禁");
-			SetMenuExitButton(btypeMenu, false);
-			DisplayMenu(btypeMenu, param1, 0);
-		}
-		else
-			DisplayMenu(ReasonMenuHandle, param1, MENU_TIME_FOREVER);
+		Handle btypeMenu = CreateMenu(MenuHandler_BanType);
+		SetMenuTitle(btypeMenu, "选择封禁类型:\n ");
+		AddMenuItem(btypeMenu, "0", "模式封禁");
+		AddMenuItem(btypeMenu, "1", "单服封禁");
+		AddMenuItem(btypeMenu, "2", "全服封禁", (GetUserFlagBits(param1) & ADMFLAG_CONVARS) ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+		SetMenuExitButton(btypeMenu, false);
+		DisplayMenu(btypeMenu, param1, MENU_TIME_FOREVER);
+		//DisplayMenu(ReasonMenuHandle, param1, MENU_TIME_FOREVER);
 	}
 }
 

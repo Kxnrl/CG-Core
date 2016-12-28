@@ -1,3 +1,28 @@
+void InitServerIP()
+{
+	if(GetEngineVersion() == Engine_Insurgency)
+	{
+		if(FileExists("addons/sourcemod/plugins/hostname_27017.smx"))
+			strcopy(g_szIP, 32, "43.241.50.250:27017");
+		else if(FileExists("addons/sourcemod/plugins/hostname_27016.smx"))
+			strcopy(g_szIP, 32, "43.241.50.250:27016");
+		else if(FileExists("addons/sourcemod/plugins/hostname_27015.smx"))
+			strcopy(g_szIP, 32, "43.241.50.250:27015");
+	}
+	else
+	{
+		int ip = GetConVarInt(FindConVar("hostip"));
+		Format(g_szIP, 32, "%d.%d.%d.%d:%d", ((ip & 0xFF000000) >> 24) & 0xFF, ((ip & 0x00FF0000) >> 16) & 0xFF, ((ip & 0x0000FF00) >>  8) & 0xFF, ((ip & 0x000000FF) >>  0) & 0xFF, GetConVarInt(FindConVar("hostport")));
+	}
+}
+
+void InitDate()
+{
+	char m_szDate[32];
+	FormatTime(m_szDate, 64, "%Y%m%d", GetTime());
+	g_iNowDate = StringToInt(m_szDate);
+}
+
 void GetNowDate()
 {
 	char m_szDate[32];

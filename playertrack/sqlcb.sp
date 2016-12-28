@@ -62,7 +62,7 @@ public void SQL_TConnect_Callback_csgo(Handle owner, Handle hndl, const char[] e
 	MySQL_Query(g_hDB_csgo, SQLCallback_GetServerIP, m_szQuery, _, DBPrio_High);
 	
 	Format(m_szQuery, 256, "DELETE FROM `playertrack_analytics` WHERE connect_time < %d and duration = -1", GetTime()-18000);
-	MySQL_Query(g_hDB_csgo, SQLCallback_OnConnect, m_szQuery);
+	MySQL_Query(g_hDB_csgo, SQLCallback_OnConnect, m_szQuery, DBPrio_Low);
 
 	g_iConnect_csgo = 1;
 }
@@ -231,7 +231,7 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 			char m_szAuth[32], m_szQuery[256];
 			GetClientAuthId(client, AuthId_SteamID64, m_szAuth, 32, true);
 			Format(m_szQuery, 256, "SELECT m.uid, m.username FROM dz_steam_users AS s LEFT JOIN dz_common_member m ON s.uid = m.uid WHERE s.steamID64 = '%s' LIMIT 1", m_szAuth);
-			MySQL_Query(g_hDB_discuz, SQLCallback_GetClientDiscuzName, m_szQuery, g_eClient[client][iUserId]);
+			MySQL_Query(g_hDB_discuz, SQLCallback_GetClientDiscuzName, m_szQuery, g_eClient[client][iUserId], DBPrio_High);
 		}
 		else
 		{
@@ -287,7 +287,7 @@ public void SQLCallback_GetClientDiscuzName(Handle owner, Handle hndl, const cha
 		GetClientAuthId(client, AuthId_SteamID64, m_szAuth, 32, true);
 		
 		Format(m_szQuery, 256, "SELECT m.uid, m.username FROM dz_steam_users AS s LEFT JOIN dz_common_member m ON s.uid = m.uid WHERE s.steamID64 = '%s' LIMIT 1", m_szAuth);
-		MySQL_Query(g_hDB_discuz, SQLCallback_GetClientDiscuzName, m_szQuery, g_eClient[client][iUserId]);
+		MySQL_Query(g_hDB_discuz, SQLCallback_GetClientDiscuzName, m_szQuery, g_eClient[client][iUserId], DBPrio_High);
 
 		return;
 	}

@@ -2,8 +2,8 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 372
-#define PLUGIN_VERSION " 6.1.3rc7 - 2016/12/24 09:05 "
+#define Build 374
+#define PLUGIN_VERSION " 6.1.4 - 2016/12/26 23:55 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12349
 
@@ -124,6 +124,12 @@ public void OnPluginStart()
 	
 	//建立临时储存文件
 	BuildTempLogFile();
+	
+	//初始化日期
+	InitDate();
+	
+	//读取服务器IP地址
+	InitServerIP();
 
 	//锁定ConVar
 	g_hCVAR = FindConVar("sv_hibernate_when_empty");
@@ -206,10 +212,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 	g_fwdOnClientVipChecked = CreateForward(ET_Ignore, Param_Cell);
 	CreateNative("HookClientVIPChecked", Native_HookOnClientVipChecked);
-
-	//读取服务器IP地址
-	int ip = GetConVarInt(FindConVar("hostip"));
-	Format(g_szIP, 32, "%d.%d.%d.%d:%d", ((ip & 0xFF000000) >> 24) & 0xFF, ((ip & 0x00FF0000) >> 16) & 0xFF, ((ip & 0x0000FF00) >>  8) & 0xFF, ((ip & 0x000000FF) >>  0) & 0xFF, GetConVarInt(FindConVar("hostport")));
 
 	g_bLateLoad = late;
 
@@ -503,6 +505,11 @@ public void OnSettingChanged(Handle convar, const char[] oldValue, const char[] 
 //////////////////////////////
 //		ON CLIENT EVENT		//
 //////////////////////////////
+public void OnMapStart()
+{
+	CreateTimer(1.0, Timer_OnMapStartPost, _, TIMER_FLAG_NO_MAPCHANGE);
+}
+
 public void OnClientConnected(int client)
 {
 	//初始化Client数据
@@ -625,4 +632,9 @@ public Action Timer_ReLoadClient(Handle timer, int userid)
 	int client = GetClientOfUserId(userid);
 	if(client && IsClientInGame(client))
 		OnClientPostAdminCheck(client);
+}
+
+public Action Timer_OnMapStartPost(Handle timer)
+{
+	SetConVarString(FindConVar("hostname"), g_szHostName, false, false);
 }
