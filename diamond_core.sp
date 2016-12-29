@@ -1,6 +1,5 @@
 #include <cg_core>
 #include <maoling>
-#include <store>
 #include <csc>
 
 #define PREFIX "[\x10新年快乐\x01]  "
