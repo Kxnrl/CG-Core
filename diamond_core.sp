@@ -15,6 +15,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 {
 	CreateNative("CG_GetClientDiamond", Native_GetClientDiamond);
 	CreateNative("CG_SetClientDiamond", Native_SetClientDiamond);
+	
+	if(late)
+		CG_OnServerLoaded();
 
 	return APLRes_Success;
 }
@@ -142,9 +145,11 @@ void BuildKeysMenu(int client, int keys)
 {
 	if(!IsAllowClient(client) || !g_bLoaded[client])
 		return;
+	
+	int left = 10 - keys;
 
 	Handle menu = CreateMenu(MenuHandler_KeysMenu);
-	SetMenuTitleEx(menu, "[CG]  新年活动 - 兑换CSGO钥匙\n钻石: %d\n今日剩余兑换数量: %d", g_iDiamonds[client], keys);
+	SetMenuTitleEx(menu, "[CG]  新年活动 - 兑换CSGO钥匙\n钻石: %d\n今日剩余兑换数量: %d[活动测试期间每天限10个]", g_iDiamonds[client], left);
 
 	AddMenuItemEx(menu, keys > 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "0", "兑换一把CSGO钥匙[200钻石]%s", keys > 0 ? "" : "明天再来吧");
 	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "1", "抽奖一把CSGO钥匙[20钻石]");
@@ -276,7 +281,7 @@ void BuildModeMenu(int client, int mode, const char[] name)
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每次正确击杀重甲玩家有概率获得钻石或信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "在地图时间内叛徒累计击杀50人即可获得钻石或信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "在地图时间内总消费50职业点数即可获得钻石或信用点");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每隔5分钟随机抽300信用点/随机皮肤/MVIP/夕立限定皮肤");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每隔5分钟随机抽300信用点/随机皮肤/MVIP/限定皮肤");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "当日在线奖励(60分钟1钻石|150分钟5钻石|300分钟10钻石)");
 		}
 		case 2:
@@ -305,7 +310,12 @@ void BuildModeMenu(int client, int mode, const char[] name)
 		}
 		case 5:
 		{
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "混战狗OP尚未提交活动策划");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每局最多杀敌|最多爆头获得随机信用点");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "5杀随机获得钻石|8杀随机获得钻石+信用点");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "使用电击枪/刀杀随机获得信用点或钻石");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "单幅地图击杀30人以上随机获得钻石或信用点");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "当日在线奖励(60分钟1钻石|150分钟5钻石|300分钟10钻石)[测试]");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每隔5分钟随机抽300信用点/随机皮肤/MVIP/限定皮肤");
 		}
 	}
 
@@ -448,8 +458,7 @@ public void SQLCallback_QueryKeys(Handle owner, Handle hndl, const char[] error,
 	if(!SQL_HasResultSet(hndl))
 		return;
 
-	int left = 30 - SQL_GetRowCount(hndl);
-	BuildKeysMenu(client, left);
+	BuildKeysMenu(client, SQL_GetRowCount(hndl));
 }
 
 public void SQLCallback_RefreshKey(Handle owner, Handle hndl, const char[] error, int userid)
