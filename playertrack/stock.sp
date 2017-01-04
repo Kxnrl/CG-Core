@@ -212,6 +212,27 @@ stock void ReplaceColorsCode(char[] buffer, int maxLen)
 	ReplaceString(buffer, maxLen, "{blue}", "\x0C", false);
 }
 
+stock void GetClientAuthName(int client, char[] buffer, int maxLen)
+{
+	switch(g_eClient[client][iGroupId])
+	{
+		case    0: strcopy(buffer, maxLen, "未认证");
+		case    1: strcopy(buffer, maxLen, "断后达人");
+		case    2: strcopy(buffer, maxLen, "指挥大佬");
+		case    3: strcopy(buffer, maxLen, "僵尸克星");
+		case  101: strcopy(buffer, maxLen, "职业侦探");
+		case  102: strcopy(buffer, maxLen, "心机婊");
+		case  103: strcopy(buffer, maxLen, "TTT影帝");
+		case  104: strcopy(buffer, maxLen, "赌命狂魔");
+		case  105: strcopy(buffer, maxLen, "杰出公民");
+		case  201: strcopy(buffer, maxLen, "娱乐挂壁");
+		case  301: strcopy(buffer, maxLen, "首杀无敌");
+		case  302: strcopy(buffer, maxLen, "混战指挥");
+		case  303: strcopy(buffer, maxLen, "爆头狂魔");
+		case  304: strcopy(buffer, maxLen, "助攻之神");
+	}
+}
+
 stock void TranslationToFile(const char[] m_szPath)
 {
 	Handle file = OpenFile(m_szPath, "w");

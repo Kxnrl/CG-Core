@@ -78,9 +78,9 @@ g_iBanType[MAXPLAYERS+1];
 public Plugin myinfo =
 {
 	name		= "SourceBans - [CG] Community Edition",
-	author		= "SourceBans Development Team, Sarabveer(VEER™), maoling (xQy)",
+	author		= "SourceBans Development Team, Sarabveer(VEER™), Kyle",
 	description	= "Advanced ban management for the Source engine",
-	version		= "2.0+dev-4",
+	version		= "2.0+dev-5",
 	url			= "http://steamcommunity.com/id/_xQy_/"
 };
 

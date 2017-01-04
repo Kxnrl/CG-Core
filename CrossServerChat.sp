@@ -18,7 +18,7 @@ bool g_bConnected;
 public Plugin myinfo = 
 {
     name		= "Broadcast System - Client",
-    author		= "maoling ( xQy )",
+    author		= "Kyle",
     description	= "Send message on all connected server !",
     version		= "1.5",
     url			= "http://steamcommunity.com/id/_xQy_/"

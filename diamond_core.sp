@@ -10,6 +10,15 @@ int g_iDiamonds[MAXPLAYERS+1];
 bool g_bLoaded[MAXPLAYERS+1];
 bool g_bPackage[MAXPLAYERS+1];
 
+public Plugin myinfo = 
+{
+    name		= "Diamonds Core",
+    author		= "Kyle",
+    description	= "",
+    version		= "1.0",
+    url			= "http://steamcommunity.com/id/_xQy_/"
+};
+
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	CreateNative("CG_GetClientDiamond", Native_GetClientDiamond);
@@ -296,12 +305,12 @@ void BuildModeMenu(int client, int mode, const char[] name)
 		case 3:
 		{
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "刀杀/电死玩家会有概率获得钻石或信用点[击杀狗OP概率翻倍]");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "地图结束时(>30分钟)获得玩家得分*3的信用点|*0.1的钻石");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "地图结束时(>30分钟)获得玩家得分*1的信用点|*5%%的钻石");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每局菠菜获胜的玩家可以选择将信用点转换成钻石");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每句菠菜失败的玩家有一定概率获得返还信用点");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "投掷物击杀将会获得[15~50]信用点奖励");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "爆头击杀玩家有概率获得[1~250]信用点奖励|[1~5]钻石");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "EndGame中1V1获胜的玩家,随机抽取商店任意在售皮肤[7天]");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "投掷物击杀将会获得[15~30]信用点奖励");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "爆头击杀玩家有概率获得[1~250]信用点奖励|[1~3]钻石");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "EndGame中1V1获胜的玩家有概率获得[10~50]信用点奖励");
 		}
 		case 4:
 		{

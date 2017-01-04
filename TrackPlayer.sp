@@ -2,8 +2,8 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 374
-#define PLUGIN_VERSION " 6.1.4 - 2016/12/26 23:55 "
+#define Build 377
+#define PLUGIN_VERSION " 6.1.6 - 2017/01/04 01:39 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12349
 
@@ -132,42 +132,17 @@ public void OnPluginStart()
 	InitServerIP();
 
 	//锁定ConVar
-	g_hCVAR = FindConVar("sv_hibernate_when_empty");
-	SetConVarInt(g_hCVAR, 0);
-	HookConVarChange(g_hCVAR, OnSettingChanged);
+	InitConVar();
 
 	//连接到数据库
 	SQL_TConnect_csgo();
 	SQL_TConnect_discuz();
 	
-	//初始化游戏数据
+	//初始化翻译数据
 	LoadTranstion();
 
 	//监听控制台命令
-	RegConsoleCmd("sm_sign", Command_Login);
-	RegConsoleCmd("sm_qiandao", Command_Login);
-	RegConsoleCmd("sm_online", Command_Online);
-	RegConsoleCmd("sm_track", Command_Track);
-	RegConsoleCmd("sm_rz", Command_GetAuth);
-	RegConsoleCmd("sm_cp", Command_CP);
-	RegConsoleCmd("sm_lily", Command_CP);
-	RegConsoleCmd("sm_cg", Command_Menu);
-	RegConsoleCmd("sm_qm", Command_Signature);
-
-	//创建管理员命令
-	RegAdminCmd("sm_reloadadv", Command_ReloadAdv, ADMFLAG_BAN);
-
-	//创建全局Forward
-	g_fwdOnServerLoaded = CreateGlobalForward("CG_OnServerLoaded", ET_Ignore, Param_Cell);
-	g_fwdOnAPIStoreSetCredits = CreateGlobalForward("CG_APIStoreSetCredits", ET_Event, Param_Cell, Param_Cell, Param_String, Param_Cell);
-	g_fwdOnAPIStoreGetCredits = CreateGlobalForward("CG_APIStoreGetCredits", ET_Event, Param_Cell);
-	g_fwdOnClientDailySign = CreateGlobalForward("CG_OnClientDailySign", ET_Ignore, Param_Cell);
-	g_fwdOnClientDataLoaded = CreateGlobalForward("CG_OnClientLoaded", ET_Ignore, Param_Cell);
-	g_fwdOnClientAuthLoaded = CreateGlobalForward("PA_OnClientLoaded", ET_Ignore, Param_Cell);
-	g_fwdOnCPCouple = CreateGlobalForward("CP_OnCPCouple", ET_Ignore, Param_Cell, Param_Cell);
-	g_fwdOnCPDivorce = CreateGlobalForward("CP_OnCPDivorce", ET_Ignore, Param_Cell, Param_Cell);
-	g_fwqOnNewDay = CreateGlobalForward("CG_OnNewDay", ET_Ignore, Param_Cell);
-	g_fwqOnCheckAuthTerm = CreateGlobalForward("CG_OnCheckAuthTerm", ET_Event, Param_Cell, Param_Cell);
+	InitCommands();
 	
 	//建立监听Timer
 	CreateTimer(1.0, Timer_Tracking, _, TIMER_REPEAT);
@@ -187,31 +162,10 @@ public void OnPluginEnd()
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	//创建API
-	CreateNative("CG_GetServerID", Native_GetServerID);
-	CreateNative("CG_GetOnlines", Native_GetOnlines);
-	CreateNative("CG_GetVitality", Native_GetVitality);
-	CreateNative("CG_GetLastseen", Native_GetLastseen);
-	CreateNative("CG_GetPlayerID", Native_GetPlayerID);
-	CreateNative("CG_GetSignature", Native_GetSingature);
-	CreateNative("CG_GetDiscuzUID", Native_GetDiscuzUID);
-	CreateNative("CG_GetDiscuzName", Native_GetDiscuzName);
-	CreateNative("CG_GetGameDatabase", Native_GetGameDatabase);
-	CreateNative("CG_GetDiscuzDatabase", Native_GetDiscuzDatabase);
-	CreateNative("CG_SaveDatabase", Native_SaveDatabase);
-	CreateNative("CG_SaveForumData", Native_SaveForumData);
-	CreateNative("VIP_IsClientVIP", Native_IsClientVIP);
-	CreateNative("VIP_SetClientVIP", Native_SetClientVIP);
-	CreateNative("VIP_GetVipType", Native_GetVipType);
-	CreateNative("PA_GetGroupID", Native_GetGroupID);
-	CreateNative("PA_GetGroupName", Native_GetGroupName);
-	CreateNative("CP_GetPartner", Native_GetCPPartner);
-	CreateNative("CP_GetDate", Native_GetCPDate);
-	CreateNative("CG_ShowNormalMotd", Native_ShowNormalMotd);
-	CreateNative("CG_ShowHiddenMotd", Native_ShowHiddenMotd);
-	CreateNative("CG_RemoveMotd", Native_RemoveMotd);
-
-	g_fwdOnClientVipChecked = CreateForward(ET_Ignore, Param_Cell);
-	CreateNative("HookClientVIPChecked", Native_HookOnClientVipChecked);
+	InitNative();
+	
+	//创建全局Forward
+	InitForward();
 
 	g_bLateLoad = late;
 

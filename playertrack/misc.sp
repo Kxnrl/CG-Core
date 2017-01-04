@@ -1,19 +1,7 @@
 void InitServerIP()
 {
-	if(GetEngineVersion() == Engine_Insurgency)
-	{
-		if(FileExists("addons/sourcemod/plugins/hostname_27017.smx"))
-			strcopy(g_szIP, 32, "43.241.50.250:27017");
-		else if(FileExists("addons/sourcemod/plugins/hostname_27016.smx"))
-			strcopy(g_szIP, 32, "43.241.50.250:27016");
-		else if(FileExists("addons/sourcemod/plugins/hostname_27015.smx"))
-			strcopy(g_szIP, 32, "43.241.50.250:27015");
-	}
-	else
-	{
-		int ip = GetConVarInt(FindConVar("hostip"));
-		Format(g_szIP, 32, "%d.%d.%d.%d:%d", ((ip & 0xFF000000) >> 24) & 0xFF, ((ip & 0x00FF0000) >> 16) & 0xFF, ((ip & 0x0000FF00) >>  8) & 0xFF, ((ip & 0x000000FF) >>  0) & 0xFF, GetConVarInt(FindConVar("hostport")));
-	}
+	int ip = GetConVarInt(FindConVar("hostip"));
+	Format(g_szIP, 32, "%d.%d.%d.%d:%d", ((ip & 0xFF000000) >> 24) & 0xFF, ((ip & 0x00FF0000) >> 16) & 0xFF, ((ip & 0x0000FF00) >>  8) & 0xFF, ((ip & 0x000000FF) >>  0) & 0xFF, GetConVarInt(FindConVar("hostport")));
 }
 
 void InitDate()
@@ -21,6 +9,71 @@ void InitDate()
 	char m_szDate[32];
 	FormatTime(m_szDate, 64, "%Y%m%d", GetTime());
 	g_iNowDate = StringToInt(m_szDate);
+}
+
+void InitConVar()
+{
+	g_hCVAR = FindConVar("sv_hibernate_when_empty");
+	SetConVarInt(g_hCVAR, 0);
+	HookConVarChange(g_hCVAR, OnSettingChanged);
+}
+
+void InitCommands()
+{
+	RegConsoleCmd("sm_sign", Command_Login);
+	RegConsoleCmd("sm_qiandao", Command_Login);
+	RegConsoleCmd("sm_online", Command_Online);
+	RegConsoleCmd("sm_track", Command_Track);
+	RegConsoleCmd("sm_rz", Command_GetAuth);
+	RegConsoleCmd("sm_cp", Command_CP);
+	RegConsoleCmd("sm_lily", Command_CP);
+	RegConsoleCmd("sm_cg", Command_Menu);
+	RegConsoleCmd("sm_qm", Command_Signature);
+	
+	RegAdminCmd("sm_reloadadv", Command_ReloadAdv, ADMFLAG_BAN);
+}
+
+void InitForward()
+{
+	g_fwdOnServerLoaded = CreateGlobalForward("CG_OnServerLoaded", ET_Ignore, Param_Cell);
+	g_fwdOnAPIStoreSetCredits = CreateGlobalForward("CG_APIStoreSetCredits", ET_Event, Param_Cell, Param_Cell, Param_String, Param_Cell);
+	g_fwdOnAPIStoreGetCredits = CreateGlobalForward("CG_APIStoreGetCredits", ET_Event, Param_Cell);
+	g_fwdOnClientDailySign = CreateGlobalForward("CG_OnClientDailySign", ET_Ignore, Param_Cell);
+	g_fwdOnClientDataLoaded = CreateGlobalForward("CG_OnClientLoaded", ET_Ignore, Param_Cell);
+	g_fwdOnClientAuthLoaded = CreateGlobalForward("PA_OnClientLoaded", ET_Ignore, Param_Cell);
+	g_fwdOnCPCouple = CreateGlobalForward("CP_OnCPCouple", ET_Ignore, Param_Cell, Param_Cell);
+	g_fwdOnCPDivorce = CreateGlobalForward("CP_OnCPDivorce", ET_Ignore, Param_Cell, Param_Cell);
+	g_fwqOnNewDay = CreateGlobalForward("CG_OnNewDay", ET_Ignore, Param_Cell);
+	g_fwqOnCheckAuthTerm = CreateGlobalForward("CG_OnCheckAuthTerm", ET_Event, Param_Cell, Param_Cell);
+	
+	g_fwdOnClientVipChecked = CreateForward(ET_Ignore, Param_Cell);
+	CreateNative("HookClientVIPChecked", Native_HookOnClientVipChecked);
+}
+
+void InitNative()
+{
+	CreateNative("CG_GetServerID", Native_GetServerID);
+	CreateNative("CG_GetOnlines", Native_GetOnlines);
+	CreateNative("CG_GetVitality", Native_GetVitality);
+	CreateNative("CG_GetLastseen", Native_GetLastseen);
+	CreateNative("CG_GetPlayerID", Native_GetPlayerID);
+	CreateNative("CG_GetSignature", Native_GetSingature);
+	CreateNative("CG_GetDiscuzUID", Native_GetDiscuzUID);
+	CreateNative("CG_GetDiscuzName", Native_GetDiscuzName);
+	CreateNative("CG_GetGameDatabase", Native_GetGameDatabase);
+	CreateNative("CG_GetDiscuzDatabase", Native_GetDiscuzDatabase);
+	CreateNative("CG_SaveDatabase", Native_SaveDatabase);
+	CreateNative("CG_SaveForumData", Native_SaveForumData);
+	CreateNative("VIP_IsClientVIP", Native_IsClientVIP);
+	CreateNative("VIP_SetClientVIP", Native_SetClientVIP);
+	CreateNative("VIP_GetVipType", Native_GetVipType);
+	CreateNative("PA_GetGroupID", Native_GetGroupID);
+	CreateNative("PA_GetGroupName", Native_GetGroupName);
+	CreateNative("CP_GetPartner", Native_GetCPPartner);
+	CreateNative("CP_GetDate", Native_GetCPDate);
+	CreateNative("CG_ShowNormalMotd", Native_ShowNormalMotd);
+	CreateNative("CG_ShowHiddenMotd", Native_ShowHiddenMotd);
+	CreateNative("CG_RemoveMotd", Native_RemoveMotd);
 }
 
 void GetNowDate()
