@@ -15,7 +15,7 @@ public Plugin myinfo =
     name		= "Diamonds Core",
     author		= "Kyle",
     description	= "",
-    version		= "1.0",
+    version		= "1.1",
     url			= "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -299,8 +299,12 @@ void BuildModeMenu(int client, int mode, const char[] name)
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "爆头击杀僵尸即可获得随机数量的钻石或信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "一局爆菊10个人类获得随机数量的钻石或信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "一局伤害输出前五名奖励随机数量钻石或信用点");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "积极断后即可有机会奖励随机数量钻石或信用点");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "续命屏障|救人冰冻奖励随机数量钻石或信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "在地图时间累计击杀10只僵尸即可获得钻石或信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "在地图时间累计感染30个人类即可获得钻石或信用点");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每隔5分钟随机抽夕立改二|普鲁鲁特|艾米莉亚|500信用点");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "当日在线奖励(60分钟2钻石|150分钟10钻石|300分钟20钻石)");
 		}
 		case 3:
 		{
@@ -322,7 +326,7 @@ void BuildModeMenu(int client, int mode, const char[] name)
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "5杀随机获得钻石|8杀随机获得钻石+信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "使用电击枪/刀杀随机获得信用点或钻石");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "单幅地图击杀30人以上随机获得钻石或信用点");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "当日在线奖励(60分钟1钻石|150分钟5钻石|300分钟10钻石)[测试]");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "当日在线奖励(60分钟1钻石|150分钟5钻石|300分钟10钻石)");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每隔5分钟随机抽300信用点/随机皮肤/MVIP/限定皮肤");
 		}
 	}
