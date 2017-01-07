@@ -294,27 +294,27 @@ void BuildModeMenu(int client, int mode, const char[] name)
 		}
 		case 2:
 		{
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "通关神图的幸存者获得随机数量的钻石或信用点");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "通关神图的幸存者获得随机数量的钻石和信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "通关神图后所有玩家参与抽取皮肤/限定皮肤");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "爆头击杀僵尸即可获得随机数量的钻石或信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "一局爆菊10个人类获得随机数量的钻石或信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "一局伤害输出前五名奖励随机数量钻石或信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "积极断后即可有机会奖励随机数量钻石或信用点");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "续命屏障|救人冰冻奖励随机数量钻石或信用点");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "救人冰冻[保全2个以上队友]随机奖励钻石或信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "在地图时间累计击杀10只僵尸即可获得钻石或信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "在地图时间累计感染30个人类即可获得钻石或信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每隔5分钟随机抽夕立改二|普鲁鲁特|艾米莉亚|500信用点");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "当日在线奖励(60分钟2钻石|150分钟10钻石|300分钟20钻石)");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "当日在线奖励(60分钟2钻石|150分钟8钻石|300分钟15钻石)");
 		}
 		case 3:
 		{
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "刀杀/电死玩家会有概率获得钻石或信用点[击杀狗OP概率翻倍]");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "地图结束时(>30分钟)获得玩家得分*1的信用点|*5%%的钻石");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "地图结束时(>25分钟)获得玩家得分*1的信用点|*5%%的钻石");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每局菠菜获胜的玩家可以选择将信用点转换成钻石");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每句菠菜失败的玩家有一定概率获得返还信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "投掷物击杀将会获得[15~30]信用点奖励");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "爆头击杀玩家有概率获得[1~250]信用点奖励|[1~3]钻石");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "EndGame中1V1获胜的玩家有概率获得[10~50]信用点奖励");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "爆头击杀玩家有概率获得[1~50]信用点奖励|[1~3]钻石");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "EndGame中1V1获胜的玩家有概率获得[15~30]信用点奖励");
 		}
 		case 4:
 		{
