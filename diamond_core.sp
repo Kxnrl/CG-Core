@@ -9,6 +9,7 @@ Handle g_hDatabase;
 int g_iDiamonds[MAXPLAYERS+1];
 bool g_bLoaded[MAXPLAYERS+1];
 bool g_bPackage[MAXPLAYERS+1];
+bool g_bTradeLnk[MAXPLAYERS+1];
 
 public Plugin myinfo = 
 {
@@ -45,7 +46,7 @@ public int Native_SetClientDiamond(Handle plugin, int numParams)
 	int counts = GetNativeCell(2);
 	if(IsValidClient(client) && IsAllowClient(client) && g_bLoaded[client])
 	{
-		if(counts > 255) counts = 255;
+		if(counts > 9999) counts = 9999;
 		int diff = counts - g_iDiamonds[client];
 		if(diff != 0)
 		{
@@ -86,19 +87,19 @@ void BuildMainMenu(int client)
 {
 	if(CG_GetPlayerID(client) < 1)
 	{
-		PrintToChat(client, "[\x0E新年活动\x01]   未知错误,请联系管理员");
+		PrintToChat(client, "%s  未知错误,请联系管理员", PREFIX);
 		return;
 	}
 	
 	if(CG_GetDiscuzUID(client) < 1)
 	{
-		PrintToChat(client, "[\x0E新年活动\x01]   欲参加此活动请先注册论坛");
+		PrintToChat(client, "%s  欲参加此活动请先注册论坛", PREFIX);
 		return;
 	}
 	
 	if(!g_bLoaded[client])
 	{
-		PrintToChat(client, "[\x0E新年活动\x01]   你的数据尚未加载完毕");
+		PrintToChat(client, "%s  你的数据尚未加载完毕", PREFIX);
 		return;
 	}
 
@@ -154,12 +155,12 @@ void BuildKeysMenu(int client, int keys)
 	if(!IsAllowClient(client) || !g_bLoaded[client])
 		return;
 	
-	int left = 10 - keys;
+	int left = 30 - keys;
 
 	Handle menu = CreateMenu(MenuHandler_KeysMenu);
-	SetMenuTitleEx(menu, "[CG]  新年活动 - 兑换CSGO钥匙\n钻石: %d\n今日剩余兑换数量: %d[活动测试期间每天限10个]", g_iDiamonds[client], left);
+	SetMenuTitleEx(menu, "[CG]  新年活动 - 兑换CSGO钥匙\n钻石: %d\n今日剩余兑换数量: %d", g_iDiamonds[client], left);
 
-	AddMenuItemEx(menu, keys > 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "0", "兑换一把CSGO钥匙[200钻石]%s", keys > 0 ? "" : "明天再来吧");
+	AddMenuItemEx(menu, left > 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "0", "兑换一把CSGO钥匙[200钻石]%s", left > 0 ? "" : "明天再来吧");
 	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "1", "抽奖一把CSGO钥匙[20钻石]");
 	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "2", "参与CSGO钥匙夺宝[10钻石]");
 
@@ -174,6 +175,12 @@ public int MenuHandler_KeysMenu(Handle menu, MenuAction action, int client, int 
 	{
 		if(!IsAllowClient(client) || !g_bLoaded[client])
 			return;
+		
+		if(!g_bTradeLnk[client])
+		{
+			tPrintToChat(client, "%s  \x04请先到论坛填写Steam交易链接再来兑换吧", PREFIX);
+			return;
+		}
 
 		char info[32], name[32];
 		GetMenuItem(menu, itemNum, info, 32, _, name, 32);
@@ -370,6 +377,7 @@ public void OnClientPutInServer(int client)
 {
 	g_bLoaded[client] = false;
 	g_bPackage[client] = false;
+	g_bTradeLnk[client] = false;
 	g_iDiamonds[client] = -1;
 }
 
@@ -377,7 +385,7 @@ void LoadClient(int client)
 {
 	char m_szAuth[32], m_szQuery[256];
 	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-	Format(m_szQuery, 256, "SELECT `diamonds`,`package` FROM `playertrack_diamonds` WHERE `playerid` = '%d' AND `dzid` = '%d' AND `steamid` = '%s' ORDER BY `playerid` ASC LIMIT 1;", CG_GetPlayerID(client), CG_GetDiscuzUID(client), m_szAuth);
+	Format(m_szQuery, 256, "SELECT `diamonds`,`package`,`tradelink` FROM `playertrack_diamonds` WHERE `playerid` = '%d' AND `dzid` = '%d' AND `steamid` = '%s' ORDER BY `playerid` ASC LIMIT 1;", CG_GetPlayerID(client), CG_GetDiscuzUID(client), m_szAuth);
 	SQL_TQuery(g_hDatabase, SQLCallback_LoadClient, m_szQuery, GetClientUserId(client));
 }
 
@@ -411,6 +419,7 @@ public void SQLCallback_LoadClient(Handle owner, Handle hndl, const char[] error
 		g_iDiamonds[client] = SQL_FetchInt(hndl, 0);
 		g_bPackage[client] = SQL_FetchInt(hndl, 1) == 0 ? true : false;
 		g_bLoaded[client] = true;
+		g_bTradeLnk[client] = !SQL_IsFieldNull(hndl, 2);
 	}
 	else if(IsValidClient(client) && IsAllowClient(client))
 	{
@@ -438,6 +447,8 @@ public void SQLCallback_NewClient(Handle owner, Handle hndl, const char[] error,
 	}
 	
 	g_bLoaded[client] = true;
+	g_bPackage[client] = true;
+	g_bTradeLnk[client] = false;
 	g_iDiamonds[client] = 0;
 }
 
