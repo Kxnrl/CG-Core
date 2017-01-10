@@ -79,7 +79,8 @@ public Action Command_Menu(int client, int args)
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "radio", "%t", "main radio desc");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "online", "%t", "main online desc");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "setrp", "%t", "main setrp desc");
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "huodo", "新年活动");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "huodo", "%t", "main new year act");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "lang", "%t", "main select language");
 
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 0);
@@ -176,4 +177,32 @@ public Action Command_GetAuth(int client, int args)
 	DisplayMenu(menu, client, 0);
 	
 	return Plugin_Handled;
+}
+
+public Action Command_Language(int client, int args)
+{
+	int newlang;
+	switch(GetClientLanguage(client))
+	{
+		case 0:
+		{
+			newlang = 23;
+			tPrintToChat(client, "%s  你的语言已切换为\x04简体中文", PLUGIN_PREFIX);
+		}
+		case 23:
+		{
+			newlang = 27;
+			tPrintToChat(client, "%s  你的語言已經切換到\x04繁體中文", PLUGIN_PREFIX);
+		}
+		case 27:
+		{
+			newlang = 0;
+			tPrintToChat(client, "%s  you language has been changed to \x04English", PLUGIN_PREFIX);
+		}
+	}
+
+	SetClientLanguage(client, newlang);
+	
+	if(args < 0)
+		FakeClientCommand(client, "sm_cg");
 }

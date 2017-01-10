@@ -29,7 +29,8 @@ void InitCommands()
 	RegConsoleCmd("sm_lily", Command_CP);
 	RegConsoleCmd("sm_cg", Command_Menu);
 	RegConsoleCmd("sm_qm", Command_Signature);
-	
+	RegConsoleCmd("sm_language", Command_Language);
+
 	RegAdminCmd("sm_reloadadv", Command_ReloadAdv, ADMFLAG_BAN);
 }
 
@@ -387,8 +388,10 @@ public int MenuHandler_CGMainMenu(Handle menu, MenuAction action, int client, in
 			FakeClientCommand(client, "sm_online");
 		else if(strcmp(info, "setrp") == 0)
 			FakeClientCommand(client, "sm_setrp");
-		else if(strcmp(info, "setrp") == 0)
+		else if(strcmp(info, "huodo") == 0)
 			FakeClientCommand(client, "sm_hd");
+		else if(strcmp(info, "lang") == 0)
+			Command_Language(client, -1);
 	}
 	else if(action == MenuAction_End)
 	{

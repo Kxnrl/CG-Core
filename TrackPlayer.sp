@@ -2,10 +2,10 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 377
-#define PLUGIN_VERSION " 6.1.6 - 2017/01/04 01:39 "
+#define Build 378
+#define PLUGIN_VERSION " 6.1.7 - 2017/01/10 07:12 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
-#define TRANSDATASIZE 12349
+#define TRANSDATASIZE 12577
 
 //////////////////////////////
 //			INCLUDES		//
