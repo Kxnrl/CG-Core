@@ -490,8 +490,12 @@ public int MenuHandler_Listener(Handle menu, MenuAction action, int client, int 
 			char auth[32], eSignature[512], m_szQuery[1024];
 			GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
 			SQL_EscapeString(g_hDB_csgo, g_eClient[client][szNewSignature], eSignature, 512);
-			Format(m_szQuery, 512, "UPDATE `playertrack_player` SET signature = '%s' WHERE id = '%d' and steamid = '%s'", eSignature, CG_GetPlayerID(client), auth);
-			CG_SaveDatabase(m_szQuery);
+			Format(m_szQuery, 512, "UPDATE `playertrack_player` SET signature = '%s' WHERE id = '%d' and steamid = '%s'", eSignature, g_eClient[client][iPlayerId], auth);
+			Handle data = CreateDataPack();
+			WritePackString(data, m_szQuery);
+			WritePackCell(data, 0);
+			ResetPack(data);
+			MySQL_Query(g_hDB_csgo, SQLCallback_SaveDatabase, m_szQuery, data);
 			tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "signature set successful");
 			strcopy(g_eClient[client][szSignature], 256, g_eClient[client][szNewSignature]);
 			ReplaceString(g_eClient[client][szNewSignature], 512, "{白}", "\x01");

@@ -2,16 +2,10 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 378
-#define PLUGIN_VERSION " 6.1.7 - 2017/01/10 07:12 "
+#define Build 379
+#define PLUGIN_VERSION " 6.1.8 - 2017/01/16 04:35 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12577
-
-//////////////////////////////
-//			INCLUDES		//
-//////////////////////////////
-#include <sourcemod>
-#include <cg_core>
 
 //////////////////////////////
 //			ENUMS			// 
@@ -121,9 +115,6 @@ public void OnPluginStart()
 {
 	//建立Log文件
 	BuildPath(Path_SM, g_szLogFile, 128, "logs/Core.log");
-	
-	//建立临时储存文件
-	BuildTempLogFile();
 	
 	//初始化日期
 	InitDate();

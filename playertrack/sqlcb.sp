@@ -65,6 +65,9 @@ public void SQL_TConnect_Callback_csgo(Handle owner, Handle hndl, const char[] e
 	MySQL_Query(g_hDB_csgo, SQLCallback_OnConnect, m_szQuery, DBPrio_Low);
 
 	g_iConnect_csgo = 1;
+	
+	//建立临时储存文件
+	BuildTempLogFile();
 }
 
 public void SQL_TConnect_Callback_discuz(Handle owner, Handle hndl, const char[] error, any data)
