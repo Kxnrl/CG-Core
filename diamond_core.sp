@@ -6,6 +6,7 @@
 
 Handle g_hDatabase;
 
+bool g_bStore;
 int g_iDiamonds[MAXPLAYERS+1];
 bool g_bLoaded[MAXPLAYERS+1];
 bool g_bPackage[MAXPLAYERS+1];
@@ -16,7 +17,7 @@ public Plugin myinfo =
     name		= "Diamonds Core",
     author		= "Kyle",
     description	= "",
-    version		= "1.1",
+    version		= "1.1.1",
     url			= "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -25,6 +26,16 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("CG_GetClientDiamond", Native_GetClientDiamond);
 	CreateNative("CG_SetClientDiamond", Native_SetClientDiamond);
 	
+	MarkNativeAsOptional("CG_Broadcast");
+
+	MarkNativeAsOptional("Store_GetClientCredits");
+	MarkNativeAsOptional("Store_SetClientCredits");
+	MarkNativeAsOptional("Store_GetItem");
+	MarkNativeAsOptional("Store_HasClientItem");
+	MarkNativeAsOptional("Store_GetItemExpiration");
+	MarkNativeAsOptional("Store_ExtClientItem");
+	MarkNativeAsOptional("Store_GiveItem");
+
 	if(late)
 		CG_OnServerLoaded();
 
@@ -72,6 +83,11 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_hd", Command_Active);
 }
 
+public void OnAllPluginsLoaded()
+{
+	if(FindPluginByFile("store.smx")) g_bStore = true;
+}
+
 public void OnMapStart()
 {
 	CG_OnServerLoaded();
@@ -104,12 +120,12 @@ void BuildMainMenu(int client)
 	}
 
 	Handle menu = CreateMenu(MenuHandler_MainMenu);
-	SetMenuTitleEx(menu, "[CG]  新年活动\n钻石: %d\n \n钻石可兑换:\nStore道具\nCSGO钥匙/皮肤\nCG专属道具", g_iDiamonds[client]);
+	SetMenuTitleEx(menu, "[CG]  新年活动\n钻石: %d\n \n钻石可兑换:\nStore道具\nCSGO钥匙\nCG专属道具", g_iDiamonds[client]);
 
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "view", "查看活动");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "earn", "查看奖励");
 	AddMenuItemEx(menu, g_iDiamonds[client] >= 200 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "keys", "兑换钥匙%s", g_iDiamonds[client] >= 200 ? "[可兑换]" : "[钻石不足]");
-	AddMenuItemEx(menu, g_bPackage[client] ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "pkge", "领取礼包%s", g_bPackage[client] ? "" : "[已领取]");
+	AddMenuItemEx(menu, (g_bStore && g_bPackage[client]) ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "pkge", "领取礼包%s", g_bPackage[client] ? "" : "[已领取]");
 
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 0);
@@ -158,9 +174,9 @@ void BuildKeysMenu(int client, int keys)
 	int left = 30 - keys;
 
 	Handle menu = CreateMenu(MenuHandler_KeysMenu);
-	SetMenuTitleEx(menu, "[CG]  新年活动 - 兑换CSGO钥匙\n钻石: %d\n今日剩余兑换数量: %d", g_iDiamonds[client], left);
+	SetMenuTitleEx(menu, "[CG]  新年活动 - 兑换CSGO钥匙\n钻石: %d", g_iDiamonds[client]);
 
-	AddMenuItemEx(menu, left > 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "0", "兑换一把CSGO钥匙[200钻石]%s", left > 0 ? "" : "明天再来吧");
+	AddMenuItemEx(menu, left > 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "0", "兑换一把CSGO钥匙[200钻石]%s", left > 0 ? "" : " *明天再来吧*");
 	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "1", "抽奖一把CSGO钥匙[20钻石]");
 	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "2", "参与CSGO钥匙夺宝[10钻石]");
 
@@ -533,7 +549,7 @@ public void SQLCallback_PorcKey(Handle owner, Handle hndl, const char[] error, i
 	CG_SaveForumData(m_szQuery);
 
 	PrintToChat(client, "%s  \x04兑换成功,你兑换了一个CSGO钥匙", PREFIX);
-	PrintToChat(client, "%s  \x04为保证奖品发放,若未在论坛填写steam交易链接,请及时填写", PREFIX);
+	PrintToChat(client, "%s  \x04请等待管理员审核并发放奖品", PREFIX);
 }
 
 public void SQLCallback_ExchangeKey(Handle owner, Handle hndl, const char[] error, int userid)
