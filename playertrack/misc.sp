@@ -349,7 +349,7 @@ void PrintConsoleInfo(int client)
 	PrintToConsole(client, "其他命令： !sign  [每日签到]  !hide    [屏蔽足迹霓虹]  !tp/!seeme [第三人称视角]");
 	PrintToConsole(client, "玩家认证： !rz    [查询认证]");
 	PrintToConsole(client, "搞基系统： !cp    [功能菜单]");
-	PrintToConsole(client, "势力系统： !faith [功能菜单]  !fhelp   [帮助菜单]");
+	PrintToConsole(client, "天赋系统： !talent[功能菜单]");
 	PrintToConsole(client, "                                                                                               ");
 	PrintToConsole(client, "-----------------------------------------------------------------------------------------------");		
 	PrintToConsole(client, "                                                                                               ");
