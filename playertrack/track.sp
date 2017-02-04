@@ -19,19 +19,19 @@ public Action Timer_Tracking(Handle timer)
 		char m_szAuth[32];
 		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
 
-		KvJumpToKey(g_hKeyValue, m_szAuth, true);
+		KvJumpToKey(g_eHandle[KV_Local], m_szAuth, true);
 		
-		KvSetNum(g_hKeyValue, "PlayerId", g_eClient[client][iPlayerId]);
-		KvSetNum(g_hKeyValue, "Connect", g_eClient[client][iConnectTime]);
-		KvSetNum(g_hKeyValue, "TrackID", g_eClient[client][iAnalyticsId]);
-		KvSetString(g_hKeyValue, "IP", g_eClient[client][szIP]);
-		KvSetNum(g_hKeyValue, "LastTime", GetTime());
-		KvSetString(g_hKeyValue, "Flag", g_eClient[client][szAdminFlags]);
+		KvSetNum(g_eHandle[KV_Local], "PlayerId", g_eClient[client][iPlayerId]);
+		KvSetNum(g_eHandle[KV_Local], "Connect", g_eClient[client][iConnectTime]);
+		KvSetNum(g_eHandle[KV_Local], "TrackID", g_eClient[client][iAnalyticsId]);
+		KvSetString(g_eHandle[KV_Local], "IP", g_eClient[client][szIP]);
+		KvSetNum(g_eHandle[KV_Local], "LastTime", GetTime());
+		KvSetString(g_eHandle[KV_Local], "Flag", g_eClient[client][szAdminFlags]);
 		
-		KvRewind(g_hKeyValue);
+		KvRewind(g_eHandle[KV_Local]);
 	}
 
-	KeyValuesToFile(g_hKeyValue, g_szTempFile);
+	KeyValuesToFile(g_eHandle[KV_Local], g_szTempFile);
 }
 
 public void OnGetClientCVAR(QueryCookie cookie, int client, ConVarQueryResult result, char [] cvarName, char [] cvarValue)
@@ -66,7 +66,7 @@ public Action Timer_HandleConnect(Handle timer, int userid)
 	GetCurrentMap(map, 128);
 
 	Format(g_eClient[client][szInsertData], 512, "INSERT INTO `playertrack_analytics` (`playerid`, `connect_time`, `connect_date`, `serverid`, `map`, `ip`) VALUES ('%d', '%d', '%s', '%d', '%s', '%s')", g_eClient[client][iPlayerId], g_eClient[client][iConnectTime], date, g_iServerId, map, g_eClient[client][szIP]);
-	MySQL_Query(g_hDB_csgo, SQLCallback_InsertPlayerStat, g_eClient[client][szInsertData], g_eClient[client][iUserId]);
+	MySQL_Query(g_eHandle[DB_Game], SQLCallback_InsertPlayerStat, g_eClient[client][szInsertData], GetClientUserId(client));
 
 	return Plugin_Stop;
 }
@@ -90,16 +90,16 @@ void SaveClient(int client)
 
 	//开始SQL查询操作
 	char m_szBuffer[128];
-	SQL_EscapeString(g_hDB_csgo, username, m_szBuffer, 128);	
+	SQL_EscapeString(g_eHandle[DB_Game], username, m_szBuffer, 128);	
 
 	Format(g_eClient[client][szUpdateData], 512, "UPDATE playertrack_player AS a, playertrack_analytics AS b SET a.name = '%s', a.onlines = a.onlines+%d, a.lastip = '%s', a.lasttime = '%d', a.number = a.number+1, a.flags = '%s', b.duration = '%d' WHERE a.id = '%d' AND b.id = '%d' AND a.steamid = '%s' AND b.playerid = '%d'", m_szBuffer, duration, g_eClient[client][szIP], GetTime(), g_eClient[client][szAdminFlags], duration, g_eClient[client][iPlayerId], g_eClient[client][iAnalyticsId], m_szAuth, g_eClient[client][iPlayerId]);
 
-	MySQL_Query(g_hDB_csgo, SQLCallback_SaveClientStat, g_eClient[client][szUpdateData], g_eClient[client][iUserId], DBPrio_High);
+	MySQL_Query(g_eHandle[DB_Game], SQLCallback_SaveClientStat, g_eClient[client][szUpdateData], GetClientUserId(client), DBPrio_High);
 	
-	if(KvJumpToKey(g_hKeyValue, m_szAuth))
+	if(KvJumpToKey(g_eHandle[KV_Local], m_szAuth))
 	{
-		KvDeleteThis(g_hKeyValue);
-		KvRewind(g_hKeyValue);
-		KeyValuesToFile(g_hKeyValue, g_szTempFile);
+		KvDeleteThis(g_eHandle[KV_Local]);
+		KvRewind(g_eHandle[KV_Local]);
+		KeyValuesToFile(g_eHandle[KV_Local], g_szTempFile);
 	}
 }

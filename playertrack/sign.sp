@@ -56,7 +56,7 @@ public void ProcessingLogin(int client)
 
 	char m_szQuery[500];
 	Format(m_szQuery, 256, "SELECT signnumber,signtime FROM playertrack_player WHERE id = %d ", g_eClient[client][iPlayerId]);
-	MySQL_Query(g_hDB_csgo, SQLCallback_GetSigninStat, m_szQuery, g_eClient[client][iUserId]);
+	MySQL_Query(g_eHandle[DB_Game], SQLCallback_GetSigninStat, m_szQuery, GetClientUserId(client));
 	
 	g_eClient[client][bLoginProc] = true;
 }

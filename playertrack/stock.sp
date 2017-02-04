@@ -2,11 +2,11 @@ stock bool MySQL_Query(Handle database, SQLTCallback callback, const char[] quer
 {
 	if(database == INVALID_HANDLE)
 	{
-		if(database == g_hDB_csgo)
+		if(database == g_eHandle[DB_Game])
 		{
 			SQL_TConnect_csgo();
 		}
-		else if(database == g_hDB_discuz)
+		else if(database == g_eHandle[DB_Discuz])
 		{
 			SQL_TConnect_discuz();
 		}

@@ -11,13 +11,6 @@ void InitDate()
 	g_iNowDate = StringToInt(m_szDate);
 }
 
-void InitConVar()
-{
-	g_hCVAR = FindConVar("sv_hibernate_when_empty");
-	SetConVarInt(g_hCVAR, 0);
-	HookConVarChange(g_hCVAR, OnSettingChanged);
-}
-
 void InitCommands()
 {
 	RegConsoleCmd("sm_sign", Command_Login);
@@ -36,45 +29,121 @@ void InitCommands()
 
 void InitForward()
 {
-	g_fwdOnServerLoaded = CreateGlobalForward("CG_OnServerLoaded", ET_Ignore, Param_Cell);
-	g_fwdOnAPIStoreSetCredits = CreateGlobalForward("CG_APIStoreSetCredits", ET_Event, Param_Cell, Param_Cell, Param_String, Param_Cell);
-	g_fwdOnAPIStoreGetCredits = CreateGlobalForward("CG_APIStoreGetCredits", ET_Event, Param_Cell);
-	g_fwdOnClientDailySign = CreateGlobalForward("CG_OnClientDailySign", ET_Ignore, Param_Cell);
-	g_fwdOnClientDataLoaded = CreateGlobalForward("CG_OnClientLoaded", ET_Ignore, Param_Cell);
-	g_fwdOnClientAuthLoaded = CreateGlobalForward("PA_OnClientLoaded", ET_Ignore, Param_Cell);
-	g_fwdOnCPCouple = CreateGlobalForward("CP_OnCPCouple", ET_Ignore, Param_Cell, Param_Cell);
-	g_fwdOnCPDivorce = CreateGlobalForward("CP_OnCPDivorce", ET_Ignore, Param_Cell, Param_Cell);
-	g_fwqOnNewDay = CreateGlobalForward("CG_OnNewDay", ET_Ignore, Param_Cell);
-	g_fwqOnCheckAuthTerm = CreateGlobalForward("CG_OnCheckAuthTerm", ET_Event, Param_Cell, Param_Cell);
-	
-	g_fwdOnClientVipChecked = CreateForward(ET_Ignore, Param_Cell);
+	g_Forward[ServerLoaded] = CreateGlobalForward("CG_OnServerLoaded", ET_Ignore);
+	g_Forward[APISetCredits] = CreateGlobalForward("CG_APIStoreSetCredits", ET_Event, Param_Cell, Param_Cell, Param_String, Param_Cell);
+	g_Forward[APIGetCredits] = CreateGlobalForward("CG_APIStoreGetCredits", ET_Event, Param_Cell);
+	g_Forward[ClientSigned] = CreateGlobalForward("CG_OnClientDailySign", ET_Ignore, Param_Cell);
+	g_Forward[ClientLoaded] = CreateGlobalForward("CG_OnClientLoaded", ET_Ignore, Param_Cell);
+	g_Forward[ClientMarried] = CreateGlobalForward("CG_OnLilyCouple", ET_Ignore, Param_Cell, Param_Cell);
+	g_Forward[ClientDivorce] = CreateGlobalForward("CG_OnLilyDivorce", ET_Ignore, Param_Cell, Param_Cell);
+	g_Forward[OnNewDay] = CreateGlobalForward("CG_OnNewDay", ET_Ignore, Param_Cell);
+	g_Forward[ClientAuthTerm] = CreateGlobalForward("CG_OnCheckAuthTerm", ET_Event, Param_Cell, Param_Cell);
+
+	g_eEvents[round_start] = CreateGlobalForward("CG_OnRoundStart", ET_Ignore);
+	g_eEvents[round_end] = CreateGlobalForward("CG_OnRoundEnd", ET_Ignore, Param_Cell);
+	g_eEvents[player_spawn] = CreateGlobalForward("CG_OnClientSpawn", ET_Ignore, Param_Cell);
+	g_eEvents[player_death] = CreateGlobalForward("CG_OnClientDeath", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_String);
+	g_eEvents[player_hurt] = CreateGlobalForward("CG_OnClientHurted", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_String);
+	g_eEvents[player_team] = CreateGlobalForward("CG_OnClientTeam", ET_Ignore, Param_Cell);
+	g_eEvents[player_jump] = CreateGlobalForward("CG_OnClientJump", ET_Ignore, Param_Cell);
+	g_eEvents[weapon_fire] = CreateGlobalForward("CG_OnClientFire", ET_Ignore, Param_Cell, Param_String);
+
+	g_Forward[ClientVipChecked] = CreateForward(ET_Ignore, Param_Cell);
 	CreateNative("HookClientVIPChecked", Native_HookOnClientVipChecked);
 }
 
 void InitNative()
 {
-	CreateNative("CG_GetServerID", Native_GetServerID);
-	CreateNative("CG_GetOnlines", Native_GetOnlines);
-	CreateNative("CG_GetVitality", Native_GetVitality);
-	CreateNative("CG_GetLastseen", Native_GetLastseen);
-	CreateNative("CG_GetPlayerID", Native_GetPlayerID);
-	CreateNative("CG_GetSignature", Native_GetSingature);
-	CreateNative("CG_GetDiscuzUID", Native_GetDiscuzUID);
-	CreateNative("CG_GetDiscuzName", Native_GetDiscuzName);
-	CreateNative("CG_GetGameDatabase", Native_GetGameDatabase);
-	CreateNative("CG_GetDiscuzDatabase", Native_GetDiscuzDatabase);
-	CreateNative("CG_SaveDatabase", Native_SaveDatabase);
-	CreateNative("CG_SaveForumData", Native_SaveForumData);
-	CreateNative("VIP_IsClientVIP", Native_IsClientVIP);
-	CreateNative("VIP_SetClientVIP", Native_SetClientVIP);
-	CreateNative("VIP_GetVipType", Native_GetVipType);
-	CreateNative("PA_GetGroupID", Native_GetGroupID);
-	CreateNative("PA_GetGroupName", Native_GetGroupName);
-	CreateNative("CP_GetPartner", Native_GetCPPartner);
-	CreateNative("CP_GetDate", Native_GetCPDate);
+	CreateNative("CG_GetServerId", Native_GetServerID);
+	CreateNative("CG_GetClientOnlines", Native_GetOnlines);
+	CreateNative("CG_GetClientVitality", Native_GetVitality);
+	CreateNative("CG_GetClientLastseen", Native_GetLastseen);
+	CreateNative("CG_GetClientId", Native_GetPlayerID);
+	CreateNative("CG_GetClientUId", Native_GetDiscuzUID);
+	CreateNative("CG_GetClientGId", Native_GetGroupID);
+	CreateNative("CG_GetClientVip", Native_GetVipType);
+	CreateNative("CG_GetClientPartner", Native_GetCPPartner);
+	CreateNative("CG_GetClientLilyDate", Native_GetCPDate);
+	CreateNative("CG_IsClientVIP", Native_IsClientVIP);
 	CreateNative("CG_ShowNormalMotd", Native_ShowNormalMotd);
 	CreateNative("CG_ShowHiddenMotd", Native_ShowHiddenMotd);
 	CreateNative("CG_RemoveMotd", Native_RemoveMotd);
+	CreateNative("CG_SetClientVIP", Native_SetClientVIP);
+	CreateNative("CG_SaveDatabase", Native_SaveDatabase);
+	CreateNative("CG_SaveForumData", Native_SaveForumData);
+	CreateNative("CG_GetClientSignature", Native_GetSingature);
+	CreateNative("CG_GetClientDName", Native_GetDiscuzName);
+	CreateNative("CG_GetClientGName", Native_GetGroupName);
+	CreateNative("CG_GetGameDatabase", Native_GetGameDatabase);
+	CreateNative("CG_GetDiscuzDatabase", Native_GetDiscuzDatabase);
+}
+
+void InitEvents()
+{
+	//Hook 回合开始
+	if(!HookEventEx("round_start", Event_RoundStart, EventHookMode_Post))
+		LogToFileEx(g_szLogFile, "Hook Event \"round_start\" Failed");
+	
+	//Hook 回合结束
+	if(!HookEventEx("round_end", Event_RoundEnd, EventHookMode_Post))
+		LogToFileEx(g_szLogFile, "Hook Event \"round_end\" Failed");
+	
+	//Hook 玩家出生
+	if(!HookEventEx("player_spawn", Event_PlayerSpawn, EventHookMode_Post))
+		LogToFileEx(g_szLogFile, "Hook Event \"player_spawn\" Failed");
+
+	//Hook 玩家死亡
+	if(!HookEventEx("player_death", Event_PlayerDeath, EventHookMode_Post))
+		LogToFileEx(g_szLogFile, "Hook Event \"player_death\" Failed");
+	
+	//Hook 玩家受伤
+	if(!HookEventEx("player_hurt", Event_PlayerHurts, EventHookMode_Post))
+		LogToFileEx(g_szLogFile, "Hook Event \"player_hurt\" Failed");
+	
+	//Hook 玩家队伍
+	if(!HookEventEx("player_team", Event_PlayerTeam, EventHookMode_Pre))
+		LogToFileEx(g_szLogFile, "Hook Event \"player_team\" Failed");
+
+	//Hook 玩家跳跃
+	if(!HookEventEx("player_jump", Event_PlayerJump, EventHookMode_Post))
+		LogToFileEx(g_szLogFile, "Hook Event \"player_jump\" Failed");
+	
+	//Hook 武器射击
+	if(!HookEventEx("weapon_fire", Event_WeaponFire, EventHookMode_Post))
+		LogToFileEx(g_szLogFile, "Hook Event \"weapon_fire\" Failed");
+}
+
+void InitClient(int client)
+{
+	g_eClient[client][bLoaded] = false;
+	g_eClient[client][bListener] = false;
+	g_eClient[client][bLoginProc] = false;
+	g_eClient[client][bAllowLogin] = false;
+	g_eClient[client][bTwiceLogin] = false;
+	g_eClient[client][iUID] = -1;
+	g_eClient[client][iSignNum] = 0;
+	g_eClient[client][iSignTime] = 0;
+	g_eClient[client][iConnectTime] = GetTime();
+	g_eClient[client][iPlayerId] = 0;
+	g_eClient[client][iNumber] = 0;
+	g_eClient[client][iOnline] = 0;
+	g_eClient[client][iVitality] = 0
+	g_eClient[client][iLastseen] = 0;
+	g_eClient[client][iDataRetry] = 0;
+	g_eClient[client][iAnalyticsId] = -1;
+	g_eClient[client][iVipType] = 0;
+	g_eClient[client][iGroupId] = 0;
+	g_eClient[client][iCPId] = -2;
+	g_eClient[client][iCPDate] = 0;
+
+	strcopy(g_eClient[client][szIP], 32, "127.0.0.1");
+	strcopy(g_eClient[client][szSignature], 256, "数据读取中...");
+	strcopy(g_eClient[client][szDiscuzName], 256, "未注册");
+	strcopy(g_eClient[client][szAdminFlags], 64, "Unknown");
+	strcopy(g_eClient[client][szInsertData], 512, "");
+	strcopy(g_eClient[client][szUpdateData], 512, "");
+	strcopy(g_eClient[client][szGroupName], 64, "未认证");
+	strcopy(g_eClient[client][szNewSignature], 256, "");
 }
 
 void GetNowDate()
@@ -83,31 +152,31 @@ void GetNowDate()
 	FormatTime(m_szDate, 64, "%Y%m%d", GetTime());
 	int iDate = StringToInt(m_szDate);
 	if(iDate > g_iNowDate)
-		OnNewDay(iDate);
+		OnNewDayForward(iDate);
 }
 
 void BuildTempLogFile()
 {
 	BuildPath(Path_SM, g_szTempFile, 128, "data/core.track.kv.txt");
 	
-	if(g_hKeyValue != INVALID_HANDLE)
-		CloseHandle(g_hKeyValue);
+	if(g_eHandle[KV_Local] != INVALID_HANDLE)
+		CloseHandle(g_eHandle[KV_Local]);
 	
-	g_hKeyValue = CreateKeyValues("core_track", "", "");
+	g_eHandle[KV_Local] = CreateKeyValues("core_track", "", "");
 	
-	FileToKeyValues(g_hKeyValue, g_szTempFile);
+	FileToKeyValues(g_eHandle[KV_Local], g_szTempFile);
 	
-	while(KvGotoFirstSubKey(g_hKeyValue, true))
+	while(KvGotoFirstSubKey(g_eHandle[KV_Local], true))
 	{
 		char m_szAuthId[32], m_szQuery[512], m_szIp[16], m_szFlag[32];
-		KvGetSectionName(g_hKeyValue, m_szAuthId, 32);
+		KvGetSectionName(g_eHandle[KV_Local], m_szAuthId, 32);
 		
-		int m_iPlayerId = KvGetNum(g_hKeyValue, "PlayerId", 0);
-		int m_iConnect = KvGetNum(g_hKeyValue, "Connect", 0);
-		int m_iTrackId = KvGetNum(g_hKeyValue, "TrackID", 0);
-		KvGetString(g_hKeyValue, "IP", m_szIp, 16, "127.0.0.1");
-		int m_iLastTime = KvGetNum(g_hKeyValue, "LastTime", 0);
-		KvGetString(g_hKeyValue, "Flag", m_szFlag, 32, "CG玩家");
+		int m_iPlayerId = KvGetNum(g_eHandle[KV_Local], "PlayerId", 0);
+		int m_iConnect = KvGetNum(g_eHandle[KV_Local], "Connect", 0);
+		int m_iTrackId = KvGetNum(g_eHandle[KV_Local], "TrackID", 0);
+		KvGetString(g_eHandle[KV_Local], "IP", m_szIp, 16, "127.0.0.1");
+		int m_iLastTime = KvGetNum(g_eHandle[KV_Local], "LastTime", 0);
+		KvGetString(g_eHandle[KV_Local], "Flag", m_szFlag, 32, "CG玩家");
 		int m_iOnlines = m_iLastTime - m_iConnect;
 		Format(m_szQuery, 512, "UPDATE playertrack_player AS a, playertrack_analytics AS b SET a.onlines = a.onlines+%d, a.lastip = '%s', a.lasttime = '%d', a.number = a.number+1, a.flags = '%s', b.duration = '%d' WHERE a.id = '%d' AND b.id = '%d' AND a.steamid = '%s' AND b.playerid = '%d'", m_iOnlines, m_szIp, m_iLastTime, m_szFlag, m_iOnlines, m_iPlayerId, m_iTrackId, m_szAuthId, m_iPlayerId);
 
@@ -121,19 +190,19 @@ void BuildTempLogFile()
 		WritePackCell(data, m_iLastTime);
 		WritePackString(data, m_szFlag);
 		ResetPack(data);
-		MySQL_Query(g_hDB_csgo, SQLCallback_SaveTempLog, m_szQuery, data);
+		MySQL_Query(g_eHandle[DB_Game], SQLCallback_SaveTempLog, m_szQuery, data);
 		
-		if(KvDeleteThis(g_hKeyValue))
+		if(KvDeleteThis(g_eHandle[KV_Local]))
 		{
 			char m_szAfter[32];
-			KvGetSectionName(g_hKeyValue, m_szAfter, 32);
+			KvGetSectionName(g_eHandle[KV_Local], m_szAfter, 32);
 			if(StrContains(m_szAfter, "STEAM", false) != -1)
-				KvGoBack(g_hKeyValue);
+				KvGoBack(g_eHandle[KV_Local]);
 		}
 	}
 	
-	KvRewind(g_hKeyValue);
-	KeyValuesToFile(g_hKeyValue, g_szTempFile);
+	KvRewind(g_eHandle[KV_Local]);
+	KeyValuesToFile(g_eHandle[KV_Local], g_szTempFile);
 }
 
 void LoadTranstion()
@@ -178,7 +247,7 @@ void SettingAdver()
 	{
 		char m_szQuery[128];
 		Format(m_szQuery, 128, "SELECT * FROM playertrack_adv WHERE sid = '%i' OR sid = '0'", g_iServerId);
-		MySQL_Query(g_hDB_csgo, SQLCallback_GetAdvData, m_szQuery, _, DBPrio_High);
+		MySQL_Query(g_eHandle[DB_Game], SQLCallback_GetAdvData, m_szQuery, _, DBPrio_High);
 	}
 }
 
@@ -347,7 +416,7 @@ void PrintConsoleInfo(int client)
 	PrintToConsole(client, "地图相关： !rtv   [滚动投票]  !revote  [重新选择]      !nominate  [预定地图]");
 	PrintToConsole(client, "娱乐相关： !music [点歌菜单]  !stop    [停止地图音乐]  !musicstop [停止点播歌曲]");
 	PrintToConsole(client, "其他命令： !sign  [每日签到]  !hide    [屏蔽足迹霓虹]  !tp/!seeme [第三人称视角]");
-	PrintToConsole(client, "玩家认证： !rz    [查询认证]");
+	PrintToConsole(client, "玩家认证： !track [查询认证]  !rz      [申请认证]");
 	PrintToConsole(client, "搞基系统： !cp    [功能菜单]");
 	PrintToConsole(client, "天赋系统： !talent[功能菜单]");
 	PrintToConsole(client, "                                                                                               ");
@@ -433,8 +502,8 @@ void BuildListenerMenu(int client)
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "ok", "%t", "signature item ok");
 	
 	SetMenuExitButton(menu, true);
-	DisplayMenu(menu, client, 120);
-	
+	DisplayMenu(menu, client, 60);
+
 	if(g_eClient[client][hListener] != INVALID_HANDLE)
 	{
 		KillTimer(g_eClient[client][hListener]);
@@ -442,7 +511,7 @@ void BuildListenerMenu(int client)
 	}
 
 	g_eClient[client][bListener] = true;
-	g_eClient[client][hListener] = CreateTimer(120.0, Timer_ListenerTimeout, GetClientUserId(client));
+	g_eClient[client][hListener] = CreateTimer(60.0, Timer_ListenerTimeout, client);
 }
 
 public int MenuHandler_Listener(Handle menu, MenuAction action, int client, int itemNum)
@@ -489,13 +558,13 @@ public int MenuHandler_Listener(Handle menu, MenuAction action, int client, int 
 			
 			char auth[32], eSignature[512], m_szQuery[1024];
 			GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
-			SQL_EscapeString(g_hDB_csgo, g_eClient[client][szNewSignature], eSignature, 512);
+			SQL_EscapeString(g_eHandle[DB_Game], g_eClient[client][szNewSignature], eSignature, 512);
 			Format(m_szQuery, 512, "UPDATE `playertrack_player` SET signature = '%s' WHERE id = '%d' and steamid = '%s'", eSignature, g_eClient[client][iPlayerId], auth);
 			Handle data = CreateDataPack();
 			WritePackString(data, m_szQuery);
 			WritePackCell(data, 0);
 			ResetPack(data);
-			MySQL_Query(g_hDB_csgo, SQLCallback_SaveDatabase, m_szQuery, data);
+			MySQL_Query(g_eHandle[DB_Game], SQLCallback_SaveDatabase, m_szQuery, data);
 			tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "signature set successful");
 			strcopy(g_eClient[client][szSignature], 256, g_eClient[client][szNewSignature]);
 			ReplaceString(g_eClient[client][szNewSignature], 512, "{白}", "\x01");
@@ -520,12 +589,15 @@ public int MenuHandler_Listener(Handle menu, MenuAction action, int client, int 
 	}
 }
 
-public Action Timer_ListenerTimeout(Handle timer, int userid)
+public Action Timer_ListenerTimeout(Handle timer, int client)
+{
+	g_eClient[client][hListener] = INVALID_HANDLE;
+	g_eClient[client][bListener] = false;
+}
+
+public Action Timer_ReLoadClient(Handle timer, int userid)
 {
 	int client = GetClientOfUserId(userid);
 	if(client && IsClientInGame(client))
-	{
-		g_eClient[client][bListener] = false;
-		g_eClient[client][hListener] = INVALID_HANDLE;
-	}
+		OnClientPostAdminCheck(client);
 }

@@ -33,7 +33,7 @@ public void CheckClientAuthTerm(int client, int AuthId)
 		GetClientAuthId(client, AuthId_Steam2, m_szAuthId, 32, true);
 		GetClientAuthName(client, g_eClient[client][szGroupName], 32);
 		Format(m_szQuery, 256, "UPDATE `playertrack_player` SET `groupid` = '%d', `groupname` = '%s' WHERE `id` = '%d' and `steamid` = '%s';", AuthId, g_eClient[client][szGroupName], g_eClient[client][iPlayerId], m_szAuthId);
-		MySQL_Query(g_hDB_csgo, SQLCallback_GiveAuth, m_szQuery, GetClientUserId(client));
+		MySQL_Query(g_eHandle[DB_Game], SQLCallback_GiveAuth, m_szQuery, GetClientUserId(client));
 		tPrintToChat(client, "%s  {blue}正在同步数据库...", PLUGIN_PREFIX);
 	}
 	else

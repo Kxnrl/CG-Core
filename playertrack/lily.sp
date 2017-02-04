@@ -227,7 +227,7 @@ public void CP_AddNewCouple(int Neptune, int Noire)
 	//使用SQL函数 CALL
 	char m_szQuery[128];
 	Format(m_szQuery, 128, "CALL lily_addcouple(%d, %d)", g_eClient[Neptune][iPlayerId], g_eClient[Noire][iPlayerId]);
-	MySQL_Query(g_hDB_csgo, SQLCallback_UpdateCP, m_szQuery, m_hPack);
+	MySQL_Query(g_eHandle[DB_Game], SQLCallback_UpdateCP, m_szQuery, m_hPack);
 }
 
 void CheckingDivorce(int client)
@@ -254,7 +254,7 @@ void CheckingDivorce(int client)
 		//需要读取CP的名字来创建确认菜单
 		char m_szQuery[256];
 		Format(m_szQuery, 256, "SELECT id, name FROM `playertrack_player` WHERE lilyid = %d", g_eClient[client][iPlayerId]);
-		MySQL_Query(g_hDB_csgo, SQLCallback_CheckDivorce, m_szQuery, GetClientUserId(client));
+		MySQL_Query(g_eHandle[DB_Game], SQLCallback_CheckDivorce, m_szQuery, GetClientUserId(client));
 	}
 }
 
@@ -314,7 +314,7 @@ public int MenuHandler_CPConfirmDivorce(Handle menu, MenuAction action, int clie
 			//确认离婚之后更新数据库
 			char m_szQuery[256];
 			Format(m_szQuery, 256, "UPDATE `playertrack_player` SET lilyid = '-2', lilydate = 0 where id = %d or lilyid = %d", g_eClient[client][iPlayerId], g_eClient[client][iPlayerId]);
-			MySQL_Query(g_hDB_csgo, SQLCallback_UpdateDivorce, m_szQuery, m_hPack);
+			MySQL_Query(g_eHandle[DB_Game], SQLCallback_UpdateDivorce, m_szQuery, m_hPack);
 		}
 		case MenuAction_End:
 		{
