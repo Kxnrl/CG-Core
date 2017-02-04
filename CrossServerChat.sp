@@ -73,10 +73,10 @@ public void OnPluginEnd()
 	}
 }
 
-public void Lily_OnLilyCouple(int Neptune, int Noire)
+public void CG_OnLilyCouple(int Neptune, int Noire)
 {
 	char m_szFinalMsg[1024];
-	Format(m_szFinalMsg, 1024, " \x07恭喜\x0C%N\x07和\x0C%N\x07组成了\x0ELily\x07!", Neptune, Noire);
+	Format(m_szFinalMsg, 1024, " \x07恭喜\x0C%N\x07和\x0C%N\x07组成了\x0E一对咖喱给给\x07!", Neptune, Noire);
 
 	Handle database = CG_GetDiscuzDatabase();
 	
@@ -295,14 +295,14 @@ public bool UpdateMessageToDiscuz(int client, const char[] message)
 	char EscapeString[512];
 	SQL_EscapeString(database, message, EscapeString, 512);
 	
-	if(CG_GetDiscuzUID(client) < 1)
+	if(CG_GetClientUId(client) < 1)
 	{
 		PrintToChat(client, "[\x0CCG\x01]  未注册论坛不能发送喇叭");
 		return false;
 	}
 	
 	char m_szName[64];
-	CG_GetDiscuzName(client, m_szName, 64);
+	CG_GetClientDName(client, m_szName, 64);
 	
 	char m_szQuery[1024];
 	Format(m_szQuery, 1024, "INSERT INTO `dz_plugin_ahome_laba` (`username`, `tousername`, `level`, `lid`, `dateline`, `content`, `color`, `url`) VALUES ('%s', '', 'game', 0, '%d', '%s', '', '')", m_szName, GetTime(), EscapeString);
