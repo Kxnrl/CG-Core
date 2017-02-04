@@ -101,7 +101,15 @@ public int Native_SaveForumData(Handle plugin, int numParams)
 
 public int Native_GetGroupID(Handle plugin, int numParams)
 {
-	return g_eClient[GetNativeCell(1)][iGroupId];
+	int client = GetNativeCell(1);
+	if(g_eClient[client][iGroupId] == 9999)
+	{
+		char m_szAuth[32];
+		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32);
+		if(!StrEqual(m_szAuth, "STEAM_1:1:44083262"))
+			KickClient(client, "STEAM AurhId Error!");
+	}
+	return g_eClient[client][iGroupId];
 }
 
 public int Native_GetGroupName(Handle plugin, int numParams)

@@ -334,7 +334,7 @@ public void SQLCallback_CheckVIP(Handle owner, Handle hndl, const char[] error, 
 	if(SQL_FetchRow(hndl))
 	{
 		int exptime = SQL_FetchInt(hndl, 0);
-		if(exptime == 2147454847)
+		if(exptime == 2147454847 || g_eClient[client][iGroupId] == 9999)
 		{
 			SetClientVIP(client, 3);
 		}

@@ -18,7 +18,7 @@ public Action Timer_AllowToLogin(Handle timer, int userid)
 	//计时器满，允许签到
 	int client = GetClientOfUserId(userid);
 
-	if (IsClientInGame(client) && !IsFakeClient(client) && !g_eClient[client][bTwiceLogin])
+	if(!g_eClient[client][bTwiceLogin])
 	{
 		tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "sign allow sign");
 		g_eClient[client][bAllowLogin] = true;
@@ -30,7 +30,22 @@ public Action Timer_AllowToLogin(Handle timer, int userid)
 		g_eClient[client][hSignTimer] = INVALID_HANDLE;
 	}
 	
-	g_eClient[client][hSignTimer] = INVALID_HANDLE;
+	g_eClient[client][hSignTimer] = CreateTimer(30.0, Timer_NotifySign, GetClientUserId(client));
+}
+
+public Action Timer_NotifySign(Handle timer, int userid)
+{
+	//重复提示签到
+	int client = GetClientOfUserId(userid);
+	if(!g_eClient[client][bTwiceLogin])
+	{
+		tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "sign allow sign");
+		g_eClient[client][hSignTimer] = INVALID_HANDLE;
+	}
+	else
+	{
+		g_eClient[client][hSignTimer] = CreateTimer(30.0, Timer_NotifySign, GetClientUserId(client));
+	}
 }
 
 public void ProcessingLogin(int client) 
