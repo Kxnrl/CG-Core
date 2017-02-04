@@ -6,7 +6,6 @@
 
 Handle g_hDatabase;
 
-bool g_bStore;
 int g_iDiamonds[MAXPLAYERS+1];
 bool g_bLoaded[MAXPLAYERS+1];
 bool g_bPackage[MAXPLAYERS+1];
@@ -27,14 +26,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("CG_SetClientDiamond", Native_SetClientDiamond);
 	
 	MarkNativeAsOptional("CG_Broadcast");
-
-	MarkNativeAsOptional("Store_GetClientCredits");
-	MarkNativeAsOptional("Store_SetClientCredits");
-	MarkNativeAsOptional("Store_GetItem");
-	MarkNativeAsOptional("Store_HasClientItem");
-	MarkNativeAsOptional("Store_GetItemExpiration");
-	MarkNativeAsOptional("Store_ExtClientItem");
-	MarkNativeAsOptional("Store_GiveItem");
 
 	if(late)
 		CG_OnServerLoaded();
@@ -64,7 +55,7 @@ public int Native_SetClientDiamond(Handle plugin, int numParams)
 			g_iDiamonds[client] = counts;
 			char m_szAuth[32], m_szQuery[256];
 			GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-			Format(m_szQuery, 256, "UPDATE `playertrack_diamonds` SET `diamonds` = `diamonds` + '%d' WHERE `playerid` = '%d' AND `dzid` = '%d' AND `steamid` = '%s'", diff, CG_GetPlayerID(client), CG_GetDiscuzUID(client), m_szAuth);
+			Format(m_szQuery, 256, "UPDATE `playertrack_diamonds` SET `diamonds` = `diamonds` + '%d' WHERE `playerid` = '%d' AND `dzid` = '%d' AND `steamid` = '%s'", diff, CG_GetClientId(client), CG_GetClientUId(client), m_szAuth);
 			SQL_TQuery(g_hDatabase, SQLCallback_SaveClient, m_szQuery, GetClientUserId(client));
 			PrintToChat(client, "%s  \x04你%s了\x10 %d钻石 \x04当前剩余\x01: \x10 %d钻石", PREFIX, (diff >= 0) ? "获得" : "失去", diff, g_iDiamonds[client]);
 			LoadClient(client); //prevent hack
@@ -83,11 +74,6 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_hd", Command_Active);
 }
 
-public void OnAllPluginsLoaded()
-{
-	if(FindPluginByFile("store.smx")) g_bStore = true;
-}
-
 public void OnMapStart()
 {
 	CG_OnServerLoaded();
@@ -101,13 +87,13 @@ public Action Command_Active(int client, int args)
 
 void BuildMainMenu(int client)
 {
-	if(CG_GetPlayerID(client) < 1)
+	if(CG_GetClientId(client) < 1)
 	{
 		PrintToChat(client, "%s  未知错误,请联系管理员", PREFIX);
 		return;
 	}
 	
-	if(CG_GetDiscuzUID(client) < 1)
+	if(CG_GetClientUId(client) < 1)
 	{
 		PrintToChat(client, "%s  欲参加此活动请先注册论坛", PREFIX);
 		return;
@@ -125,7 +111,7 @@ void BuildMainMenu(int client)
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "view", "查看活动");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "earn", "查看奖励");
 	AddMenuItemEx(menu, g_iDiamonds[client] >= 200 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "keys", "兑换钥匙%s", g_iDiamonds[client] >= 200 ? "[可兑换]" : "[钻石不足]");
-	AddMenuItemEx(menu, (g_bStore && g_bPackage[client]) ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "pkge", "领取礼包%s", g_bPackage[client] ? "" : "[已领取]");
+	//AddMenuItemEx(menu, (g_bStore && g_bPackage[client]) ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "pkge", "领取礼包%s", g_bPackage[client] ? "" : "[已领取]");
 
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 0);
@@ -155,6 +141,13 @@ void QueryKeyCount(int client)
 	if(!IsAllowClient(client) || !g_bLoaded[client])
 		return;
 	
+	if(CG_GetClientVitality(client) < 100)
+	{
+		tPrintToChat(client, "%s  \x04你的热度不足100点,不能兑换钥匙...", PREFIX);
+		tPrintToChat(client, "%s  \x04当前热度值\x01: \x10%d\x04点", PREFIX, CG_GetClientVitality(client));
+		return;
+	}
+
 	char m_szQuery[128], date[32];
 	FormatTime(date, 32, "%Y%m%d", GetTime());
 	Format(m_szQuery, 128, "SELECT * FROM playertrack_keys WHERE date = '%s'", date);
@@ -171,7 +164,7 @@ void BuildKeysMenu(int client, int keys)
 	if(!IsAllowClient(client) || !g_bLoaded[client])
 		return;
 	
-	int left = 30 - keys;
+	int left = 10 - keys;
 
 	Handle menu = CreateMenu(MenuHandler_KeysMenu);
 	SetMenuTitleEx(menu, "[CG]  新年活动 - 兑换CSGO钥匙\n钻石: %d", g_iDiamonds[client]);
@@ -206,7 +199,7 @@ public int MenuHandler_KeysMenu(Handle menu, MenuAction action, int client, int 
 			PrintToChat(client, "%s  正在处理...", PREFIX);
 			char m_szAuth[32], m_szQuery[256];
 			GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-			Format(m_szQuery, 256, "SELECT `diamonds` FROM `playertrack_diamonds` WHERE `playerid` = '%d' AND `dzid` = '%d' AND `steamid` = '%s' ORDER BY `playerid` ASC LIMIT 1;", CG_GetPlayerID(client), CG_GetDiscuzUID(client), m_szAuth);
+			Format(m_szQuery, 256, "SELECT `diamonds` FROM `playertrack_diamonds` WHERE `playerid` = '%d' AND `dzid` = '%d' AND `steamid` = '%s' ORDER BY `playerid` ASC LIMIT 1;", CG_GetClientId(client), CG_GetClientUId(client), m_szAuth);
 			SQL_TQuery(g_hDatabase, SQLCallback_ExchangeKey, m_szQuery, GetClientUserId(client));
 		}
 		else if(StrEqual(info, "1"))
@@ -238,7 +231,7 @@ void ExchangeKey(int client)
 	
 	char m_szAuth[32], m_szQuery[256];
 	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-	Format(m_szQuery, 256, "UPDATE `playertrack_diamonds` SET `diamonds` = `diamonds` - '200' WHERE `playerid` = '%d' AND `dzid` = '%d' AND `steamid` = '%s' ORDER BY `playerid` ASC LIMIT 1;", CG_GetPlayerID(client), CG_GetDiscuzUID(client), m_szAuth);
+	Format(m_szQuery, 256, "UPDATE `playertrack_diamonds` SET `diamonds` = `diamonds` - '200' WHERE `playerid` = '%d' AND `dzid` = '%d' AND `steamid` = '%s' ORDER BY `playerid` ASC LIMIT 1;", CG_GetClientId(client), CG_GetClientUId(client), m_szAuth);
 	SQL_TQuery(g_hDatabase, SQLCallback_RefreshKey, m_szQuery, GetClientUserId(client));
 }
 
@@ -401,7 +394,7 @@ void LoadClient(int client)
 {
 	char m_szAuth[32], m_szQuery[256];
 	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-	Format(m_szQuery, 256, "SELECT `diamonds`,`package`,`tradelink` FROM `playertrack_diamonds` WHERE `playerid` = '%d' AND `dzid` = '%d' AND `steamid` = '%s' ORDER BY `playerid` ASC LIMIT 1;", CG_GetPlayerID(client), CG_GetDiscuzUID(client), m_szAuth);
+	Format(m_szQuery, 256, "SELECT `diamonds`,`package`,`tradelink` FROM `playertrack_diamonds` WHERE `playerid` = '%d' AND `dzid` = '%d' AND `steamid` = '%s' ORDER BY `playerid` ASC LIMIT 1;", CG_GetClientId(client), CG_GetClientUId(client), m_szAuth);
 	SQL_TQuery(g_hDatabase, SQLCallback_LoadClient, m_szQuery, GetClientUserId(client));
 }
 
@@ -422,7 +415,7 @@ public void SQLCallback_LoadClient(Handle owner, Handle hndl, const char[] error
 	
 	if(hndl == INVALID_HANDLE)
 	{
-		if(StrContains(error, "lost connection", false) == -1 && CG_GetPlayerID(client) > 0)
+		if(StrContains(error, "lost connection", false) == -1 && CG_GetClientId(client) > 0)
 		{
 			LoadClient(client);
 		}
@@ -441,7 +434,7 @@ public void SQLCallback_LoadClient(Handle owner, Handle hndl, const char[] error
 	{
 		char m_szAuth[32], m_szQuery[256];
 		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-		Format(m_szQuery, 128, "INSERT INTO `playertrack_diamonds` (`playerid`, `dzid`, `steamid`) VALUES ('%d', '%d', '%s');", CG_GetPlayerID(client), CG_GetDiscuzUID(client), m_szAuth);
+		Format(m_szQuery, 128, "INSERT INTO `playertrack_diamonds` (`playerid`, `dzid`, `steamid`) VALUES ('%d', '%d', '%s');", CG_GetClientId(client), CG_GetClientUId(client), m_szAuth);
 		SQL_TQuery(g_hDatabase, SQLCallback_NewClient, m_szQuery, GetClientUserId(client));
 	}
 }
@@ -519,7 +512,7 @@ public void SQLCallback_RefreshKey(Handle owner, Handle hndl, const char[] error
 	char m_szAuth[32], m_szQuery[256], date[32];
 	FormatTime(date, 32, "%Y%m%d", GetTime());
 	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-	Format(m_szQuery, 256, "INSERT INTO `playertrack_keys` (`playerid`, `dzid`, `steamid`, `date`, `time`) VALUES ('%d', '%d', '%s', '%s', '%d');", CG_GetPlayerID(client), CG_GetDiscuzUID(client), m_szAuth, date, GetTime());
+	Format(m_szQuery, 256, "INSERT INTO `playertrack_keys` (`playerid`, `dzid`, `steamid`, `date`, `time`) VALUES ('%d', '%d', '%s', '%s', '%d');", CG_GetClientId(client), CG_GetClientUId(client), m_szAuth, date, GetTime());
 	SQL_TQuery(g_hDatabase, SQLCallback_PorcKey, m_szQuery, GetClientUserId(client));
 }
 
@@ -544,7 +537,7 @@ public void SQLCallback_PorcKey(Handle owner, Handle hndl, const char[] error, i
 	CG_Broadcast(false, fmt);
 
 	char m_szQuery[256], m_szName[64];
-	CG_GetDiscuzName(client, m_szName, 64);
+	CG_GetClientDName(client, m_szName, 64);
 	Format(m_szQuery, 256, "INSERT INTO `dz_plugin_ahome_laba` (`username`, `tousername`, `level`, `lid`, `dateline`, `content`, `color`, `url`) VALUES ('%s', '', 'game', 0, '%d', '使用活动钻石兑换了一把CSGO钥匙', '', '')", m_szName, GetTime());
 	CG_SaveForumData(m_szQuery);
 
@@ -564,7 +557,7 @@ public void SQLCallback_ExchangeKey(Handle owner, Handle hndl, const char[] erro
 		LogError("ExchangeKey: %N  Error: %s", client, error);
 		return;
 	}
-	
+
 	if(SQL_FetchRow(hndl))
 	{
 		g_iDiamonds[client] = SQL_FetchInt(hndl, 0);
@@ -576,10 +569,10 @@ public void SQLCallback_ExchangeKey(Handle owner, Handle hndl, const char[] erro
 
 stock bool IsAllowClient(int client)
 {
-	if(CG_GetPlayerID(client) < 1)
+	if(CG_GetClientId(client) < 1)
 		return false;
 	
-	if(CG_GetDiscuzUID(client) < 1)
+	if(CG_GetClientUId(client) < 1)
 		return false;
 	
 	return true;
