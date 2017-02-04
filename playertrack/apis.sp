@@ -176,6 +176,9 @@ public int Native_RemoveMotd(Handle plugin, int numParams)
 
 void OnServerLoadSuccess()
 {
+	//建立临时储存文件
+	BuildTempLogFile();
+
 	//Call Forward
 	Call_StartForward(g_Forward[ServerLoaded]);
 	Call_Finish();

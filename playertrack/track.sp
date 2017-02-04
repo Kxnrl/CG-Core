@@ -4,10 +4,16 @@
 public Action Timer_Tracking(Handle timer)
 {
 	GetNowDate();
+	
+	if(g_eHandle[KV_Local] == null)
+		return Plugin_Continue;
 
 	for(int client = 1; client <= MaxClients; ++client)
 	{
-		if(!IsValidClient(client, false))
+		if(!IsClientInGame(client))
+			continue;
+		
+		if(IsFakeClient(client))
 			continue;
 		
 		if(!g_eClient[client][bLoaded])
@@ -32,6 +38,8 @@ public Action Timer_Tracking(Handle timer)
 	}
 
 	KeyValuesToFile(g_eHandle[KV_Local], g_szTempFile);
+	
+	return Plugin_Continue;
 }
 
 public void OnGetClientCVAR(QueryCookie cookie, int client, ConVarQueryResult result, char [] cvarName, char [] cvarValue)

@@ -65,9 +65,6 @@ public void SQL_TConnect_Callback_csgo(Handle owner, Handle hndl, const char[] e
 	MySQL_Query(g_eHandle[DB_Game], SQLCallback_OnConnect, m_szQuery, _, DBPrio_Low);
 
 	g_iConnect_csgo = 1;
-	
-	//建立临时储存文件
-	BuildTempLogFile();
 }
 
 public void SQL_TConnect_Callback_discuz(Handle owner, Handle hndl, const char[] error, any data)
@@ -146,6 +143,8 @@ public void SQLCallback_GetServerIP(Handle owner, Handle hndl, const char[] erro
 		SQL_FetchString(hndl, 1, g_szHostName, 256);
 		SetConVarString(FindConVar("hostname"), g_szHostName, false, false);
 		SettingAdver();
+		
+		OnServerLoadSuccess();
 	}
 	else
 	{
@@ -157,8 +156,6 @@ public void SQLCallback_GetServerIP(Handle owner, Handle hndl, const char[] erro
 		LogToFileEx(g_szLogFile, "Not Found this server in playertrack_server , now Register this!  %s", m_szQuery);
 		MySQL_Query(g_eHandle[DB_Game], SQLCallback_InsertServerIP, m_szQuery, _, DBPrio_High);
 	}
-	
-	OnServerLoadSuccess();
 	
 	if(g_bLateLoad)
 	{
@@ -182,6 +179,7 @@ public void SQLCallback_InsertServerIP(Handle owner, Handle hndl, const char[] e
 	
 	//从INSERT ID获得ServerID 变量g_ServerID
 	g_iServerId = SQL_GetInsertId(hndl);
+	OnServerLoadSuccess();
 }
 
 /**client callbacks**/

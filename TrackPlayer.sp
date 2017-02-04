@@ -3,8 +3,8 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 385
-#define PLUGIN_VERSION " 7.0.2 - 2017/02/03 20:17 "
+#define Build 386
+#define PLUGIN_VERSION " 7.0.3 - 2017/02/05 02:31 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12577
 
@@ -18,7 +18,7 @@ Forward g_Forward[Forward];
 hEvents g_eEvents[hEvents];
 
 //全部变量
-int g_iServerId = -1;
+int g_iServerId;
 int g_iConnect_csgo;
 int g_iConnect_discuz;
 int g_iNowDate;
