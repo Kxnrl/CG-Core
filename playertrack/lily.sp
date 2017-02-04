@@ -39,11 +39,11 @@ void BuildCPMenu(int client)
 {
 	//CP主菜单
 	Handle menu = CreateMenu(MenuHandler_CPMain);
-	SetMenuTitleEx(menu, "[CP]  %t ", "global menu title");
+	SetMenuTitleEx(menu, "[CP]  %T ", "global menu title", client);
 
-	AddMenuItemEx(menu, g_eClient[client][iCPId] == -2 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "propose", "%t", "cp find");
-	AddMenuItemEx(menu, g_eClient[client][iCPId] > -2 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "divorce", "%t", "cp out");
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "aboutlily", "%t", "cp about");
+	AddMenuItemEx(menu, g_eClient[client][iCPId] == -2 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "propose", "%T", "cp find", client);
+	AddMenuItemEx(menu, g_eClient[client][iCPId] > -2 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "divorce", "%T", "cp out", client);
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "aboutlily", "%T", "cp about", client);
 	
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 20);
@@ -94,7 +94,7 @@ void BuildSelectCPMenu(int client)
 	
 	if(counts == 0)
 	{
-		AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", "%t", "cp no target");
+		AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", "%T", "cp no target", client);
 	}
 	
 	SetMenuExitBackButton(menu, true);
@@ -140,20 +140,20 @@ void ConfirmCPRequest(int client, int target)
 {
 	//接受lily请求菜单
 	Handle menu = CreateMenu(MenuHandler_CPConfirm)
-	SetMenuTitleEx(menu, "[CP]  %t", "cp request");
+	SetMenuTitleEx(menu, "[CP]  %T", "cp request", client);
 
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", "%t", "cp request item target", target);
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", "%t", "cp 7days");
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", "%t", "cp buff");
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", "%t", "cp confirm");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", "%T", "cp request item target", client, target);
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", "%T", "cp 7days", client);
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", "%T", "cp buff", client);
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", "%T", "cp confirm", client);
 
 	char m_szItem[32];
 	
 	Format(m_szItem, 32, "Accept%d", GetClientUserId(client));
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, m_szItem, "%t", "cp accept");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, m_szItem, "%T", "cp accept", client);
 	
 	Format(m_szItem, 32, "Refuse%d", GetClientUserId(client));
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, m_szItem, "%t", "cp refuse");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, m_szItem, "%T", "cp refuse", client);
 	
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, target, 0);
@@ -272,13 +272,13 @@ void ConfirmDivorce(int client, const int m_iId, const char[] m_szName)
 	Format(m_szItem, 128, "%t", "cp your days", (GetTime() - g_eClient[client][iCPDate])/86400);
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", m_szItem);
 
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", "%t", "cp confirm divorce");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", "%T", "cp confirm divorce", client);
 	
 	AddMenuItemEx(menu, ITEMDRAW_SPACER, "", "");
 	
 	Format(m_szItem, 128, "%d;%s", m_iId, m_szName);
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, m_szItem, "%t", "global item sure");
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "fuckyou", "%t",  "global item refuse");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, m_szItem, "%T", "global item sure", client);
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "fuckyou", "%T",  "global item refuse", client);
 
 	SetMenuExitBackButton(menu, true);
 	SetMenuExitButton(menu, false);
@@ -335,11 +335,11 @@ void BuildCPHelpPanel(int client)
 {
 	//lily的帮助菜单
 	Handle menu = CreateMenu(CPHelpPanelHandler);
-	SetMenuTitleEx(menu, "[CP]  %t", "cp help title");
+	SetMenuTitleEx(menu, "[CP]  %T", "cp help title", client);
 
-	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%t", "cp each other");
-	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%t", "cp after 7days");
-	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%t", "cp earn buff");
+	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%T", "cp each other", client);
+	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%T", "cp after 7days", client);
+	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%T", "cp earn buff", client);
 
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 0);

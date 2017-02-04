@@ -64,23 +64,23 @@ public Action Command_Menu(int client, int args)
 {
 	//创建CG玩家主菜单
 	Handle menu = CreateMenu(MenuHandler_CGMainMenu);
-	SetMenuTitleEx(menu, "[CG]  %t", "global menu title");
+	SetMenuTitleEx(menu, "[CG]  %T", "global menu title", client);
 
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "store", "%t", "main store desc");
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "lily", "%t", "main cp desc");
-	AddMenuItemEx(menu, TalentAvailable() ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "talent", "%t", TalentAvailable() ? "main talent desc" : "main talent not allow");
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "sign", "%t", "main sign desc");
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "auth", "%t", "main auth desc");
-	AddMenuItemEx(menu, g_eClient[client][iVipType] > 1 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "vip", "%t", "main vip desc");
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "rule", "%t", "main rule desc");
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "group", "%t", "main group desc");
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "forum", "%t", "main forum desc");
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "music", "%t", "main music desc");
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "radio", "%t", "main radio desc");
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "online", "%t", "main online desc");
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "setrp", "%t", "main setrp desc");
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "huodo", "%t", "main new year act");
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "lang", "%t", "main select language");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "store", "%T", "main store desc", client);
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "lily", "%T", "main cp desc", client);
+	AddMenuItemEx(menu, TalentAvailable() ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "talent", "%T", TalentAvailable() ? "main talent desc" : "main talent not allow", client);
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "sign", "%T", "main sign desc", client);
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "auth", "%T", "main auth desc", client);
+	AddMenuItemEx(menu, g_eClient[client][iVipType] > 1 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "vip", "%T", "main vip desc", client);
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "rule", "%T", "main rule desc", client);
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "group", "%T", "main group desc", client);
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "forum", "%T", "main forum desc", client);
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "music", "%T", "main music desc", client);
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "radio", "%T", "main radio desc", client);
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "online", "%T", "main online desc", client);
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "setrp", "%T", "main setrp desc", client);
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "huodo", "%T", "main new year act", client);
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "lang", "%T", "main select language", client);
 
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 0);
@@ -153,7 +153,7 @@ public Action Command_GetAuth(int client, int args)
 
 	//创建CG玩家主菜单
 	Handle menu = CreateMenu(MenuHandler_GetAuth);
-	SetMenuTitleEx(menu, "[CG]  %t [Auth name Only SChinese]", "auth menu title");
+	SetMenuTitleEx(menu, "[CG]  %T [Auth name Only SChinese]", "auth menu title", client);
 
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT,    "1", "[僵尸逃跑] 断后达人");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT,    "2", "[僵尸逃跑] 指挥大佬");
@@ -202,7 +202,7 @@ public Action Command_Language(int client, int args)
 	}
 
 	SetClientLanguage(client, newlang);
-	
+
 	if(args < 0)
 		FakeClientCommand(client, "sm_cg");
 }

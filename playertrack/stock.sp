@@ -30,7 +30,7 @@ stock void SetMenuTitleEx(Handle menu, const char[] fmt, any ...)
 		ReplaceString(m_szBuffer, 256, "\n \n", " - ");
 		ReplaceString(m_szBuffer, 256, "\n", " - ");
 	}
-	
+
 	SetMenuTitle(menu, m_szBuffer);
 }
 

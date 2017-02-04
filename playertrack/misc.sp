@@ -491,15 +491,15 @@ public int MenuHandler_GetAuth(Handle menu, MenuAction action, int client, int i
 void BuildListenerMenu(int client)
 {
 	Handle menu = CreateMenu(MenuHandler_Listener);
-	SetMenuTitleEx(menu, "[CG]  %t", "signature title");
+	SetMenuTitleEx(menu, "[CG]  %T", "signature title", client);
 
-	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%t", "signature now you can type");
-	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%t", "signature color codes");
-	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%t", "signature example");
-	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%t", "signature input preview", g_eClient[client][szNewSignature]);
+	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%T", "signature now you can type", client);
+	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%T", "signature color codes", client);
+	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%T", "signature example", client);
+	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%T", "signature input preview", client, g_eClient[client][szNewSignature]);
 	
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "preview", "%t", "signature item preview");
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "ok", "%t", "signature item ok");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "preview", "%T", "signature item preview", client);
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "ok", "%T", "signature item ok", client);
 	
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 60);
