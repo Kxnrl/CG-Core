@@ -3,8 +3,8 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 387
-#define PLUGIN_VERSION " 7.0.4 - 2017/02/05 03:50 "
+#define Build 388
+#define PLUGIN_VERSION " 7.0.5 - 2017/02/06 03:25 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12577
 
@@ -69,6 +69,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 	//注册函数库
 	RegPluginLibrary("csgogamers");
+	
+	//Fix Plugin Load
+	SetConVarInt(FindConVar("sv_hibernate_when_empty"), 0);
 
 	return APLRes_Success;
 }
@@ -146,12 +149,12 @@ public void OnClientPostAdminCheck(int client)
 	if(g_eHandle[DB_Game] == INVALID_HANDLE)
 	{
 		//Call Forward让其它程序也执行
-		OnClientDataLoaded(client);
-		OnClientVipChecked(client);
+		//OnClientDataLoaded(client);
+		//OnClientVipChecked(client);
 		LogToFileEx(g_szLogFile, "Query Client[%N] Failed:  Database is not avaliable!", client);
 		LogError("Query Client[%N] Failed:  Database is not avaliable!", client);
 		SQL_TConnect_csgo();
-		//CreateTimer(5.0, Timer_ReLoadClient, GetClientUserId(client));
+		CreateTimer(5.0, Timer_ReLoadClient, GetClientUserId(client));
 		return;
 	}
 
