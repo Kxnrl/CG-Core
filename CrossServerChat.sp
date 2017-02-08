@@ -1,8 +1,8 @@
-#include <sdktools>
+#include <maoling>
 #include <socket>
 #include <cg_core>
 #include <store>
-#include <csc>
+#include <chat-processor>
 
 #pragma newdecls required 
 
@@ -10,9 +10,8 @@
 #define key				"[&KVJL>P*^Y*(JHjkhlsa]"
 #define MasterServer	"112.74.128.238"
 #define port			"64333"
-#define CHAT_SYMBOL '#'
 
-Handle globalClientSocket;
+Handle g_hSocket;
 bool g_bConnected;
 
 public Plugin myinfo = 
@@ -20,7 +19,7 @@ public Plugin myinfo =
     name		= "Broadcast System - Client",
     author		= "Kyle",
     description	= "Send message on all connected server !",
-    version		= "1.5",
+    version		= "2.0",
     url			= "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -52,7 +51,7 @@ public int Native_Broadcast(Handle plugin, int numParams)
 		PrintToChatAll(m_szFinalMsg);
 
 		Format(m_szFinalMsg, 1024, "%s%s", key, m_szFinalMsg);
-		SocketSend(globalClientSocket, m_szFinalMsg, 1024);
+		SocketSend(g_hSocket, m_szFinalMsg, 1024);
 	}
 }
 
@@ -61,7 +60,7 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_msg", Command_PubMessage);
 	RegConsoleCmd("sm_xlb", Command_PubMessage);
 	RegConsoleCmd("sm_dlb", Command_PnlMessage);
-	
+
 	CreateTimer(3.0, Timer_Reconnect);
 }
 
@@ -69,8 +68,28 @@ public void OnPluginEnd()
 {
 	if(g_bConnected)
 	{
-		DisconnectFromMasterServer();
+		char m_szFinalMsg[1024], serverName[128];
+		GetConVarString(FindConVar("hostname"), serverName, 128);
+		Format(m_szFinalMsg, 1024, "%s%s%s", key, DISCONNECTSTR, serverName);
+		SocketSend(g_hSocket, m_szFinalMsg, 1024);
+		CloseHandle(g_hSocket);
+		g_hSocket = INVALID_HANDLE;
 	}
+}
+
+public void CP_OnChatMessagePost(int client, ArrayList recipients, const char[] flagstring, const char[] formatstring, const char[] name, const char[] message, bool processcolors, bool removecolors)
+{
+	char m_szServerTag[32], m_szFinalMsg[1024];
+	
+	strcopy(m_szFinalMsg, 1024, message);
+	PrepareString(m_szFinalMsg, 1024);
+	if(m_szFinalMsg[0] == '!' || m_szFinalMsg[0] == '#' || m_szFinalMsg[0] == '@' || StrEqual(m_szFinalMsg, "rtv", false) || StrContains(m_szFinalMsg, "nominat", false) != -1)
+		return;
+
+	GetServerTag(m_szServerTag, 32);
+	Format(m_szFinalMsg, 1024, "%s \x04%s\x01>>>  %s \x01:  %s", key, m_szServerTag, name, message);
+	ReplaceAllColors(m_szFinalMsg, 1024);
+	SocketSend(g_hSocket, m_szFinalMsg, 1024);
 }
 
 public void CG_OnLilyCouple(int Neptune, int Noire)
@@ -79,12 +98,10 @@ public void CG_OnLilyCouple(int Neptune, int Noire)
 	Format(m_szFinalMsg, 1024, " \x07恭喜\x0C%N\x07和\x0C%N\x07组成了\x0E一对咖喱给给\x07!", Neptune, Noire);
 
 	Handle database = CG_GetDiscuzDatabase();
-	
-	if(database == INVALID_HANDLE)
-	{
+
+	if(!database)
 		return;
-	}
-	
+
 	char EscapeString[512];
 	SQL_EscapeString(database, m_szFinalMsg, EscapeString, 512);
 
@@ -96,7 +113,7 @@ public void CG_OnLilyCouple(int Neptune, int Noire)
 	PrintToChatAll(m_szFinalMsg);
 
 	Format(m_szFinalMsg, 1024, "%s%s", key, m_szFinalMsg);
-	SocketSend(globalClientSocket, m_szFinalMsg, 1024);
+	SocketSend(g_hSocket, m_szFinalMsg, 1024);
 }
 
 public void OnMapVoteEnd(const char[] map)
@@ -114,12 +131,12 @@ public void OnMapVoteEnd(const char[] map)
 	PrintToChatAll(m_szFinalMsg);
 
 	Format(m_szFinalMsg, 1024, "%s%s", key, m_szFinalMsg);
-	SocketSend(globalClientSocket, m_szFinalMsg, 1024);
+	SocketSend(g_hSocket, m_szFinalMsg, 1024);
 }
 
 public Action Command_PubMessage(int client, int args)
 {
-	if(Store_GetClientCredits(client) < 500)
+	if(Store_GetClientCredits(client) < 50)
 	{
 		PrintToChat(client, "\x01 \x04[Store]  \x01没钱还想发小喇叭?");
 		return Plugin_Handled;
@@ -138,20 +155,20 @@ public Action Command_PubMessage(int client, int args)
 	if(!UpdateMessageToDiscuz(client, message))
 		return Plugin_Handled;
 
-	Store_SetClientCredits(client, Store_GetClientCredits(client)-500, "发送小喇叭");
-	PrintToChat(client, "\x01 \x04[Store]  \x01你花费\x04500信用点\x01发送了一条小喇叭");
+	Store_SetClientCredits(client, Store_GetClientCredits(client)-50, "发送小喇叭");
+	PrintToChat(client, "\x01 \x04[Store]  \x01你花费\x0450信用点\x01发送了一条小喇叭");
 
 	PrintToChatAll(m_szFinalMsg);
 
 	Format(m_szFinalMsg, 1024, "%s%s", key, m_szFinalMsg);
-	SocketSend(globalClientSocket, m_szFinalMsg, 1024);
+	SocketSend(g_hSocket, m_szFinalMsg, 1024);
 
 	return Plugin_Handled;
 }
 
 public Action Command_PnlMessage(int client, int args)
 {
-	if(Store_GetClientCredits(client) < 5000)
+	if(Store_GetClientCredits(client) < 500)
 	{
 		PrintToChat(client, "\x01 \x04[Store]  \x01没钱还想发大喇叭?");
 		return Plugin_Handled;
@@ -170,13 +187,13 @@ public Action Command_PnlMessage(int client, int args)
 
 	Format(m_szFinalMsg, 1024, "[\x02大\x04喇\x0C叭\x01]  \x04%N\x01 :   \x07%s", client, message);
 	
-	Store_SetClientCredits(client, Store_GetClientCredits(client)-5000, "发送大喇叭");
-	PrintToChat(client, "\x01 \x04[Store]  \x01你花费\x045000信用点\x01发送了一条小喇叭");
+	Store_SetClientCredits(client, Store_GetClientCredits(client)-500, "发送大喇叭");
+	PrintToChat(client, "\x01 \x04[Store]  \x01你花费\x04500信用点\x01发送了一条小喇叭");
 
 	PrintToMenuAll(m_szFinalMsg);
 
 	Format(m_szFinalMsg, 1024, "%s%s", key, m_szFinalMsg);
-	SocketSend(globalClientSocket, m_szFinalMsg, 1024);
+	SocketSend(g_hSocket, m_szFinalMsg, 1024);
 
 	return Plugin_Handled;
 }
@@ -204,42 +221,36 @@ public int OnClientSocketError(Handle socket, const int errorType, const int err
 
 public int OnChildSocketReceive(Handle socket, char[] receiveData, const int dataSize, any hFile)
 {
-	if(StrContains(receiveData, key) != -1)
-	{
-		ReplaceString(receiveData, dataSize, key, "");
+	if(StrContains(receiveData, key) == -1)
+		return;
 
-		if(StrContains(receiveData, DISCONNECTSTR) == -1)
-		{
-			if(StrContains(receiveData, "[\x02小\x04喇\x0C叭\x01]", false) != -1 || StrContains(receiveData, "Broadcast", false) != -1 || StrContains(receiveData, "[\x0ELily\x04]", false) != -1)
-				PrintToChatAll(receiveData);
-			else
-			{
-				PrintToChatAll(receiveData);
-				PrintToMenuAll(receiveData);
-			}
-		}
+	ReplaceString(receiveData, dataSize, key, "");
+
+	if(StrContains(receiveData, DISCONNECTSTR) != -1)
+		return;
+
+	PrintToChatAll(receiveData);
+
+	if(StrContains(receiveData, "[\x02小\x04喇\x0C叭\x01]", false) != -1)
+	{
+		PrintToChatAll(receiveData);
+		PrintToChatAll(receiveData);
+	}
+	else if(StrContains(receiveData, "[\x02大\x04喇\x0C叭\x01]", false) != -1)
+	{
+		PrintToChatAll(receiveData);
+		PrintToChatAll(receiveData);
+		PrintToMenuAll(receiveData);
 	}
 }
 
 public int OnChildSocketDisconnected(Handle socket, any hFile)
 {
-	LogError("Lost connection to master chat server, reconnecting...");
+	LogMessage("Lost connection to master chat server, reconnecting...");
 	g_bConnected = false;
 	CreateTimer(10.0, Timer_Reconnect);
 	CloseHandle(socket);
 }
-
-stock void DisconnectFromMasterServer()
-{
-	char m_szFinalMsg[1024];
-	char serverName[45];
-	GetConVarString(FindConVar("hostname"), serverName, sizeof(serverName));
-	Format(m_szFinalMsg, 1024, "%s%s%s", key, DISCONNECTSTR, serverName);
-	SocketSend(globalClientSocket, m_szFinalMsg, 1024);
-	CloseHandle(globalClientSocket);
-	globalClientSocket = INVALID_HANDLE;
-}
-
 
 stock void ConnecToMasterServer()
 {
@@ -247,8 +258,8 @@ stock void ConnecToMasterServer()
 		return;
 	
 	g_bConnected = false;
-	globalClientSocket = SocketCreate(SOCKET_TCP, OnClientSocketError);
-	SocketConnect(globalClientSocket, OnClientSocketConnected, OnChildSocketReceive, OnChildSocketDisconnected, MasterServer, StringToInt(port));
+	g_hSocket = SocketCreate(SOCKET_TCP, OnClientSocketError);
+	SocketConnect(g_hSocket, OnClientSocketConnected, OnChildSocketReceive, OnChildSocketDisconnected, MasterServer, StringToInt(port));
 }
 
 stock void PrintToMenuAll(char[] message)
@@ -313,19 +324,19 @@ public bool UpdateMessageToDiscuz(int client, const char[] message)
 
 public Action OnClientSayCommand(int client, const char[] command, const char[] sArgs)
 {
-	if(!IsValidClient(client))
+	if(!client || !IsClientInGame(client))
 		return Plugin_Continue;
 
 	int startidx;
-	if(sArgs[startidx] != CHAT_SYMBOL)
+	if(sArgs[startidx] != '#')
 		return Plugin_Continue;
 	
-	if(Store_GetClientCredits(client) < 500)
+	if(Store_GetClientCredits(client) < 50)
 		return Plugin_Continue;
 
 	startidx++;
 
-	if(sArgs[startidx] != CHAT_SYMBOL) // sm_say alias
+	if(sArgs[startidx] != '#') // sm_say alias
 	{
 		char message[1024], m_szFinalMsg[1024], m_szServerTag[32];
 		strcopy(message, 1024, sArgs[startidx]);
@@ -338,106 +349,109 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 		if(!UpdateMessageToDiscuz(client, message))
 			return Plugin_Stop;
 
-		Store_SetClientCredits(client, Store_GetClientCredits(client)-500, "发送小喇叭");
-		PrintToChat(client, "\x01 \x04[Store]  \x01你花费\x04500信用点\x01发送了一条小喇叭");
+		Store_SetClientCredits(client, Store_GetClientCredits(client)-50, "发送小喇叭");
+		PrintToChat(client, "\x01 \x04[Store]  \x01你花费\x0450信用点\x01发送了一条小喇叭");
 
 		PrintToChatAll(m_szFinalMsg);
 
 		Format(m_szFinalMsg, 1024, "%s%s", key, m_szFinalMsg);
-		SocketSend(globalClientSocket, m_szFinalMsg, 1024);
+		SocketSend(g_hSocket, m_szFinalMsg, 1024);
 
 		return Plugin_Stop;
 	}
-	
+
 	return Plugin_Continue;
 }
 
-stock void PrepareString(char[] message, int mexLen)
+stock void PrepareString(char[] message, int maxLen)
 {
-	ReplaceString(message, mexLen, "!msg ", "", false);
-	ReplaceString(message, mexLen, "!xlb ", "", false);
-	ReplaceString(message, mexLen, "!dlb ", "", false);
-	ReplaceString(message, mexLen, "{default}", "", false);
-	ReplaceString(message, mexLen, "{white}", "", false);
-	ReplaceString(message, mexLen, "{darkred}", "", false);
-	ReplaceString(message, mexLen, "{pink}", "", false);
-	ReplaceString(message, mexLen, "{green}", "", false);
-	ReplaceString(message, mexLen, "{lime}", "", false);
-	ReplaceString(message, mexLen, "{lightgreen}", "", false);
-	ReplaceString(message, mexLen, "{red}", "", false);
-	ReplaceString(message, mexLen, "{gray}", "", false);
-	ReplaceString(message, mexLen, "{grey}", "", false);
-	ReplaceString(message, mexLen, "{olive}", "", false);
-	ReplaceString(message, mexLen, "{orange}", "", false);
-	ReplaceString(message, mexLen, "{purple}", "", false);
-	ReplaceString(message, mexLen, "{lightblue}", "", false);
-	ReplaceString(message, mexLen, "{blue}", "", false);
-	ReplaceString(message, mexLen, "\x01", "", false);
-	ReplaceString(message, mexLen, "\x02", "", false);
-	ReplaceString(message, mexLen, "\x03", "", false);
-	ReplaceString(message, mexLen, "\x04", "", false);
-	ReplaceString(message, mexLen, "\x05", "", false);
-	ReplaceString(message, mexLen, "\x06", "", false);
-	ReplaceString(message, mexLen, "\x07", "", false);
-	ReplaceString(message, mexLen, "\x08", "", false);
-	ReplaceString(message, mexLen, "\x09", "", false);
-	ReplaceString(message, mexLen, "\x10", "", false);
-	ReplaceString(message, mexLen, "\x0A", "", false);
-	ReplaceString(message, mexLen, "\x0B", "", false);
-	ReplaceString(message, mexLen, "\x0C", "", false);
-	ReplaceString(message, mexLen, "\x0D", "", false);
-	ReplaceString(message, mexLen, "\x0E", "", false);
-	ReplaceString(message, mexLen, "\x0F", "", false);
+	ReplaceString(message, maxLen, "!msg ", "", false);
+	ReplaceString(message, maxLen, "!xlb ", "", false);
+	ReplaceString(message, maxLen, "!dlb ", "", false);
+	ReplaceString(message, maxLen, "{normal}", "", false);
+	ReplaceString(message, maxLen, "{default}", "", false);
+	ReplaceString(message, maxLen, "{white}", "", false);
+	ReplaceString(message, maxLen, "{darkred}", "", false);
+	ReplaceString(message, maxLen, "{teamcolor}", "", false);
+	ReplaceString(message, maxLen, "{pink}", "", false);
+	ReplaceString(message, maxLen, "{green}", "", false);
+	ReplaceString(message, maxLen, "{HIGHLIGHT}", "", false);
+	ReplaceString(message, maxLen, "{lime}", "", false);
+	ReplaceString(message, maxLen, "{lightgreen}", "", false);
+	ReplaceString(message, maxLen, "{lime}", "", false);
+	ReplaceString(message, maxLen, "{lightred}", "", false);
+	ReplaceString(message, maxLen, "{red}", "", false);
+	ReplaceString(message, maxLen, "{gray}", "", false);
+	ReplaceString(message, maxLen, "{grey}", "", false);
+	ReplaceString(message, maxLen, "{olive}", "", false);
+	ReplaceString(message, maxLen, "{yellow}", "", false);
+	ReplaceString(message, maxLen, "{orange}", "", false);
+	ReplaceString(message, maxLen, "{silver}", "", false);
+	ReplaceString(message, maxLen, "{lightblue}", "", false);
+	ReplaceString(message, maxLen, "{blue}", "", false);
+	ReplaceString(message, maxLen, "{purple}", "", false);
+	ReplaceString(message, maxLen, "{darkorange}", "", false);
+	ReplaceString(message, maxLen, "\x01", "", false);
+	ReplaceString(message, maxLen, "\x02", "", false);
+	ReplaceString(message, maxLen, "\x03", "", false);
+	ReplaceString(message, maxLen, "\x04", "", false);
+	ReplaceString(message, maxLen, "\x05", "", false);
+	ReplaceString(message, maxLen, "\x06", "", false);
+	ReplaceString(message, maxLen, "\x07", "", false);
+	ReplaceString(message, maxLen, "\x08", "", false);
+	ReplaceString(message, maxLen, "\x09", "", false);
+	ReplaceString(message, maxLen, "\x10", "", false);
+	ReplaceString(message, maxLen, "\x0A", "", false);
+	ReplaceString(message, maxLen, "\x0B", "", false);
+	ReplaceString(message, maxLen, "\x0C", "", false);
+	ReplaceString(message, maxLen, "\x0D", "", false);
+	ReplaceString(message, maxLen, "\x0E", "", false);
+	ReplaceString(message, maxLen, "\x0F", "", false);
 }
 
 stock void GetServerTag(char[] m_szServerTag, int maxLen)
 {
-	char m_szServerName[64];
-	GetConVarString(FindConVar("hostname"), m_szServerName, 64);
-	if(StrContains(m_szServerName, "逃跑", false ) != -1)
-		strcopy(m_szServerTag, 32, "僵尸逃跑");
-	else if(StrContains(m_szServerName, "TTT", false ) != -1)
-		strcopy(m_szServerTag, 32, "匪镇碟影");
-	else if(StrContains(m_szServerName, "MiniGames", false ) != -1)
-		strcopy(m_szServerTag, 32, "娱乐休闲");
-	else if(StrContains(m_szServerName, "JailBreak", false ) != -1)
-		strcopy(m_szServerTag, 32, "越狱搞基");
-	else if(StrContains(m_szServerName, "KreedZ", false ) != -1)
-		strcopy(m_szServerTag, 32, "Kz跳跃");
-	else if(StrContains(m_szServerName, "DeathRun", false ) != -1)
-		strcopy(m_szServerTag, 32, "死亡奔跑");
-	else if(StrContains(m_szServerName, "战役", false ) != -1)
-		strcopy(m_szServerTag, 32, "求生战役");
-	else if(StrContains(m_szServerName, "对抗", false ) != -1)
-		strcopy(m_szServerTag, 32, "求生对抗");
-	else if(StrContains(m_szServerName, "HG", false ) != -1)
-		strcopy(m_szServerTag, 32, "饥饿游戏");
-	else if(StrContains(m_szServerName, "死斗", false ) != -1)
-		strcopy(m_szServerTag, 32, "纯净死斗");
-	else if(StrContains(m_szServerName, "纯净死亡", false ) != -1)
-		strcopy(m_szServerTag, 32, "纯净死亡");
-	else if(StrContains(m_szServerName, "Riot", false ) != -1)
-		strcopy(m_szServerTag, 32, "僵尸暴动");
-	else if(StrContains(m_szServerName, "Ninja", false ) != -1)
-		strcopy(m_szServerTag, 32, "忍者行动");
-	else if(StrContains(m_szServerName, "BHop", false ) != -1)
-		strcopy(m_szServerTag, 32, "BHop连跳");
-	else if(StrContains(m_szServerName, "满十", false ) != -1)
-		strcopy(m_szServerTag, 32, "满十比赛");
-	else
-		strcopy(m_szServerTag, 32, "论坛");
-	
-	if(StrContains(m_szServerName, "1#", false ) != -1 || StrContains(m_szServerName, "1服", false ) != -1)
-		StrCat(m_szServerTag, 32, "1服");
-	
-	if(StrContains(m_szServerName, "2#", false ) != -1 || StrContains(m_szServerName, "2服", false ) != -1)
-		StrCat(m_szServerTag, 32, "2服");
+	switch(CG_GetServerId())
+	{
+		case  1: strcopy(m_szServerTag, maxLen, "僵尸逃跑①");
+		case  2: strcopy(m_szServerTag, maxLen, "匪镇碟影①");
+		case  3: strcopy(m_szServerTag, maxLen, "娱乐休闲");
+		case  4: strcopy(m_szServerTag, maxLen, "僵尸逃跑②");
+		case  5: strcopy(m_szServerTag, maxLen, "越狱搞基");
+		case  6: strcopy(m_szServerTag, maxLen, "混战干拉");
+		case  7: strcopy(m_szServerTag, maxLen, "死斗练枪");
+		case  8: strcopy(m_szServerTag, maxLen, "死亡练枪");
+		case  9: strcopy(m_szServerTag, maxLen, "满十比赛");
+		case 10: strcopy(m_szServerTag, maxLen, "KreedZ①");
+		case 11: strcopy(m_szServerTag, maxLen, "KreedZ②");
+		case 15: strcopy(m_szServerTag, maxLen, "手雷训练服");
+		default: strcopy(m_szServerTag, maxLen, "论坛");
+	}
 }
 
-stock bool IsValidClient(int client)
+stock void ReplaceAllColors(char[] message, int maxLen)
 {
-	if(client <= 0) return false;
-	if(client > MaxClients) return false;
-	if(!IsClientConnected(client)) return false;
-	return IsClientInGame(client);
+	ReplaceString(message, maxLen, "{normal}", "\x01", false);
+	ReplaceString(message, maxLen, "{default}", "\x01", false);
+	ReplaceString(message, maxLen, "{white}", "\x01", false);
+	ReplaceString(message, maxLen, "{darkred}", "\x02", false);
+	ReplaceString(message, maxLen, "{teamcolor}", "\x03", false);
+	ReplaceString(message, maxLen, "{pink}", "\x03", false);
+	ReplaceString(message, maxLen, "{green}", "\x04", false);
+	ReplaceString(message, maxLen, "{HIGHLIGHT}", "\x04", false);
+	ReplaceString(message, maxLen, "{lime}", "\x05", false);
+	ReplaceString(message, maxLen, "{lightgreen}", "\x05", false);
+	ReplaceString(message, maxLen, "{lime}", "\x06", false);
+	ReplaceString(message, maxLen, "{lightred}", "\x07", false);
+	ReplaceString(message, maxLen, "{red}", "\x07", false);
+	ReplaceString(message, maxLen, "{gray}", "\x08", false);
+	ReplaceString(message, maxLen, "{grey}", "\x08", false);
+	ReplaceString(message, maxLen, "{olive}", "\x09", false);
+	ReplaceString(message, maxLen, "{yellow}", "\x05", false);
+	ReplaceString(message, maxLen, "{orange}", "\x10", false);
+	ReplaceString(message, maxLen, "{silver}", "\x0A", false);
+	ReplaceString(message, maxLen, "{lightblue}", "\x0B", false);
+	ReplaceString(message, maxLen, "{blue}", "\x0C", false);
+	ReplaceString(message, maxLen, "{purple}", "\x0E", false);
+	ReplaceString(message, maxLen, "{darkorange}", "\x0F", false);
 }
