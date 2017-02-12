@@ -2,7 +2,7 @@
 #include <maoling>
 #include <csc>
 
-#define PREFIX "[\x10新年快乐\x01]  "
+#define PREFIX "[\x0CCG\x01]  "
 
 Handle g_hDatabase;
 
@@ -106,7 +106,7 @@ void BuildMainMenu(int client)
 	}
 
 	Handle menu = CreateMenu(MenuHandler_MainMenu);
-	SetMenuTitleEx(menu, "[CG]  新年活动\n钻石: %d\n \n钻石可兑换:\nStore道具\nCSGO钥匙\nCG专属道具", g_iDiamonds[client]);
+	SetMenuTitleEx(menu, "[CG]  活动专区\n钻石: %d\n \n钻石可兑换:\nStore道具\nCSGO钥匙\nCG专属道具", g_iDiamonds[client]);
 
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "view", "查看活动");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "earn", "查看奖励");
@@ -167,7 +167,7 @@ void BuildKeysMenu(int client, int keys)
 	int left = 10 - keys;
 
 	Handle menu = CreateMenu(MenuHandler_KeysMenu);
-	SetMenuTitleEx(menu, "[CG]  新年活动 - 兑换CSGO钥匙\n钻石: %d", g_iDiamonds[client]);
+	SetMenuTitleEx(menu, "[CG] 兑换CSGO钥匙\n钻石: %d", g_iDiamonds[client]);
 
 	AddMenuItemEx(menu, left > 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "0", "兑换一把CSGO钥匙[200钻石]%s", left > 0 ? "" : " *明天再来吧*");
 	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "1", "抽奖一把CSGO钥匙[20钻石]");
@@ -241,7 +241,7 @@ void BuildViewMenu(int client)
 		return;
 	
 	Handle menu = CreateMenu(MenuHandler_ViewMenu);
-	SetMenuTitleEx(menu, "[CG]  新年活动 - 查看活动\n钻石: %d", g_iDiamonds[client]);
+	SetMenuTitleEx(menu, "[CG]  查看活动\n钻石: %d", g_iDiamonds[client]);
 
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "0", "全服活动");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "1", "匪镇谍影");
@@ -280,32 +280,21 @@ void BuildModeMenu(int client, int mode, const char[] name)
 		return;
 
 	Handle menu = CreateMenu(MenuHandler_ModeMenu);
-	SetMenuTitleEx(menu, "[CG]  新年活动 - %s\n钻石: %d", name, g_iDiamonds[client]);
+	SetMenuTitleEx(menu, "[CG]  活动专区 - %s\n钻石: %d", name, g_iDiamonds[client]);
 	
 	switch(mode)
 	{
 		case 0:
 		{
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "无限火力开启|不统计死亡|击杀奖励加倍");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每日签到后,参加新年专属皮肤抽奖");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "服务器内随机掉落宝箱,打开后获得奖励");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "领取双旦礼包/新春礼包");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "在线获得信用点加倍");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每日签到信用点加倍");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每日签到随机抽皮肤");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "热度统计值获得加倍");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每隔五分钟进行抽奖");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "使用钻石币兑换钥匙");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "使用钻石币参与抽奖");	
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "使用钻石兑换钥匙");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "使用钻石参与抽奖");	
 		}
 		case 1:
 		{
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每次正确击杀都会额外获得随机数量的信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "使用电击枪验明叛徒有概率获得钻石或信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每次正确击杀重甲玩家有概率获得钻石或信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "在地图时间内叛徒累计击杀50人即可获得钻石或信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "在地图时间内总消费50职业点数即可获得钻石或信用点");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每隔5分钟随机抽300信用点/随机皮肤/MVIP/限定皮肤");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "当日在线奖励(60分钟1钻石|150分钟5钻石|300分钟10钻石)");
 		}
 		case 2:
@@ -320,12 +309,12 @@ void BuildModeMenu(int client, int mode, const char[] name)
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "在地图时间累计击杀10只僵尸即可获得钻石或信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "在地图时间累计感染30个人类即可获得钻石或信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每隔5分钟随机抽夕立改二|普鲁鲁特|艾米莉亚|500信用点");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "当日在线奖励(60分钟2钻石|150分钟8钻石|300分钟15钻石)");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "当日在线奖励(60分钟1钻石|150分钟3钻石|300分钟5钻石)");
 		}
 		case 3:
 		{
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "刀杀/电死玩家会有概率获得钻石或信用点[击杀狗OP概率翻倍]");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "地图结束时(>25分钟)获得玩家得分*1的信用点|*5%%的钻石");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "电死玩家会有概率获得钻石或信用点");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "地图结束时(>25分钟)获得玩家得分*0.3的信用点|*2%%的钻石");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每局菠菜获胜的玩家可以选择将信用点转换成钻石");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每句菠菜失败的玩家有一定概率获得返还信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "投掷物击杀将会获得[15~30]信用点奖励");
@@ -342,8 +331,7 @@ void BuildModeMenu(int client, int mode, const char[] name)
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "5杀随机获得钻石|8杀随机获得钻石+信用点");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "使用电击枪/刀杀随机获得信用点或钻石");
 			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "单幅地图击杀30人以上随机获得钻石或信用点");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "当日在线奖励(60分钟1钻石|150分钟5钻石|300分钟10钻石)");
-			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "每隔5分钟随机抽300信用点/随机皮肤/MVIP/限定皮肤");
+			AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "当日在线奖励(60分钟1钻石|150分钟3钻石|300分钟5钻石)");
 		}
 	}
 
