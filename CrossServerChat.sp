@@ -3,6 +3,7 @@
 #include <cg_core>
 #include <store>
 #include <chat-processor>
+#include <clientprefs>
 
 #pragma newdecls required 
 
@@ -12,6 +13,8 @@
 #define port			"64333"
 
 Handle g_hSocket;
+Handle g_hCookie;
+bool g_bPbCSC[MAXPLAYERS+1];
 bool g_bConnected;
 
 public Plugin myinfo = 
@@ -19,7 +22,7 @@ public Plugin myinfo =
     name		= "Broadcast System - Client",
     author		= "Kyle",
     description	= "Send message on all connected server !",
-    version		= "2.0",
+    version		= "2.1",
     url			= "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -60,8 +63,30 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_msg", Command_PubMessage);
 	RegConsoleCmd("sm_xlb", Command_PubMessage);
 	RegConsoleCmd("sm_dlb", Command_PnlMessage);
+	RegConsoleCmd("sm_pbcsc", Command_PbCSC);
+	
+	g_hCookie = RegClientCookie("csc_pb", "pb csc chat", CookieAccess_Private);
 
 	CreateTimer(3.0, Timer_Reconnect);
+	CreateTimer(180.0, Timer_Broadcast, _, TIMER_REPEAT);
+}
+
+public Action Timer_Broadcast(Handle timer)
+{
+	PrintToChatAll("[\x0CCG\x01]   \x04输入\x07!pbcsc\x04可以开关全服聊天消息");
+}
+
+public void OnClientCookiesCached(int client)
+{
+	char Buffer[8];
+	GetClientCookie(client, g_hCookie, Buffer, 8);
+	if(!strcmp(Buffer, "true", false))
+		g_bPbCSC[client] = true;
+}
+
+public void OnClientDisconnect(int client)
+{
+	g_bPbCSC[client] = false;
 }
 
 public void OnPluginEnd()
@@ -77,8 +102,30 @@ public void OnPluginEnd()
 	}
 }
 
+public Action Command_PbCSC(int client, int args)
+{
+	if(g_bPbCSC[client])
+	{
+		g_bPbCSC[client] = false;
+		SetClientCookie(client, g_hCookie, "false");
+		tPrintToChat(client, "[\x0CCG\x01]   \x04您已打开全服聊天功能");
+	}
+	else
+	{
+		g_bPbCSC[client] = true;
+		SetClientCookie(client, g_hCookie, "true");
+		tPrintToChat(client, "[\x0CCG\x01]   \x04您已屏蔽全服聊天功能");
+    }
+}
+
 public void CP_OnChatMessagePost(int client, ArrayList recipients, const char[] flagstring, const char[] formatstring, const char[] name, const char[] message, bool processcolors, bool removecolors)
 {
+	if(g_bPbCSC[client])
+	{
+		tPrintToChat(client, "[\x0CCG\x01]   \x04您已关闭全服聊天功能,你所发送的内容无法被其它服务器的玩家收到");
+		return;
+	}
+
 	char m_szServerTag[32], m_szFinalMsg[1024];
 	
 	strcopy(m_szFinalMsg, 1024, message);
@@ -229,7 +276,15 @@ public int OnChildSocketReceive(Handle socket, char[] receiveData, const int dat
 	if(StrContains(receiveData, DISCONNECTSTR) != -1)
 		return;
 
-	PrintToChatAll(receiveData);
+	if(StrContains(receiveData, "\x01>>>", false) != -1)
+	{
+		for(int client = 1; client <= MaxClients; ++client)
+			if(IsClientInGame(client))
+				if(!g_bPbCSC[client])
+					PrintToChat(client, receiveData);
+				
+		return;
+	}
 
 	if(StrContains(receiveData, "[\x02小\x04喇\x0C叭\x01]", false) != -1)
 	{
@@ -242,6 +297,8 @@ public int OnChildSocketReceive(Handle socket, char[] receiveData, const int dat
 		PrintToChatAll(receiveData);
 		PrintToMenuAll(receiveData);
 	}
+
+	PrintToChatAll(receiveData);
 }
 
 public int OnChildSocketDisconnected(Handle socket, any hFile)
@@ -438,8 +495,8 @@ stock void ReplaceAllColors(char[] message, int maxLen)
 	ReplaceString(message, maxLen, "{teamcolor}", "\x03", false);
 	ReplaceString(message, maxLen, "{pink}", "\x03", false);
 	ReplaceString(message, maxLen, "{green}", "\x04", false);
-	ReplaceString(message, maxLen, "{HIGHLIGHT}", "\x04", false);
-	ReplaceString(message, maxLen, "{lime}", "\x05", false);
+	ReplaceString(message, maxLen, "{highlight}", "\x04", false);
+	ReplaceString(message, maxLen, "{yellow}", "\x05", false);
 	ReplaceString(message, maxLen, "{lightgreen}", "\x05", false);
 	ReplaceString(message, maxLen, "{lime}", "\x06", false);
 	ReplaceString(message, maxLen, "{lightred}", "\x07", false);
@@ -447,7 +504,6 @@ stock void ReplaceAllColors(char[] message, int maxLen)
 	ReplaceString(message, maxLen, "{gray}", "\x08", false);
 	ReplaceString(message, maxLen, "{grey}", "\x08", false);
 	ReplaceString(message, maxLen, "{olive}", "\x09", false);
-	ReplaceString(message, maxLen, "{yellow}", "\x05", false);
 	ReplaceString(message, maxLen, "{orange}", "\x10", false);
 	ReplaceString(message, maxLen, "{silver}", "\x0A", false);
 	ReplaceString(message, maxLen, "{lightblue}", "\x0B", false);
