@@ -3,10 +3,10 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 388
-#define PLUGIN_VERSION " 7.0.5 - 2017/02/06 03:25 "
+#define Build 389
+#define PLUGIN_VERSION " 7.0.6 - 2017/02/17 03:12 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
-#define TRANSDATASIZE 12577
+#define TRANSDATASIZE 12576
 
 //////////////////////////////////
 //		GLOBAL VARIABLES		//
@@ -115,8 +115,7 @@ public void OnPluginEnd()
 public void OnConfigsExecuted()
 {
 	SetConVarInt(FindConVar("sv_hibernate_when_empty"), 0);
-	if(g_szHostName[0] != '\0')
-		SetConVarString(FindConVar("hostname"), g_szHostName, false, false);
+	SetConVarString(FindConVar("hostname"), g_szHostName, false, false);
 }
 
 //////////////////////////////

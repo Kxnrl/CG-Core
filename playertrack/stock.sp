@@ -678,11 +678,11 @@ stock void TranslationToFile(const char[] m_szPath)
 	WriteFileLine(file, "\"chi\"	\"请在控制台中输入\"");
 	WriteFileLine(file, "\"zho\"	\"在操作臺中輸入\"");
 	WriteFileLine(file, "}");
-	WriteFileLine(file, "\"main new year act\"");
+	WriteFileLine(file, "\"main act desc\"");
 	WriteFileLine(file, "{");
-	WriteFileLine(file, "\"en\"	\"New Year`s Activities\"");
-	WriteFileLine(file, "\"chi\"	\"新年活动\"");
-	WriteFileLine(file, "\"zho\"	\"春節活動\"");
+	WriteFileLine(file, "\"en\"	\"Community`s Activities\"");
+	WriteFileLine(file, "\"chi\"	\"社区活动\"");
+	WriteFileLine(file, "\"zho\"	\"社群活動\"");
 	WriteFileLine(file, "}");
 	WriteFileLine(file, "\"main select language\"");
 	WriteFileLine(file, "{");
