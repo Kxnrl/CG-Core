@@ -130,13 +130,36 @@ public void CP_OnChatMessagePost(int client, ArrayList recipients, const char[] 
 	
 	strcopy(m_szFinalMsg, 1024, message);
 	PrepareString(m_szFinalMsg, 1024);
-	if(m_szFinalMsg[0] == '!' || m_szFinalMsg[0] == '#' || m_szFinalMsg[0] == '@' || StrEqual(m_szFinalMsg, "rtv", false) || StrContains(m_szFinalMsg, "nominat", false) != -1)
+	if(m_szFinalMsg[0] == '!' || m_szFinalMsg[0] == '.' || m_szFinalMsg[0] == '/' || m_szFinalMsg[0] == '#' || m_szFinalMsg[0] == '@' || StrEqual(m_szFinalMsg, "rtv", false) || StrContains(m_szFinalMsg, "nominat", false) != -1)
 		return;
 
 	GetServerTag(m_szServerTag, 32);
+	
 	Format(m_szFinalMsg, 1024, "%s \x04%s\x01>>>  %s \x01:  %s", key, m_szServerTag, name, message);
 	ReplaceAllColors(m_szFinalMsg, 1024);
 	SocketSend(g_hSocket, m_szFinalMsg, 1024);
+
+/*
+	int[] iRecipients = new int[MaxClients];
+	int iNumRecipients = GetArraySize(recipients);
+
+	for(int i = 0; i < iNumRecipients; i++)
+		iRecipients[i] = GetArrayCell(recipients, i);
+	
+	char m_szBuffer[1024];
+	if(!IsPlayerAlive(client))
+		Format(m_szBuffer, 1024, "*DEAD* %s \x01:  %s", name, message);
+	else
+		Format(m_szBuffer, 1024, " %s \x01:  %s", name, message);
+	
+	ReplaceAllColors(m_szBuffer, 1024);
+
+	for(int i = 0; i < GetArraySize(recipients); i++)
+	{
+		int target = GetArrayCell(recipients, i);
+		if(IsClientInGame(target))
+			PrintToChat(target, m_szBuffer);
+	}*/
 }
 
 public void CG_OnLilyCouple(int Neptune, int Noire)
