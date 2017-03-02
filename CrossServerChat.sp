@@ -5,6 +5,9 @@
 #include <chat-processor>
 #include <clientprefs>
 
+#define REQUIRE_PLUGIN
+#include <basecomm>
+
 #pragma newdecls required 
 
 #define DISCONNECTSTR	"DISCONNECTMEPLSTHX"
@@ -29,6 +32,7 @@ public Plugin myinfo =
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	CreateNative("CG_Broadcast", Native_Broadcast);
+	MarkNativeAsOptional("BaseComm_IsClientGagged");
 	
 	return APLRes_Success;
 }
@@ -126,40 +130,15 @@ public void CP_OnChatMessagePost(int client, ArrayList recipients, const char[] 
 		return;
 	}
 
-	char m_szServerTag[32], m_szFinalMsg[1024];
-	
-	strcopy(m_szFinalMsg, 1024, message);
-	PrepareString(m_szFinalMsg, 1024);
-	if(m_szFinalMsg[0] == '!' || m_szFinalMsg[0] == '.' || m_szFinalMsg[0] == '/' || m_szFinalMsg[0] == '#' || m_szFinalMsg[0] == '@' || StrEqual(m_szFinalMsg, "rtv", false) || StrContains(m_szFinalMsg, "nominat", false) != -1)
+	if(message[0] == '!' || message[0] == '.' || message[0] == '/' || message[0] == '#' || message[0] == '@' || StrEqual(message, "rtv", false) || StrContains(message, "nominat", false) != -1)
 		return;
 
+	char m_szServerTag[32], m_szFinalMsg[1024];
 	GetServerTag(m_szServerTag, 32);
-	
+
 	Format(m_szFinalMsg, 1024, "%s \x04%s\x01>>>  %s \x01:  %s", key, m_szServerTag, name, message);
 	ReplaceAllColors(m_szFinalMsg, 1024);
 	SocketSend(g_hSocket, m_szFinalMsg, 1024);
-
-/*
-	int[] iRecipients = new int[MaxClients];
-	int iNumRecipients = GetArraySize(recipients);
-
-	for(int i = 0; i < iNumRecipients; i++)
-		iRecipients[i] = GetArrayCell(recipients, i);
-	
-	char m_szBuffer[1024];
-	if(!IsPlayerAlive(client))
-		Format(m_szBuffer, 1024, "*DEAD* %s \x01:  %s", name, message);
-	else
-		Format(m_szBuffer, 1024, " %s \x01:  %s", name, message);
-	
-	ReplaceAllColors(m_szBuffer, 1024);
-
-	for(int i = 0; i < GetArraySize(recipients); i++)
-	{
-		int target = GetArrayCell(recipients, i);
-		if(IsClientInGame(target))
-			PrintToChat(target, m_szBuffer);
-	}*/
 }
 
 public void CG_OnLilyCouple(int Neptune, int Noire)
@@ -206,12 +185,12 @@ public void OnMapVoteEnd(const char[] map)
 
 public Action Command_PubMessage(int client, int args)
 {
-	if(Store_GetClientCredits(client) < 50)
+	if(Store_GetClientCredits(client) < 100)
 	{
-		PrintToChat(client, "\x01 \x04[Store]  \x01没钱还想发小喇叭?");
+		PrintToChat(client, "[\x04Store\x01]  \x01没钱还想发小喇叭?");
 		return Plugin_Handled;
 	}
-	
+
 	if(args < 1)
 		return Plugin_Handled;
 
@@ -224,9 +203,15 @@ public Action Command_PubMessage(int client, int args)
 
 	if(!UpdateMessageToDiscuz(client, message))
 		return Plugin_Handled;
-
-	Store_SetClientCredits(client, Store_GetClientCredits(client)-50, "发送小喇叭");
-	PrintToChat(client, "\x01 \x04[Store]  \x01你花费\x0450信用点\x01发送了一条小喇叭");
+	
+	Store_SetClientCredits(client, Store_GetClientCredits(client)-100, "发送小喇叭");
+	PrintToChat(client, "[\x04Store\x01]  \x01你花费\x0450信用点\x01发送了一条小喇叭");
+	
+	if(IsClientGag(client))
+	{
+		PrintToChat(client, "[\x04Store\x01]  \x01你被口球了还想发喇叭?");
+		return Plugin_Handled;
+	}
 
 	PrintToChatAll(m_szFinalMsg);
 
@@ -240,7 +225,7 @@ public Action Command_PnlMessage(int client, int args)
 {
 	if(Store_GetClientCredits(client) < 500)
 	{
-		PrintToChat(client, "\x01 \x04[Store]  \x01没钱还想发大喇叭?");
+		PrintToChat(client, "[\x04Store\x01]  \x01没钱还想发大喇叭?");
 		return Plugin_Handled;
 	}
 	
@@ -258,7 +243,13 @@ public Action Command_PnlMessage(int client, int args)
 	Format(m_szFinalMsg, 1024, "[\x02大\x04喇\x0C叭\x01]  \x04%N\x01 :   \x07%s", client, message);
 	
 	Store_SetClientCredits(client, Store_GetClientCredits(client)-500, "发送大喇叭");
-	PrintToChat(client, "\x01 \x04[Store]  \x01你花费\x04500信用点\x01发送了一条小喇叭");
+	PrintToChat(client, "[\x04Store\x01]  \x01你花费\x04500信用点\x01发送了一条小喇叭");
+	
+	if(IsClientGag(client))
+	{
+		PrintToChat(client, "[\x04Store\x01]  \x01你被口球了还想发喇叭?");
+		return Plugin_Handled;
+	}
 
 	PrintToMenuAll(m_szFinalMsg);
 
@@ -411,7 +402,7 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 	if(sArgs[startidx] != '#')
 		return Plugin_Continue;
 	
-	if(Store_GetClientCredits(client) < 50)
+	if(Store_GetClientCredits(client) < 100)
 		return Plugin_Continue;
 
 	startidx++;
@@ -429,8 +420,14 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 		if(!UpdateMessageToDiscuz(client, message))
 			return Plugin_Stop;
 
-		Store_SetClientCredits(client, Store_GetClientCredits(client)-50, "发送小喇叭");
-		PrintToChat(client, "\x01 \x04[Store]  \x01你花费\x0450信用点\x01发送了一条小喇叭");
+		Store_SetClientCredits(client, Store_GetClientCredits(client)-100, "发送小喇叭");
+		PrintToChat(client, "[\x04Store\x01]  \x01你花费\x0450信用点\x01发送了一条小喇叭");
+		
+		if(IsClientGag(client))
+		{
+			PrintToChat(client, "[\x04Store\x01]  \x01你被口球了还想发喇叭?");
+			return Plugin_Stop;
+		}
 
 		PrintToChatAll(m_szFinalMsg);
 
@@ -533,4 +530,12 @@ stock void ReplaceAllColors(char[] message, int maxLen)
 	ReplaceString(message, maxLen, "{blue}", "\x0C", false);
 	ReplaceString(message, maxLen, "{purple}", "\x0E", false);
 	ReplaceString(message, maxLen, "{darkorange}", "\x0F", false);
+}
+
+stock bool IsClientGag(int client)
+{
+	if(GetFeatureStatus(FeatureType_Native, "BaseComm_IsClientGagged") != FeatureStatus_Available)
+		return false;
+	
+	return BaseComm_IsClientGagged(client);
 }
