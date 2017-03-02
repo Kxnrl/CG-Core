@@ -23,16 +23,16 @@ void InitializeCP(int client, int CPId, int CPDate)
 	}
 }
 
-void CheckingCP(int Neptune)
+void CheckingCP(int client)
 {
 	//先获取你CP是不是有效的玩家
-	int Noire = g_eClient[Neptune][iCPId];
+	int target = g_eClient[client][iCPId];
 	
-	if(Noire < 1)
+	if(target < 1)
 		return;
 
 	//清除关联
-	g_eClient[Noire][iCPId] = -1;
+	g_eClient[target][iCPId] = -1;
 }
 
 void BuildCPMenu(int client)
@@ -115,14 +115,14 @@ public int MenuHandler_CPSelect(Handle menu, MenuAction action, int client, int 
 
 			if(!target || !IsClientInGame(target) || g_eClient[target][iCPId] != -2)
 			{
-				tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "cp invalid target");
+				tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "cp invalid target", client);
 				BuildCPMenu(client);
 				return;
 			}
 			
 			ConfirmCPRequest(client, target);
 			
-			tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "cp send", target);
+			tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "cp send", client, target);
 		}
 		case MenuAction_End:
 		{
@@ -175,7 +175,7 @@ public int MenuHandler_CPConfirm(Handle menu, MenuAction action, int target, int
 			
 			if(!client || !IsClientInGame(client) || g_eClient[client][iCPId] != -2)
 			{
-				tPrintToChat(target, "%s  %t", PLUGIN_PREFIX, "cp invalid target");
+				tPrintToChat(target, "%s  %T", PLUGIN_PREFIX, "cp invalid target", client);
 				return;
 			}
 			
@@ -193,8 +193,8 @@ public int MenuHandler_CPConfirm(Handle menu, MenuAction action, int target, int
 				return;
 			}
 			
-			tPrintToChat(target, "%s  %t", PLUGIN_PREFIX, "cp refuse target", client);
-			tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "cp refuse client", target);
+			tPrintToChat(target, "%s  %T", PLUGIN_PREFIX, "cp refuse target", target, client);
+			tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "cp refuse client", client, target);
 		}
 	}
 	else if(action == MenuAction_End)
@@ -203,30 +203,30 @@ public int MenuHandler_CPConfirm(Handle menu, MenuAction action, int target, int
 	}
 }
 
-public void CP_AddNewCouple(int Neptune, int Noire)
+public void CP_AddNewCouple(int client, int target)
 {
 	//对象无效?
-	if(!IsClientInGame(Neptune))
+	if(!IsClientInGame(client))
 	{
-		tPrintToChat(Noire, "%s  %t 000000", PLUGIN_PREFIX, "system error");
+		tPrintToChat(target, "%s  %T 000000", PLUGIN_PREFIX, "system error", target);
 		return;
 	}
 	
-	if(!IsClientInGame(Noire))
+	if(!IsClientInGame(target))
 	{
-		tPrintToChat(Neptune, "%s  %t 000000", PLUGIN_PREFIX, "system error");
+		tPrintToChat(client, "%s  %T 000000", PLUGIN_PREFIX, "system error", client);
 		return;
 	}
-	
+
 	//创建DataPack
 	Handle m_hPack = CreateDataPack();
-	WritePackCell(m_hPack, GetClientUserId(Neptune));
-	WritePackCell(m_hPack, GetClientUserId(Noire));
+	WritePackCell(m_hPack, GetClientUserId(client));
+	WritePackCell(m_hPack, GetClientUserId(target));
 	ResetPack(m_hPack);
 
 	//使用SQL函数 CALL
 	char m_szQuery[128];
-	Format(m_szQuery, 128, "CALL lily_addcouple(%d, %d)", g_eClient[Neptune][iPlayerId], g_eClient[Noire][iPlayerId]);
+	Format(m_szQuery, 128, "CALL lily_addcouple(%d, %d)", g_eClient[client][iPlayerId], g_eClient[target][iPlayerId]);
 	MySQL_Query(g_eHandle[DB_Game], SQLCallback_UpdateCP, m_szQuery, m_hPack);
 }
 
@@ -235,7 +235,7 @@ void CheckingDivorce(int client)
 	//防止某些人刷CP
 	if((GetTime() - g_eClient[client][iCPDate]) < 604800)
 	{
-		tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "cp can divorce");
+		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "cp can divorce", client);
 		BuildCPMenu(client);
 		return;
 	}
@@ -266,10 +266,10 @@ void ConfirmDivorce(int client, const int m_iId, const char[] m_szName)
 	
 	char m_szItem[128];
 
-	Format(m_szItem, 128, "%t", "cp your cp", m_szName);
+	Format(m_szItem, 128, "%T", "cp your cp", client, m_szName);
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", m_szItem);
 	
-	Format(m_szItem, 128, "%t", "cp your days", (GetTime() - g_eClient[client][iCPDate])/86400);
+	Format(m_szItem, 128, "%T", "cp your days", client, (GetTime() - g_eClient[client][iCPDate])/86400);
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", m_szItem);
 
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", "%T", "cp confirm divorce", client);

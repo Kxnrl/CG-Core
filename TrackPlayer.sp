@@ -3,10 +3,10 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 389
-#define PLUGIN_VERSION " 7.0.6 - 2017/02/17 03:12 "
+#define Build 391
+#define PLUGIN_VERSION " 7.2 - 2017/03/02 06:00 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
-#define TRANSDATASIZE 12576
+#define TRANSDATASIZE 12574
 
 //////////////////////////////////
 //		GLOBAL VARIABLES		//
@@ -24,9 +24,11 @@ int g_iConnect_discuz;
 int g_iNowDate;
 bool g_bLateLoad;
 char g_szIP[32];
+char g_szRconPwd[32];
 char g_szHostName[256];
 char g_szLogFile[128];
 char g_szTempFile[128];
+EngineVersion g_eGame;
 
 //////////////////////////////
 //			MODULES			//
@@ -72,6 +74,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	
 	//Fix Plugin Load
 	SetConVarInt(FindConVar("sv_hibernate_when_empty"), 0);
+	Format(g_szRconPwd, 32, "%d", GetRandomInt(10000000, 99999999));
+	SetConVarString(FindConVar("rcon_password"), g_szRconPwd);
 
 	return APLRes_Success;
 }
@@ -79,7 +83,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 public void OnPluginStart()
 {
 	//建立Log文件
-	BuildPath(Path_SM, g_szLogFile, 128, "logs/Core.log");
+	InitLogFile();
 	
 	//初始化日期
 	InitDate();
@@ -100,6 +104,9 @@ public void OnPluginStart()
 	//获取所有Event
 	InitEvents();
 	
+	//获取游戏模式
+	InitGame();
+	
 	//建立监听Timer
 	CreateTimer(1.0, Timer_Tracking, _, TIMER_REPEAT);
 }
@@ -116,6 +123,7 @@ public void OnConfigsExecuted()
 {
 	SetConVarInt(FindConVar("sv_hibernate_when_empty"), 0);
 	SetConVarString(FindConVar("hostname"), g_szHostName, false, false);
+	SetConVarString(FindConVar("rcon_password"), g_szRconPwd, false, false);
 }
 
 //////////////////////////////

@@ -1,3 +1,8 @@
+void InitLogFile()
+{
+	BuildPath(Path_SM, g_szLogFile, 128, "logs/Core.log");
+}
+
 void InitServerIP()
 {
 	int ip = GetConVarInt(FindConVar("hostip"));
@@ -9,6 +14,11 @@ void InitDate()
 	char m_szDate[32];
 	FormatTime(m_szDate, 64, "%Y%m%d", GetTime());
 	g_iNowDate = StringToInt(m_szDate);
+}
+
+void InitGame()
+{
+	g_eGame = GetEngineVersion();
 }
 
 void InitCommands()
@@ -330,7 +340,7 @@ void SetClientVIP(int client, int type)
 		
 	}
 	
-	if(GetEngineVersion() == Engine_Left4Dead2)
+	if(g_eGame == Engine_Left4Dead2)
 	{
 		RunAdminCacheChecks(client);
 	}
@@ -552,7 +562,7 @@ public int MenuHandler_Listener(Handle menu, MenuAction action, int client, int 
 		{
 			if(!OnAPIStoreSetCredits(client, -500, "设置签名", true))
 			{
-				tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "signature you have not enough credits");
+				tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "signature you have not enough credits", client);
 				return;
 			}
 			
@@ -565,7 +575,7 @@ public int MenuHandler_Listener(Handle menu, MenuAction action, int client, int 
 			WritePackCell(data, 0);
 			ResetPack(data);
 			MySQL_Query(g_eHandle[DB_Game], SQLCallback_SaveDatabase, m_szQuery, data);
-			tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "signature set successful");
+			tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "signature set successful", client);
 			strcopy(g_eClient[client][szSignature], 256, g_eClient[client][szNewSignature]);
 			ReplaceString(g_eClient[client][szNewSignature], 512, "{白}", "\x01");
 			ReplaceString(g_eClient[client][szNewSignature], 512, "{红}", "\x02");
@@ -580,7 +590,7 @@ public int MenuHandler_Listener(Handle menu, MenuAction action, int client, int 
 			ReplaceString(g_eClient[client][szNewSignature], 512, "{紫}", "\x0E");
 			ReplaceString(g_eClient[client][szNewSignature], 512, "{亮蓝}", "\x0B");
 			ReplaceString(g_eClient[client][szNewSignature], 512, "{蓝}", "\x0C");
-			tPrintToChat(client, "%t: %s", "signature yours", g_eClient[client][szNewSignature]);
+			tPrintToChat(client, "%T: %s", "signature yours", client, g_eClient[client][szNewSignature]);
 		}
 	}
 	if(action == MenuAction_End)

@@ -13,7 +13,7 @@ public Action Command_Online(int client, int args)
 	int m_iHours = g_eClient[client][iOnline] / 3600;
 	int m_iMins = g_eClient[client][iOnline] % 3600;
 	int t_iMins = (GetTime() - g_eClient[client][iConnectTime]) / 60;
-	tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "cmd onlines", client, m_iHours, m_iMins/60, g_eClient[client][iNumber], t_iMins);
+	tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "cmd onlines", client, client, m_iHours, m_iMins/60, g_eClient[client][iNumber], t_iMins);
 }
 
 public Action Command_Track(int client, int args)
@@ -46,8 +46,8 @@ public Action Command_Track(int client, int args)
 		}
 	}
 	
-	tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "check console");
-	tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "cmd track", ingame, connected);
+	tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "check console", client);
+	tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "cmd track", client, ingame, connected);
 
 	return Plugin_Handled;
 }
@@ -99,14 +99,14 @@ public Action Command_Signature(int client, int args)
 {
 	if(StrContains(g_eClient[client][szSignature], "该玩家未设置签名") != -1)
 	{
-		tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "signature free first");
+		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "signature free first", client);
 		BuildListenerMenu(client);
 		return Plugin_Handled;
 	}
 
 	if(OnAPIStoreGetCredits(client) < 500)
 	{
-		tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "signature you have not enough credits");
+		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "signature you have not enough credits", client);
 		return Plugin_Handled;
 	}
 
@@ -122,7 +122,7 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 	
 	strcopy(g_eClient[client][szNewSignature], 256, sArgs);
 	
-	tPrintToChat(client, "%t", "signature input", sArgs);
+	tPrintToChat(client, "%T", "signature input", sArgs, client);
 
 	g_eClient[client][bListener] = false;
 
@@ -147,7 +147,7 @@ public Action Command_GetAuth(int client, int args)
 	
 	if(g_eClient[client][iGroupId] > 0)
 	{
-		tPrintToChat(client, "%s  {green}%t", PLUGIN_PREFIX, "you are already Auth Player")
+		tPrintToChat(client, "%s  {green}%T", PLUGIN_PREFIX, "you are already Auth Player", client)
 		return Plugin_Handled;
 	}
 

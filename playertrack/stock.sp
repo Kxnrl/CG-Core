@@ -23,7 +23,7 @@ stock void SetMenuTitleEx(Handle menu, const char[] fmt, any ...)
 	char m_szBuffer[256];
 	VFormat(m_szBuffer, 256, fmt, 3);
 	
-	if(GetEngineVersion() == Engine_CSGO)
+	if(g_eGame == Engine_CSGO)
 		Format(m_szBuffer, 256, "%s\n　", m_szBuffer);
 	else
 	{
@@ -39,7 +39,7 @@ stock bool AddMenuItemEx(Handle menu, int style, const char[] info, const char[]
 	char m_szBuffer[256];
 	VFormat(m_szBuffer, 256, display, 5);
 
-	if(GetEngineVersion() != Engine_CSGO)
+	if(g_eGame != Engine_CSGO)
 		ReplaceString(m_szBuffer, 256, "\n", " - ");
 
 	return AddMenuItem(menu, info, m_szBuffer, style);
@@ -87,65 +87,12 @@ stock int FindClientByPlayerId(int PlayerId)
 	return -1;
 }
 
-stock void tPrintHintTextToAll(const char[] szMessage, any ...)
-{
-	char szBuffer[256];
-	
-	for(int i = 1; i <= MaxClients; i++)
-	{
-		if (IsClientInGame(i) && !IsFakeClient(i))
-		{
-			SetGlobalTransTarget(i);
-			VFormat(szBuffer, 256, szMessage, 2);
-			PrintHintText(i, "%s", szBuffer);
-		}
-	}
-}
-
-stock void tPrintHintText(int client, const char[] szMessage, any ...)
-{
-	char szBuffer[256];
-
-	SetGlobalTransTarget(client);
-	VFormat(szBuffer, 256, szMessage, 3);
-	PrintHintText(client, "%s", szBuffer);
-}
-
-stock void tPrintCenterTextAll(const char[] szMessage, any ...)
-{
-	char szBuffer[256];
-
-	for(int i = 1; i <= MaxClients; i++)
-	{
-		if (IsClientInGame(i) && !IsFakeClient(i))
-		{
-			SetGlobalTransTarget(i);
-			VFormat(szBuffer, 256, szMessage, 2);
-			PrintCenterText(i, "%s", szBuffer);
-		}
-	}
-}
-
-stock void tPrintCenterText(int client, const char[] szMessage, any ...)
-{
-	char szBuffer[256];
-
-	SetGlobalTransTarget(client);
-	VFormat(szBuffer, 256, szMessage, 3);
-	PrintCenterText(client, "%s", szBuffer);
-}
-
 stock void tPrintToChat(int client, const char[] szMessage, any ...)
 {
-	if(client <= 0 || client > MaxClients)
+	if(!IsValidClient(client, true))
 		ThrowError("Invalid client index %d", client);
 
-	if(!IsClientInGame(client))
-		ThrowError("Client %d is not in game", client);
-
 	char szBuffer[256];
-
-	SetGlobalTransTarget(client);
 	VFormat(szBuffer, 256, szMessage, 3);
 	ReplaceColorsCode(szBuffer, 256);
 	PrintToChat(client, szBuffer);
@@ -155,14 +102,14 @@ stock void tPrintToChatAll(const char[] szMessage, any ...)
 {
 	char szBuffer[256];
 
-	for(int i = 1; i <= MaxClients; i++)
+	for(int client = 1; client <= MaxClients; client++)
 	{
-		if(IsClientInGame(i) && !IsFakeClient(i))
+		if(IsValidClient(client, true))
 		{
-			SetGlobalTransTarget(i);			
+			SetGlobalTransTarget(client);
 			VFormat(szBuffer, 256, szMessage, 2);
 			ReplaceColorsCode(szBuffer, 256);
-			PrintToChat(i, "%s", szBuffer);
+			PrintToChat(client, szBuffer);
 		}
 	}
 }
@@ -190,26 +137,30 @@ stock void ShowHiddenMOTDPanel(int client, char[] url, int type)
 	CloseHandle(m_hKv);
 }
 
-stock void ReplaceColorsCode(char[] buffer, int maxLen)
+stock void ReplaceColorsCode(char[] message, int maxLen)
 {
-	ReplaceString(buffer, maxLen, "{normal}", "\x01", false);
-	ReplaceString(buffer, maxLen, "{default}", "\x01", false);
-	ReplaceString(buffer, maxLen, "{white}", "\x01", false);
-	ReplaceString(buffer, maxLen, "{darkred}", "\x02", false);
-	ReplaceString(buffer, maxLen, "{pink}", "\x03", false);
-	ReplaceString(buffer, maxLen, "{green}", "\x04", false);
-	ReplaceString(buffer, maxLen, "{lime}", "\x05", false);
-	ReplaceString(buffer, maxLen, "{yellow}", "\x05", false);
-	ReplaceString(buffer, maxLen, "{lightgreen}", "\x06", false);
-	ReplaceString(buffer, maxLen, "{lightred}", "\x07", false);
-	ReplaceString(buffer, maxLen, "{red}", "\x07", false);
-	ReplaceString(buffer, maxLen, "{gray}", "\x08", false);
-	ReplaceString(buffer, maxLen, "{grey}", "\x08", false);
-	ReplaceString(buffer, maxLen, "{olive}", "\x09", false);
-	ReplaceString(buffer, maxLen, "{orange}", "\x10", false);
-	ReplaceString(buffer, maxLen, "{purple}", "\x0E", false);
-	ReplaceString(buffer, maxLen, "{lightblue}", "\x0B", false);
-	ReplaceString(buffer, maxLen, "{blue}", "\x0C", false);
+	ReplaceString(message, maxLen, "{normal}", "\x01", false);
+	ReplaceString(message, maxLen, "{default}", "\x01", false);
+	ReplaceString(message, maxLen, "{white}", "\x01", false);
+	ReplaceString(message, maxLen, "{darkred}", "\x02", false);
+	ReplaceString(message, maxLen, "{teamcolor}", "\x03", false);
+	ReplaceString(message, maxLen, "{pink}", "\x03", false);
+	ReplaceString(message, maxLen, "{green}", "\x04", false);
+	ReplaceString(message, maxLen, "{highlight}", "\x04", false);
+	ReplaceString(message, maxLen, "{yellow}", "\x05", false);
+	ReplaceString(message, maxLen, "{lightgreen}", "\x05", false);
+	ReplaceString(message, maxLen, "{lime}", "\x06", false);
+	ReplaceString(message, maxLen, "{lightred}", "\x07", false);
+	ReplaceString(message, maxLen, "{red}", "\x07", false);
+	ReplaceString(message, maxLen, "{gray}", "\x08", false);
+	ReplaceString(message, maxLen, "{grey}", "\x08", false);
+	ReplaceString(message, maxLen, "{olive}", "\x09", false);
+	ReplaceString(message, maxLen, "{orange}", "\x10", false);
+	ReplaceString(message, maxLen, "{silver}", "\x0A", false);
+	ReplaceString(message, maxLen, "{lightblue}", "\x0B", false);
+	ReplaceString(message, maxLen, "{blue}", "\x0C", false);
+	ReplaceString(message, maxLen, "{purple}", "\x0E", false);
+	ReplaceString(message, maxLen, "{darkorange}", "\x0F", false);
 }
 
 stock void GetClientAuthName(int client, char[] buffer, int maxLen)

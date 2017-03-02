@@ -145,6 +145,12 @@ public void SQLCallback_GetServerIP(Handle owner, Handle hndl, const char[] erro
 		SettingAdver();
 		
 		OnServerLoadSuccess();
+
+		int ip = GetConVarInt(FindConVar("hostip"));
+		char IPadr[32], m_szQuery[128];
+		Format(IPadr, 32, "%d.%d.%d.%d", ((ip & 0xFF000000) >> 24) & 0xFF, ((ip & 0x00FF0000) >> 16) & 0xFF, ((ip & 0x0000FF00) >>  8) & 0xFF, ((ip & 0x000000FF) >>  0) & 0xFF);
+		Format(m_szQuery, 128, "UPDATE sb_servers SET rcon = '%s' WHERE ip = '%s' and port = '%d'", g_szRconPwd, IPadr, GetConVarInt(FindConVar("hostport")));
+		MySQL_Query(g_eHandle[DB_Game], SQLCallback_OnRconPwd, m_szQuery, _, DBPrio_High);
 	}
 	else
 	{
@@ -196,7 +202,7 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 		//输出错误日志
 		if(StrContains(error, "lost connection", false) == -1)
 		{
-			LogToFileEx(g_szLogFile, "Query Client Stats Failed! Client:\"%N\" Error Happened: %s", client, error);
+			LogToFileEx(g_szLogFile, "Query Client Stats Failed! Client:\"%L\" Error Happened: %s", client, error);
 			return;
 		}
 
@@ -234,7 +240,7 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 		}
 		else
 		{
-			LogToFileEx(g_szLogFile, "Check '%N' DZ Error happened: %s", client, error);
+			LogToFileEx(g_szLogFile, "Check '%L' DZ Error happened: %s", client, error);
 			RunAdminCacheChecks(client);
 			OnClientVipChecked(client);
 			OnClientDataLoaded(client);
@@ -270,7 +276,7 @@ public void SQLCallback_GetClientDiscuzName(Handle owner, Handle hndl, const cha
 	{
 		if(StrContains(error, "lost connection", false) == -1)
 		{
-			LogToFileEx(g_szLogFile, "Check '%N' DZ Error happened: %s", client, error);
+			LogToFileEx(g_szLogFile, "Check '%L' DZ Error happened: %s", client, error);
 			RunAdminCacheChecks(client);
 			OnClientVipChecked(client);
 			OnClientDataLoaded(client);
@@ -321,7 +327,7 @@ public void SQLCallback_CheckVIP(Handle owner, Handle hndl, const char[] error, 
 		{
 			RunAdminCacheChecks(client);
 			OnClientVipChecked(client);
-			LogToFileEx(g_szLogFile, "Check '%N' VIP Error happened: %s", client, error);
+			LogToFileEx(g_szLogFile, "Check '%L' VIP Error happened: %s", client, error);
 		}
 		
 		char m_szQuery[128];
@@ -370,7 +376,7 @@ public void SQLCallback_InsertClientStat(Handle owner, Handle hndl, const char[]
 	if(hndl == INVALID_HANDLE)
 	{
 		//记录客户信息 写入到错误日志
-		LogToFileEx(g_szLogFile, "INSERT playertrack_player Failed! Client:\"%N\" Error Happened: %s", client, error);
+		LogToFileEx(g_szLogFile, "INSERT playertrack_player Failed! Client:\"%L\" Error Happened: %s", client, error);
 		
 		//重试检查  辣鸡阿里云RDS
 		char m_szAuth[32], m_szQuery[512];
@@ -400,7 +406,7 @@ public void SQLCallback_SaveClientStat(Handle owner, Handle hndl, const char[] e
 	{
 		if(g_eClient[client][iDataRetry] <= 5)
 		{
-			LogToFileEx(g_szLogFile, "UPDATE Client Data Failed!   Times:%d Player:\"%N\" Error Happened:%s", g_eClient[client][iDataRetry], client, error);
+			LogToFileEx(g_szLogFile, "UPDATE Client Data Failed!   Times:%d Player:\"%L\" Error Happened:%s", g_eClient[client][iDataRetry], client, error);
 			g_eClient[client][iDataRetry]++;
 
 			if(StrContains(error, "empty", false) != -1)
@@ -410,7 +416,7 @@ public void SQLCallback_SaveClientStat(Handle owner, Handle hndl, const char[] e
 		}
 		else
 		{
-			LogToFileEx(g_szLogFile, "UPDATE Client Data Failed!   Times:(Times out) Player:\"%N\" Error Happened:%s", client, error);
+			LogToFileEx(g_szLogFile, "UPDATE Client Data Failed!   Times:(Times out) Player:\"%L\" Error Happened:%s", client, error);
 			g_eClient[client][iDataRetry] = 0;
 		}
 	}
@@ -428,7 +434,7 @@ public void SQLCallback_InsertPlayerStat(Handle owner, Handle hndl, const char[]
 	if(hndl == INVALID_HANDLE)
 	{
 		//记录客户信息 写入到错误日志
-		LogToFileEx(g_szLogFile, "INSERT playertrack_analytics Failed!   Player:\"%N\" Error Happened:%s", client, error);
+		LogToFileEx(g_szLogFile, "INSERT playertrack_analytics Failed!   Player:\"%L\" Error Happened:%s", client, error);
 		char m_szQuery[256];
 		Format(m_szQuery, 256, "SELECT * FROM `playertrack_analytics` WHERE (connect_time = %d AND ip = '%s' AND playerid = %d) order by id desc limit 1;", g_eClient[client][iConnectTime], g_eClient[client][szIP], g_eClient[client][iPlayerId]);
 		MySQL_Query(g_eHandle[DB_Game], SQLCallback_InsertPlayerStatFailed, m_szQuery, GetClientUserId(client));
@@ -451,7 +457,7 @@ public void SQLCallback_InsertPlayerStatFailed(Handle owner, Handle hndl, const 
 	if(hndl == INVALID_HANDLE)
 	{
 		//输出错误日志
-		LogToFileEx(g_szLogFile, "Confirm Insert Failed! Client:\"%N\" Error Happened: %s", error);
+		LogToFileEx(g_szLogFile, "Confirm Insert Failed! Client:\"%L\" Error Happened: %s", error);
 		char m_szQuery[256];
 		Format(m_szQuery, 256, "SELECT * FROM `playertrack_analytics` WHERE (connect_time = %d AND ip = '%s' AND playerid = %d) order by id desc limit 1;", g_eClient[client][iConnectTime], g_eClient[client][szIP], g_eClient[client][iPlayerId]);
 		MySQL_Query(g_eHandle[DB_Game], SQLCallback_InsertPlayerStatFailed, m_szQuery, GetClientUserId(client));
@@ -474,9 +480,9 @@ public void SQLCallback_GetSigninStat(Handle owner, Handle hndl, const char[] er
 	
 	if(hndl == INVALID_HANDLE)
 	{
-		tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "sign error");
+		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "sign error", client);
 		g_eClient[client][bLoginProc] = false;
-		LogToFileEx(g_szLogFile, "Get SigninStat Failed client: %N error: %s", client, error);
+		LogToFileEx(g_szLogFile, "Get SigninStat Failed client: %L error: %s", client, error);
 		return;
 	}
 
@@ -505,15 +511,15 @@ public void SQLCallback_SignCallback(Handle owner, Handle hndl, const char[] err
 
 	if(hndl == INVALID_HANDLE)
 	{
-		tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "sign error");
+		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "sign error", client);
 		g_eClient[client][bLoginProc] = false;
-		LogToFileEx(g_szLogFile, "UPDATE Client Sign Failed! Client:%N Query:%s", client, error);
+		LogToFileEx(g_szLogFile, "UPDATE Client Sign Failed! Client:%L Query:%s", client, error);
 		return;
 	}
 
 	g_eClient[client][iSignNum]++;
 	g_eClient[client][iSignTime] = GetTime();
-	tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "sign successful", g_eClient[client][iSignNum]);
+	tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "sign successful", client, g_eClient[client][iSignNum]);
 	g_eClient[client][bTwiceLogin] = true;
 	g_eClient[client][bLoginProc] = false;
 	OnClientSignSucessed(client);
@@ -563,7 +569,7 @@ public void SQLCallback_NothingCallback(Handle owner, Handle hndl, const char[] 
 	if(hndl == INVALID_HANDLE)
 	{
 		int client = GetClientOfUserId(userid);
-		LogToFileEx(g_szLogFile, "INSERT Failed: client:%N ERROR:%s", client, error);
+		LogToFileEx(g_szLogFile, "INSERT Failed: client:%L ERROR:%s", client, error);
 		return;
 	}
 	
@@ -602,58 +608,67 @@ public void SQLCallback_OnConnect(Handle owner, Handle hndl, const char[] error,
 	}
 }
 
+public void SQLCallback_OnRconPwd(Handle owner, Handle hndl, const char[] error, int userid)
+{
+	if(hndl == INVALID_HANDLE)
+	{
+		LogToFileEx(g_szLogFile, "Set Rcon Password Failed! Error:%s", error);
+		return;
+	}
+}
+
 public void SQLCallback_UpdateCP(Handle owner, Handle hndl, const char[] error, Handle pack)
 {
-	int Neptune = GetClientOfUserId(ReadPackCell(pack));
-	int Noire = GetClientOfUserId(ReadPackCell(pack));
+	int client = GetClientOfUserId(ReadPackCell(pack));
+	int target = GetClientOfUserId(ReadPackCell(pack));
 	CloseHandle(pack);
 
 	if(hndl == INVALID_HANDLE)
 	{
-		if(Neptune && IsClientInGame(Neptune))
+		if(client && IsClientInGame(client))
 		{
-			tPrintToChat(Neptune, "%s  %t:\x02 x03", PLUGIN_PREFIX, "system error");
-			LogToFileEx(g_szLogFile, "UpdateCP %N error: %s", Neptune, error);
+			tPrintToChat(client, "%s  %T:\x02 x03", PLUGIN_PREFIX, "system error", client);
+			LogToFileEx(g_szLogFile, "UpdateCP %L error: %s", client, error);
 		}
 		
-		if(Noire && IsClientInGame(Noire))
+		if(target && IsClientInGame(target))
 		{
-			tPrintToChat(Neptune, "%s  %t:\x02 x03", PLUGIN_PREFIX, "system error");
-			LogToFileEx(g_szLogFile, "UpdateCP %N error: %s", Noire, error);
+			tPrintToChat(client, "%s  %T:\x02 x03", PLUGIN_PREFIX, "system error", client);
+			LogToFileEx(g_szLogFile, "UpdateCP %L error: %s", target, error);
 		}
 		
 		return;
 	}
 	
-	if(Neptune && IsClientInGame(Neptune) && Noire && IsClientInGame(Noire))
+	if(client && IsClientInGame(client) && target && IsClientInGame(target))
 	{
-		g_eClient[Neptune][iCPId] = Noire;
-		g_eClient[Neptune][iCPDate] = GetTime();
-		g_eClient[Noire][iCPId] = Neptune;
-		g_eClient[Noire][iCPDate] = GetTime();
+		g_eClient[client][iCPId] = target;
+		g_eClient[client][iCPDate] = GetTime();
+		g_eClient[target][iCPId] = client;
+		g_eClient[target][iCPDate] = GetTime();
 		
 		Call_StartForward(g_Forward[ClientMarried]);
-		Call_PushCell(Neptune);
-		Call_PushCell(Noire);
+		Call_PushCell(client);
+		Call_PushCell(target);
 		Call_Finish();
 		
-		tPrintToChatAll("%s  %t", PLUGIN_PREFIX, "cp married", Neptune, Noire);
+		tPrintToChatAll("%s  %t", PLUGIN_PREFIX, "cp married", client, target);
 	}
 	
-	if(Neptune && IsClientInGame(Neptune) && (!Noire || !IsClientInGame(Noire)))
+	if(client && IsClientInGame(client) && (!target || !IsClientInGame(target)))
 	{
-		g_eClient[Neptune][iCPId] = -1;
-		g_eClient[Neptune][iCPDate] = GetTime();
+		g_eClient[client][iCPId] = -1;
+		g_eClient[client][iCPDate] = GetTime();
 		
-		tPrintToChat(Neptune, "%s  %t", PLUGIN_PREFIX, "cp married offline");
+		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "cp married offline", client);
 	}
 	
-	if(Noire && IsClientInGame(Noire) && (!Neptune || !IsClientInGame(Neptune)))
+	if(target && IsClientInGame(target) && (!client || !IsClientInGame(client)))
 	{
-		g_eClient[Noire][iCPId] = -1;
-		g_eClient[Noire][iCPDate] = GetTime();
+		g_eClient[target][iCPId] = -1;
+		g_eClient[target][iCPDate] = GetTime();
 		
-		tPrintToChat(Noire, "%s  %t", PLUGIN_PREFIX, "cp married offline");
+		tPrintToChat(target, "%s  %T", PLUGIN_PREFIX, "cp married offline", client);
 	}
 }
 
@@ -666,14 +681,14 @@ public void SQLCallback_CheckDivorce(Handle owner, Handle hndl, const char[] err
 	
 	if(hndl == INVALID_HANDLE)
 	{
-		tPrintToChat(client, "%s  %t:\x02 x04", PLUGIN_PREFIX, "system error");
-		LogToFileEx(g_szLogFile, "CheckDivorce %N error: %s", client, error);
+		tPrintToChat(client, "%s  %T:\x02 x04", PLUGIN_PREFIX, "system error", client);
+		LogToFileEx(g_szLogFile, "CheckDivorce %L error: %s", client, error);
 		return;
 	}
 	
 	if(!SQL_FetchRow(hndl))
 	{
-		tPrintToChat(client, "%s  %t:\x02 x05", PLUGIN_PREFIX, "system error");
+		tPrintToChat(client, "%s  %T:\x02 x05", PLUGIN_PREFIX, "system error", client);
 		return;
 	}
 	else
@@ -699,8 +714,8 @@ public void SQLCallback_UpdateDivorce(Handle owner, Handle hndl, const char[] er
 	
 	if(hndl == INVALID_HANDLE)
 	{
-		tPrintToChat(client, "%s  %t:\x02 x06", PLUGIN_PREFIX, "system error");
-		LogToFileEx(g_szLogFile, "UpdateDivorce %N error: %s", client, error);
+		tPrintToChat(client, "%s  %T:\x02 x06", PLUGIN_PREFIX, "system error", client);
+		LogToFileEx(g_szLogFile, "UpdateDivorce %L error: %s", client, error);
 		return;
 	}
 
@@ -751,7 +766,7 @@ public void SQLCallback_GiveAuth(Handle owner, Handle hndl, const char[] error, 
 	if(hndl == INVALID_HANDLE)
 	{
 		LogToFileEx(g_szLogFile, "UPDATE auth Failed: client:%N ERROR:%s", client, error);
-		tPrintToChat(client, "%s  %t:\x02 x99", PLUGIN_PREFIX, "system error");
+		tPrintToChat(client, "%s  %T:\x02 x99", PLUGIN_PREFIX, "system error", client);
 		g_eClient[client][iGroupId] = 0;
 		return;
 	}

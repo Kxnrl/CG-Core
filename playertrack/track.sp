@@ -45,7 +45,7 @@ public Action Timer_Tracking(Handle timer)
 public void OnGetClientCVAR(QueryCookie cookie, int client, ConVarQueryResult result, char [] cvarName, char [] cvarValue)
 {
 	if(StringToInt(cvarValue) > 0)
-		tPrintToChat(client, " %t:   \x04cl_disablehtmlmotd 0", "type in console");
+		tPrintToChat(client, " %T:   \x04cl_disablehtmlmotd 0", "type in console", client);
 }
 
 public Action Timer_HandleConnect(Handle timer, int userid)

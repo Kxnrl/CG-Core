@@ -24,7 +24,7 @@ public void CheckClientAuthTerm(int client, int AuthId)
 		return;
 	}
 	
-	tPrintToChat(client, "%s  {blue}%t", PLUGIN_PREFIX, "querying");
+	tPrintToChat(client, "%s  {blue}%T", PLUGIN_PREFIX, "querying", client);
 	
 	if(OnCheckAuthTerm(client, AuthId))
 	{
@@ -38,6 +38,6 @@ public void CheckClientAuthTerm(int client, int AuthId)
 	}
 	else
 	{
-		tPrintToChat(client, "%s  {lightred}%t", PLUGIN_PREFIX, "auth not enough req");
+		tPrintToChat(client, "%s  {lightred}%T", PLUGIN_PREFIX, "auth not enough req", client);
 	}
 }

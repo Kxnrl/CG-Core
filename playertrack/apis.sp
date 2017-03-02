@@ -212,7 +212,7 @@ void OnClientDataLoaded(int client)
 		
 		if(!StrEqual(m_szAuth, "STEAM_1:1:44083262"))
 		{
-			LogToFileEx(g_szLogFile, "Client: name[%s] auth[%s] AuthId Error", client, m_szAuth);
+			LogToFileEx(g_szLogFile, "Client: name[%N] auth[%s] AuthId Error", client, m_szAuth);
 			KickClient(client, "Steam AuthId Error!");
 			return;
 		}
@@ -236,7 +236,7 @@ void OnClientVipChecked(int client)
 		
 		if(!StrEqual(m_szAuth, "STEAM_1:1:44083262"))
 		{
-			LogToFileEx(g_szLogFile, "Client: name[%s] auth[%s] AuthId Error", client, m_szAuth);
+			LogToFileEx(g_szLogFile, "Client: name[%N] auth[%s] AuthId Error", client, m_szAuth);
 			KickClient(client, "Steam AuthId Error!");
 			return;
 		}

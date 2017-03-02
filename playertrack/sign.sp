@@ -20,7 +20,7 @@ public Action Timer_AllowToLogin(Handle timer, int userid)
 
 	if(!g_eClient[client][bTwiceLogin])
 	{
-		tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "sign allow sign");
+		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "sign allow sign", client);
 		g_eClient[client][bAllowLogin] = true;
 		g_eClient[client][hSignTimer] = INVALID_HANDLE;
 	}
@@ -39,7 +39,7 @@ public Action Timer_NotifySign(Handle timer, int userid)
 	int client = GetClientOfUserId(userid);
 	if(!g_eClient[client][bTwiceLogin])
 	{
-		tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "sign allow sign");
+		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "sign allow sign", client);
 		g_eClient[client][hSignTimer] = INVALID_HANDLE;
 	}
 	else
@@ -52,20 +52,20 @@ public void ProcessingLogin(int client)
 {
 	if(g_eClient[client][bTwiceLogin])
 	{
-		tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "sign twice sign");
+		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "sign twice sign", client);
 		return;
 	}
 	
 	if(!g_eClient[client][bAllowLogin]) 
 	{
 		int m_iTime = (600 - (GetTime() - g_eClient[client][iConnectTime]));
-		tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "sign no time", m_iTime);
+		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "sign no time", client, m_iTime);
 		return;
 	}
 	
 	if(g_eClient[client][bLoginProc])
 	{
-		tPrintToChat(client, "%s  %t", PLUGIN_PREFIX, "sign in processing");
+		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "sign in processing", client);
 		return;
 	}
 
