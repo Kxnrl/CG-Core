@@ -25,7 +25,7 @@ public Plugin myinfo =
     name		= "Broadcast System - Client",
     author		= "Kyle",
     description	= "Send message on all connected server !",
-    version		= "2.1",
+    version		= "2.2.1",
     url			= "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -39,6 +39,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public int Native_Broadcast(Handle plugin, int numParams)
 {
+	if(g_hSocket == INVALID_HANDLE)
+		return;
+
 	char m_szContent[512];
 	if(GetNativeString(2, m_szContent, 512) == SP_ERROR_NONE)
 	{
@@ -124,6 +127,9 @@ public Action Command_PbCSC(int client, int args)
 
 public void CP_OnChatMessagePost(int client, ArrayList recipients, const char[] flagstring, const char[] formatstring, const char[] name, const char[] message, bool processcolors, bool removecolors)
 {
+	if(g_hSocket == INVALID_HANDLE)
+		return;
+
 	if(g_bPbCSC[client])
 	{
 		tPrintToChat(client, "[\x0CCG\x01]   \x04您已关闭全服聊天功能,你所发送的内容无法被其它服务器的玩家收到");
@@ -133,16 +139,29 @@ public void CP_OnChatMessagePost(int client, ArrayList recipients, const char[] 
 	if(message[0] == '!' || message[0] == '.' || message[0] == '/' || message[0] == '#' || message[0] == '@' || StrEqual(message, "rtv", false) || StrContains(message, "nominat", false) != -1)
 		return;
 
+	if(StrContains(flagstring, "_All") == -1)
+		return;
+
 	char m_szServerTag[32], m_szFinalMsg[1024];
 	GetServerTag(m_szServerTag, 32);
 
 	Format(m_szFinalMsg, 1024, "%s \x04%s\x01>>>  %s \x01:  %s", key, m_szServerTag, name, message);
 	ReplaceAllColors(m_szFinalMsg, 1024);
+
+	ReplaceString(m_szFinalMsg, 1024, "◇ ", "");
+	ReplaceString(m_szFinalMsg, 1024, "◆ ", "");
+	ReplaceString(m_szFinalMsg, 1024, "☆ ", "");
+	ReplaceString(m_szFinalMsg, 1024, "★ ", "");
+	ReplaceString(m_szFinalMsg, 1024, "✪ ", "");
+
 	SocketSend(g_hSocket, m_szFinalMsg, 1024);
 }
 
 public void CG_OnLilyCouple(int Neptune, int Noire)
 {
+	if(g_hSocket == INVALID_HANDLE)
+		return;
+
 	char m_szFinalMsg[1024];
 	Format(m_szFinalMsg, 1024, " \x07恭喜\x0C%N\x07和\x0C%N\x07组成了\x0E一对咖喱给给\x07!", Neptune, Noire);
 
@@ -167,6 +186,9 @@ public void CG_OnLilyCouple(int Neptune, int Noire)
 
 public void OnMapVoteEnd(const char[] map)
 {
+	if(g_hSocket == INVALID_HANDLE)
+		return;
+
 	if(StrContains(map, "extend", false) != -1)
 		return;
 	
@@ -185,6 +207,9 @@ public void OnMapVoteEnd(const char[] map)
 
 public Action Command_PubMessage(int client, int args)
 {
+	if(g_hSocket == INVALID_HANDLE)
+		return Plugin_Continue;
+
 	if(Store_GetClientCredits(client) < 100)
 	{
 		PrintToChat(client, "[\x04Store\x01]  \x01没钱还想发小喇叭?");
@@ -223,6 +248,9 @@ public Action Command_PubMessage(int client, int args)
 
 public Action Command_PnlMessage(int client, int args)
 {
+	if(g_hSocket == INVALID_HANDLE)
+		return Plugin_Continue;
+
 	if(Store_GetClientCredits(client) < 500)
 	{
 		PrintToChat(client, "[\x04Store\x01]  \x01没钱还想发大喇叭?");
@@ -278,6 +306,7 @@ public int OnClientSocketError(Handle socket, const int errorType, const int err
 	LogError("socket error %d (errno %d)", errorType, errorNum);
 	CreateTimer(3.0, Timer_Reconnect);
 	CloseHandle(socket);
+	g_hSocket = INVALID_HANDLE;
 }
 
 public int OnChildSocketReceive(Handle socket, char[] receiveData, const int dataSize, any hFile)
@@ -395,7 +424,7 @@ public bool UpdateMessageToDiscuz(int client, const char[] message)
 
 public Action OnClientSayCommand(int client, const char[] command, const char[] sArgs)
 {
-	if(!client || !IsClientInGame(client))
+	if(!client || !IsClientInGame(client) || g_hSocket == INVALID_HANDLE)
 		return Plugin_Continue;
 
 	int startidx;
