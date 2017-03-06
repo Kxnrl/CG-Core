@@ -79,7 +79,7 @@ public Plugin myinfo =
 	name		= "SourceBans - [CG] Community Edition",
 	author		= "SourceBans Development Team, Sarabveer(VEER™), Kyle",
 	description	= "Advanced ban management for the Source engine",
-	version		= "2.0+dev-5",
+	version		= "2.0.1+dev-7",
 	url			= "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -973,7 +973,7 @@ public void VerifyBan(Handle owner, Handle hndl, const char[] error, any userid)
 		if(StrEqual(bType, "全服封禁") || StrEqual(bType, bantype) || (StrEqual(bType, "单服封禁") && sid == g_iServerId))
 		{
 			SQL_EscapeString(g_hDatabase, clientName, Name, 128);
-			FormatEx(m_szQuery, 512, "INSERT INTO sb_banlog VALUES (%d, UNIX_TIMESTAMP(), '%s', '%s', %d)", g_iServerId, Name, clientAuth[8], clientIp, SQL_FetchInt(hndl, 0));
+			FormatEx(m_szQuery, 512, "INSERT INTO sb_banlog VALUES (%d, UNIX_TIMESTAMP(), '%s', '%s', %d)", g_iServerId, Name, clientIp, SQL_FetchInt(hndl, 0));
 			SQL_TQuery(g_hDatabase, ErrorCheckCallback, m_szQuery, client, DBPrio_High);
 			FormatEx(buffer, 40, "banid 2 %s", clientAuth);
 			ServerCommand(buffer);
