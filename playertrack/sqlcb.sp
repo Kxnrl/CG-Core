@@ -457,7 +457,7 @@ public void SQLCallback_InsertPlayerStatFailed(Handle owner, Handle hndl, const 
 	if(hndl == INVALID_HANDLE)
 	{
 		//输出错误日志
-		LogToFileEx(g_szLogFile, "Confirm Insert Failed! Client:\"%L\" Error Happened: %s", error);
+		LogToFileEx(g_szLogFile, "Confirm Insert Failed! Client:\"%L\" Error Happened: %s", client, error);
 		char m_szQuery[256];
 		Format(m_szQuery, 256, "SELECT * FROM `playertrack_analytics` WHERE (connect_time = %d AND ip = '%s' AND playerid = %d) order by id desc limit 1;", g_eClient[client][iConnectTime], g_eClient[client][szIP], g_eClient[client][iPlayerId]);
 		MySQL_Query(g_eHandle[DB_Game], SQLCallback_InsertPlayerStatFailed, m_szQuery, GetClientUserId(client));

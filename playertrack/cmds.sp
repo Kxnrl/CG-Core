@@ -122,7 +122,7 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 	
 	strcopy(g_eClient[client][szNewSignature], 256, sArgs);
 	
-	tPrintToChat(client, "%T", "signature input", sArgs, client);
+	tPrintToChat(client, "%T", "signature input", client, sArgs);
 
 	g_eClient[client][bListener] = false;
 
