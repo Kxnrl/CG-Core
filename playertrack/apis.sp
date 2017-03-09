@@ -150,12 +150,12 @@ public int Native_ShowNormalMotd(Handle plugin, int numParams)
 	if(GetNativeString(4, m_szUrl, 192) == SP_ERROR_NONE)
 	{
 		PrepareUrl(width, height, m_szUrl);
-		ShowMOTDPanel(client, "CSGOGAMERS Motd", m_szUrl, MOTDPANEL_TYPE_URL);
+		ShowMOTDPanelEx(client, _, m_szUrl, MOTDPANEL_TYPE_URL, _, true);
 		return true;
 	}
 	else
 	{
-		ShowHiddenMOTDPanel(client, "about:blank", MOTDPANEL_TYPE_URL);
+		ShowMOTDPanelEx(client, _, "about:blank", MOTDPANEL_TYPE_URL, _, false);
 		return false;
 	}
 }
@@ -169,7 +169,7 @@ public int Native_ShowHiddenMotd(Handle plugin, int numParams)
 	if(GetNativeString(2, m_szUrl, 192) != SP_ERROR_NONE)
 		return false;
 
-	ShowHiddenMOTDPanel(client, m_szUrl, MOTDPANEL_TYPE_URL);
+	ShowMOTDPanelEx(client, _, m_szUrl, MOTDPANEL_TYPE_URL, _, false);
 
 	return true;
 }
@@ -178,7 +178,7 @@ public int Native_RemoveMotd(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
 	QueryClientConVar(client, "cl_disablehtmlmotd", view_as<ConVarQueryFinished>(OnGetClientCVAR), client);
-	ShowHiddenMOTDPanel(client, "about:blank", MOTDPANEL_TYPE_URL);
+	ShowMOTDPanelEx(client, _, "about:blank", MOTDPANEL_TYPE_URL, _, false);
 	return true;
 }
 

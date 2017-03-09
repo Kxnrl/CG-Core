@@ -127,13 +127,14 @@ stock void PrepareUrl(int width, int height, char[] m_szUrl)
 	Format(m_szUrl, 192, "https://csgogamers.com/webplugin.php?width=%d&height=%d&url=%s", width, height, m_szUrl);
 }
 
-stock void ShowHiddenMOTDPanel(int client, char[] url, int type)
+stock void ShowMOTDPanelEx(int client, const char[] title = "CSGOGAMERS.COM", const char[] url, int type = MOTDPANEL_TYPE_INDEX, int cmd = MOTDPANEL_CMD_NONE, bool show = true)
 {
 	Handle m_hKv = CreateKeyValues("data");
-	KvSetString(m_hKv, "title", "ShowHiddenMOTDPanel");
+	KvSetString(m_hKv, "title", "CSGOGAMERS.COM");
 	KvSetNum(m_hKv, "type", type);
 	KvSetString(m_hKv, "msg", url);
-	ShowVGUIPanel(client, "info", m_hKv, false);
+	KvSetNum(m_hKv, "cmd", cmd);
+	ShowVGUIPanel(client, "info", m_hKv, show);
 	CloseHandle(m_hKv);
 }
 
