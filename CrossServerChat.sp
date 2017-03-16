@@ -19,13 +19,14 @@ Handle g_hSocket;
 Handle g_hCookie;
 bool g_bPbCSC[MAXPLAYERS+1];
 bool g_bConnected;
+char g_szLAST[1024];
 
 public Plugin myinfo = 
 {
     name		= "Broadcast System - Client",
     author		= "Kyle",
     description	= "Send message on all connected server !",
-    version		= "2.2.1",
+    version		= "2.3.1",
     url			= "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -45,6 +46,11 @@ public int Native_Broadcast(Handle plugin, int numParams)
 	char m_szContent[512];
 	if(GetNativeString(2, m_szContent, 512) == SP_ERROR_NONE)
 	{
+		
+		ReplaceString(m_szContent, 512, "[通用]", "");
+		ReplaceString(m_szContent, 512, "[CT]", "");
+		ReplaceString(m_szContent, 512, "[TE]", "");
+	
 		if(GetNativeCell(1))
 		{
 			Handle db = CG_GetDiscuzDatabase();
@@ -62,6 +68,7 @@ public int Native_Broadcast(Handle plugin, int numParams)
 
 		Format(m_szFinalMsg, 1024, "%s%s", key, m_szFinalMsg);
 		SocketSend(g_hSocket, m_szFinalMsg, 1024);
+		strcopy(g_szLAST, 1024, m_szFinalMsg);
 	}
 }
 
@@ -155,6 +162,7 @@ public void CP_OnChatMessagePost(int client, ArrayList recipients, const char[] 
 	ReplaceString(m_szFinalMsg, 1024, "✪ ", "");
 
 	SocketSend(g_hSocket, m_szFinalMsg, 1024);
+	strcopy(g_szLAST, 1024, m_szFinalMsg);
 }
 
 public void CG_OnLilyCouple(int Neptune, int Noire)
@@ -182,6 +190,7 @@ public void CG_OnLilyCouple(int Neptune, int Noire)
 
 	Format(m_szFinalMsg, 1024, "%s%s", key, m_szFinalMsg);
 	SocketSend(g_hSocket, m_szFinalMsg, 1024);
+	strcopy(g_szLAST, 1024, m_szFinalMsg);
 }
 
 public void OnMapVoteEnd(const char[] map)
@@ -203,6 +212,7 @@ public void OnMapVoteEnd(const char[] map)
 
 	Format(m_szFinalMsg, 1024, "%s%s", key, m_szFinalMsg);
 	SocketSend(g_hSocket, m_szFinalMsg, 1024);
+	strcopy(g_szLAST, 1024, m_szFinalMsg);
 }
 
 public Action Command_PubMessage(int client, int args)
@@ -242,6 +252,7 @@ public Action Command_PubMessage(int client, int args)
 
 	Format(m_szFinalMsg, 1024, "%s%s", key, m_szFinalMsg);
 	SocketSend(g_hSocket, m_szFinalMsg, 1024);
+	strcopy(g_szLAST, 1024, m_szFinalMsg);
 
 	return Plugin_Handled;
 }
@@ -283,6 +294,7 @@ public Action Command_PnlMessage(int client, int args)
 
 	Format(m_szFinalMsg, 1024, "%s%s", key, m_szFinalMsg);
 	SocketSend(g_hSocket, m_szFinalMsg, 1024);
+	strcopy(g_szLAST, 1024, m_szFinalMsg);
 
 	return Plugin_Handled;
 }
@@ -315,6 +327,9 @@ public int OnChildSocketReceive(Handle socket, char[] receiveData, const int dat
 		return;
 
 	ReplaceString(receiveData, dataSize, key, "");
+	
+	if(StrContains(receiveData, g_szLAST) != -1)
+		return;
 
 	if(StrContains(receiveData, DISCONNECTSTR) != -1)
 		return;
@@ -424,7 +439,7 @@ public bool UpdateMessageToDiscuz(int client, const char[] message)
 
 public Action OnClientSayCommand(int client, const char[] command, const char[] sArgs)
 {
-	if(!client || !IsClientInGame(client) || g_hSocket == INVALID_HANDLE)
+	if(!client || !IsClientInGame(client) || g_hSocket == INVALID_HANDLE || IsClientGag(client))
 		return Plugin_Continue;
 
 	int startidx;
@@ -462,6 +477,7 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 
 		Format(m_szFinalMsg, 1024, "%s%s", key, m_szFinalMsg);
 		SocketSend(g_hSocket, m_szFinalMsg, 1024);
+		strcopy(g_szLAST, 1024, m_szFinalMsg);
 
 		return Plugin_Stop;
 	}
