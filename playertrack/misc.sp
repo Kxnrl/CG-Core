@@ -68,6 +68,7 @@ void InitNative()
 	CreateNative("CG_GetClientOnlines", Native_GetOnlines);
 	CreateNative("CG_GetClientVitality", Native_GetVitality);
 	CreateNative("CG_GetClientLastseen", Native_GetLastseen);
+	CreateNative("CG_GetClientDailyTime", Native_GetDailyTime);
 	CreateNative("CG_GetClientId", Native_GetPlayerID);
 	CreateNative("CG_GetClientUId", Native_GetDiscuzUID);
 	CreateNative("CG_GetClientGId", Native_GetGroupID);
@@ -127,9 +128,7 @@ void InitClient(int client)
 {
 	g_eClient[client][bLoaded] = false;
 	g_eClient[client][bListener] = false;
-	g_eClient[client][bLoginProc] = false;
-	g_eClient[client][bAllowLogin] = false;
-	g_eClient[client][bTwiceLogin] = false;
+	g_eClient[client][bSignIn] = false;
 	g_eClient[client][iUID] = -1;
 	g_eClient[client][iSignNum] = 0;
 	g_eClient[client][iSignTime] = 0;
@@ -145,6 +144,7 @@ void InitClient(int client)
 	g_eClient[client][iGroupId] = 0;
 	g_eClient[client][iCPId] = -2;
 	g_eClient[client][iCPDate] = 0;
+	g_eClient[client][iDaily] = 0;
 
 	strcopy(g_eClient[client][szIP], 32, "127.0.0.1");
 	strcopy(g_eClient[client][szSignature], 256, "数据读取中...");
@@ -162,7 +162,12 @@ void GetNowDate()
 	FormatTime(m_szDate, 64, "%Y%m%d", GetTime());
 	int iDate = StringToInt(m_szDate);
 	if(iDate > g_iNowDate)
+	{
 		OnNewDayForward(iDate);
+		
+		for(int client = 1; client <= MaxClients; ++client)
+			g_eClient[client][iDaily] = 0;
+	}
 }
 
 void BuildTempLogFile()
@@ -188,7 +193,8 @@ void BuildTempLogFile()
 		int m_iLastTime = KvGetNum(g_eHandle[KV_Local], "LastTime", 0);
 		KvGetString(g_eHandle[KV_Local], "Flag", m_szFlag, 32, "CG玩家");
 		int m_iOnlines = m_iLastTime - m_iConnect;
-		Format(m_szQuery, 512, "UPDATE playertrack_player AS a, playertrack_analytics AS b SET a.onlines = a.onlines+%d, a.lastip = '%s', a.lasttime = '%d', a.number = a.number+1, a.flags = '%s', b.duration = '%d' WHERE a.id = '%d' AND b.id = '%d' AND a.steamid = '%s' AND b.playerid = '%d'", m_iOnlines, m_szIp, m_iLastTime, m_szFlag, m_iOnlines, m_iPlayerId, m_iTrackId, m_szAuthId, m_iPlayerId);
+		int m_iDaily = KvGetNum(g_eHandle[KV_Local], "DayTime", 0);
+		Format(m_szQuery, 512, "UPDATE playertrack_player AS a, playertrack_analytics AS b SET a.onlines = a.onlines+%d, a.lastip = '%s', a.lasttime = '%d', a.number = a.number+1, a.flags = '%s', a.daytime = '%d', b.duration = '%d' WHERE a.id = '%d' AND b.id = '%d' AND a.steamid = '%s' AND b.playerid = '%d'", m_iOnlines, m_szIp, m_iLastTime, m_szFlag, m_iDaily, m_iOnlines, m_iPlayerId, m_iTrackId, m_szAuthId, m_iPlayerId);
 
 		Handle data = CreateDataPack();
 		WritePackString(data, m_szQuery);
@@ -210,9 +216,12 @@ void BuildTempLogFile()
 				KvGoBack(g_eHandle[KV_Local]);
 		}
 	}
-	
+
 	KvRewind(g_eHandle[KV_Local]);
 	KeyValuesToFile(g_eHandle[KV_Local], g_szTempFile);
+	
+	//建立监听Timer
+	CreateTimer(1.0, Timer_Tracking, _, TIMER_REPEAT);
 }
 
 void LoadTranstion()

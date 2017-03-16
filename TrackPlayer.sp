@@ -3,8 +3,8 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 393
-#define PLUGIN_VERSION " 7.2.2 - 2017/03/09 05:09 "
+#define Build 395
+#define PLUGIN_VERSION " 7.3.1 - 2017/03/15 04:49 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12574
 
@@ -106,9 +106,6 @@ public void OnPluginStart()
 	
 	//获取游戏模式
 	InitGame();
-	
-	//建立监听Timer
-	CreateTimer(1.0, Timer_Tracking, _, TIMER_REPEAT);
 }
 
 public void OnPluginEnd()
@@ -155,9 +152,6 @@ public void OnClientPostAdminCheck(int client)
 	//如果连不上数据库直接就跳过了
 	if(g_eHandle[DB_Game] == INVALID_HANDLE)
 	{
-		//Call Forward让其它程序也执行
-		//OnClientDataLoaded(client);
-		//OnClientVipChecked(client);
 		LogToFileEx(g_szLogFile, "Query Client[%N] Failed:  Database is not avaliable!", client);
 		LogError("Query Client[%N] Failed:  Database is not avaliable!", client);
 		SQL_TConnect_csgo();
@@ -169,7 +163,7 @@ public void OnClientPostAdminCheck(int client)
 
 	char m_szAuth[32], m_szQuery[256];
 	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-	Format(m_szQuery, 256, "SELECT id, onlines, lasttime, number, signature, signnumber, signtime, groupid, groupname, lilyid, lilydate, active FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
+	Format(m_szQuery, 256, "SELECT id, onlines, lasttime, number, signature, signnumber, signtime, groupid, groupname, lilyid, lilydate, active, daytime FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
 	MySQL_Query(g_eHandle[DB_Game], SQLCallback_GetClientStat, m_szQuery, GetClientUserId(client), DBPrio_High);
 }
 
@@ -188,7 +182,7 @@ public void OnClientDisconnect(int client)
 		KillTimer(g_eClient[client][hSignTimer]);
 		g_eClient[client][hSignTimer] = INVALID_HANDLE;
 	}
-	
+
 	if(g_eClient[client][hListener] != INVALID_HANDLE)
 	{
 		KillTimer(g_eClient[client][hListener]);

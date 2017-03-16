@@ -1,77 +1,33 @@
-public void SetClientSignStat(int client)
+public Action Timer_NotifySign(Handle timer, int client)
 {
-	//初始化签到程序的Client状态
-	if(g_eClient[client][iSignTime] == 0)
+	if(!IsClientInGame(client) || g_eClient[client][bSignIn] || g_eClient[client][iDaily] < 900)
 	{
-		g_eClient[client][hSignTimer] = CreateTimer(600.0, Timer_AllowToLogin, GetClientUserId(client));
-		g_eClient[client][bTwiceLogin] = false;
-	}
-	else
-	{
-		g_eClient[client][bTwiceLogin] = true;
-		g_eClient[client][bAllowLogin] = false;
-	}
-}
-
-public Action Timer_AllowToLogin(Handle timer, int userid)
-{
-	//计时器满，允许签到
-	int client = GetClientOfUserId(userid);
-
-	if(!g_eClient[client][bTwiceLogin])
-	{
-		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "sign allow sign", client);
-		g_eClient[client][bAllowLogin] = true;
 		g_eClient[client][hSignTimer] = INVALID_HANDLE;
+		return Plugin_Stop;
 	}
-	else
-	{
-		g_eClient[client][bAllowLogin] = false;
-		g_eClient[client][hSignTimer] = INVALID_HANDLE;
-	}
+
+	tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "sign allow sign", client);
 	
-	g_eClient[client][hSignTimer] = CreateTimer(30.0, Timer_NotifySign, GetClientUserId(client));
-}
-
-public Action Timer_NotifySign(Handle timer, int userid)
-{
-	//重复提示签到
-	int client = GetClientOfUserId(userid);
-	if(!g_eClient[client][bTwiceLogin])
-	{
-		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "sign allow sign", client);
-		g_eClient[client][hSignTimer] = INVALID_HANDLE;
-	}
-	else
-	{
-		g_eClient[client][hSignTimer] = CreateTimer(30.0, Timer_NotifySign, GetClientUserId(client));
-	}
+	return Plugin_Continue;
 }
 
 public void ProcessingLogin(int client) 
 {
-	if(g_eClient[client][bTwiceLogin])
+	if(g_eClient[client][bSignIn])
 	{
 		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "sign twice sign", client);
 		return;
 	}
-	
-	if(!g_eClient[client][bAllowLogin]) 
+
+	if(g_eClient[client][iDaily] < 900) 
 	{
-		int m_iTime = (600 - (GetTime() - g_eClient[client][iConnectTime]));
-		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "sign no time", client, m_iTime);
-		return;
-	}
-	
-	if(g_eClient[client][bLoginProc])
-	{
-		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "sign in processing", client);
+		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "sign no time", client, 900 - g_eClient[client][iDaily]);
 		return;
 	}
 
 	char m_szQuery[500];
 	Format(m_szQuery, 256, "SELECT signnumber,signtime FROM playertrack_player WHERE id = %d ", g_eClient[client][iPlayerId]);
 	MySQL_Query(g_eHandle[DB_Game], SQLCallback_GetSigninStat, m_szQuery, GetClientUserId(client));
-	
-	g_eClient[client][bLoginProc] = true;
+
+	g_eClient[client][bSignIn] = true;
 }

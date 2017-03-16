@@ -283,12 +283,6 @@ stock void TranslationToFile(const char[] m_szPath)
 	WriteFileLine(file, "\"chi\"	\"你还需要在线{green}{1}{default}秒才能签到!\"");
 	WriteFileLine(file, "\"zho\"	\"你還需要在綫{green}{1}{default}秒才能簽到!\"");
 	WriteFileLine(file, "}");
-	WriteFileLine(file, "\"sign in processing\"");
-	WriteFileLine(file, "{");
-	WriteFileLine(file, "\"en\"	\"Quering sign procession\"");
-	WriteFileLine(file, "\"chi\"	\"正在执行签到查询!\"");
-	WriteFileLine(file, "\"zho\"	\"正在進行簽到進程!\"");
-	WriteFileLine(file, "}");
 	WriteFileLine(file, "\"sign error\"");
 	WriteFileLine(file, "{");
 	WriteFileLine(file, "\"en\"	\"{darkred}Sign error - try again later\"");

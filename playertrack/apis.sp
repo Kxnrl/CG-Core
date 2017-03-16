@@ -13,6 +13,11 @@ public int Native_GetVitality(Handle plugin, int numParams)
 	return g_eClient[GetNativeCell(1)][iVitality];
 }
 
+public int Native_GetDailyTime(Handle plugin, int numParams)
+{
+	return g_eClient[GetNativeCell(1)][iDaily];
+}
+
 public int Native_GetLastseen(Handle plugin, int numParams)
 {
 	return g_eClient[GetNativeCell(1)][iLastseen];

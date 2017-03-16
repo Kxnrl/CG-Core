@@ -5,7 +5,7 @@ public Action Timer_Tracking(Handle timer)
 {
 	GetNowDate();
 	
-	if(g_eHandle[KV_Local] == null)
+	if(g_eHandle[KV_Local] == INVALID_HANDLE)
 		return Plugin_Continue;
 
 	for(int client = 1; client <= MaxClients; ++client)
@@ -21,19 +21,28 @@ public Action Timer_Tracking(Handle timer)
 
 		if(g_eClient[client][iAnalyticsId] < 1)
 			continue;
+		
+		g_eClient[client][iDaily]++;
+		
+		if(!g_eClient[client][bSignIn] && g_eClient[client][iDaily] >= 900 && g_eClient[client][hSignTimer] == INVALID_HANDLE)
+		{
+			tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "sign allow sign", client);
+			g_eClient[client][hSignTimer] = CreateTimer(30.0, Timer_NotifySign, client, TIMER_REPEAT);
+		}
 
 		char m_szAuth[32];
 		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
 
 		KvJumpToKey(g_eHandle[KV_Local], m_szAuth, true);
-		
+
 		KvSetNum(g_eHandle[KV_Local], "PlayerId", g_eClient[client][iPlayerId]);
 		KvSetNum(g_eHandle[KV_Local], "Connect", g_eClient[client][iConnectTime]);
 		KvSetNum(g_eHandle[KV_Local], "TrackID", g_eClient[client][iAnalyticsId]);
 		KvSetString(g_eHandle[KV_Local], "IP", g_eClient[client][szIP]);
 		KvSetNum(g_eHandle[KV_Local], "LastTime", GetTime());
 		KvSetString(g_eHandle[KV_Local], "Flag", g_eClient[client][szAdminFlags]);
-		
+		KvSetNum(g_eHandle[KV_Local], "DayTime", g_eClient[client][iDaily]);
+
 		KvRewind(g_eHandle[KV_Local]);
 	}
 
@@ -100,7 +109,7 @@ void SaveClient(int client)
 	char m_szBuffer[128];
 	SQL_EscapeString(g_eHandle[DB_Game], username, m_szBuffer, 128);	
 
-	Format(g_eClient[client][szUpdateData], 512, "UPDATE playertrack_player AS a, playertrack_analytics AS b SET a.name = '%s', a.onlines = a.onlines+%d, a.lastip = '%s', a.lasttime = '%d', a.number = a.number+1, a.flags = '%s', b.duration = '%d' WHERE a.id = '%d' AND b.id = '%d' AND a.steamid = '%s' AND b.playerid = '%d'", m_szBuffer, duration, g_eClient[client][szIP], GetTime(), g_eClient[client][szAdminFlags], duration, g_eClient[client][iPlayerId], g_eClient[client][iAnalyticsId], m_szAuth, g_eClient[client][iPlayerId]);
+	Format(g_eClient[client][szUpdateData], 512, "UPDATE playertrack_player AS a, playertrack_analytics AS b SET a.name = '%s', a.onlines = a.onlines+%d, a.lastip = '%s', a.lasttime = '%d', a.number = a.number+1, a.flags = '%s', a.daytime = '%d', b.duration = '%d' WHERE a.id = '%d' AND b.id = '%d' AND a.steamid = '%s' AND b.playerid = '%d'", m_szBuffer, duration, g_eClient[client][szIP], GetTime(), g_eClient[client][szAdminFlags], g_eClient[client][iDaily], duration, g_eClient[client][iPlayerId], g_eClient[client][iAnalyticsId], m_szAuth, g_eClient[client][iPlayerId]);
 
 	MySQL_Query(g_eHandle[DB_Game], SQLCallback_SaveClientStat, g_eClient[client][szUpdateData], GetClientUserId(client), DBPrio_High);
 	

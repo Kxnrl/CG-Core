@@ -208,7 +208,7 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 
 		char m_szAuth[32], m_szQuery[256];
 		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-		Format(m_szQuery, 256, "SELECT id, onlines, lasttime, number, signature, signnumber, signtime, groupid, groupname, lilyid, lilydate, active FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
+		Format(m_szQuery, 256, "SELECT id, onlines, lasttime, number, signature, signnumber, signtime, groupid, groupname, lilyid, lilydate, active, daytime FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
 		MySQL_Query(g_eHandle[DB_Game], SQLCallback_GetClientStat, m_szQuery, GetClientUserId(client), DBPrio_High);
 		return;
 	}
@@ -228,6 +228,8 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 		SQL_FetchString(hndl, 8, g_eClient[client][szGroupName], 256);
 		InitializeCP(client, SQL_FetchInt(hndl, 9), SQL_FetchInt(hndl, 10));
 		g_eClient[client][iVitality] = SQL_FetchInt(hndl, 11);
+		g_eClient[client][iDaily] = SQL_FetchInt(hndl, 12);
+		g_eClient[client][bSignIn] = (g_eClient[client][iSignTime]>0) ? true : false;
 
 		g_eClient[client][bLoaded] = true;
 
@@ -248,8 +250,6 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 			strcopy(g_eClient[client][szDiscuzName], 128, "未注册");
 		}
 
-		SetClientSignStat(client);
-		
 		CreateTimer(10.0, Timer_HandleConnect, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	}
 	else
@@ -381,7 +381,7 @@ public void SQLCallback_InsertClientStat(Handle owner, Handle hndl, const char[]
 		//重试检查  辣鸡阿里云RDS
 		char m_szAuth[32], m_szQuery[512];
 		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-		Format(m_szQuery, 256, "SELECT id, onlines, lasttime, number, signature, signnumber, signtime, groupid, groupname, lilyid, lilydate, active FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
+		Format(m_szQuery, 256, "SELECT id, onlines, lasttime, number, signature, signnumber, signtime, groupid, groupname, lilyid, lilydate, active, daytime FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
 		MySQL_Query(g_eHandle[DB_Game], SQLCallback_GetClientStat, m_szQuery, GetClientUserId(client), DBPrio_High);
 	}
 	else
@@ -475,13 +475,13 @@ public void SQLCallback_GetSigninStat(Handle owner, Handle hndl, const char[] er
 {
 	int client = GetClientOfUserId(userid);
 
-	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot] || g_eClient[client][iDaily] < 900)
 		return;
 	
 	if(hndl == INVALID_HANDLE)
 	{
 		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "sign error", client);
-		g_eClient[client][bLoginProc] = false;
+		g_eClient[client][bSignIn] = false;
 		LogToFileEx(g_szLogFile, "Get SigninStat Failed client: %L error: %s", client, error);
 		return;
 	}
@@ -506,13 +506,13 @@ public void SQLCallback_SignCallback(Handle owner, Handle hndl, const char[] err
 {
 	int client = GetClientOfUserId(userid);
 	
-	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
+	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot] || g_eClient[client][iDaily] < 900)
 		return;
 
 	if(hndl == INVALID_HANDLE)
 	{
 		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "sign error", client);
-		g_eClient[client][bLoginProc] = false;
+		g_eClient[client][bSignIn] = false;
 		LogToFileEx(g_szLogFile, "UPDATE Client Sign Failed! Client:%L Query:%s", client, error);
 		return;
 	}
@@ -520,8 +520,7 @@ public void SQLCallback_SignCallback(Handle owner, Handle hndl, const char[] err
 	g_eClient[client][iSignNum]++;
 	g_eClient[client][iSignTime] = GetTime();
 	tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "sign successful", client, g_eClient[client][iSignNum]);
-	g_eClient[client][bTwiceLogin] = true;
-	g_eClient[client][bLoginProc] = false;
+	g_eClient[client][bSignIn] = true;
 	OnClientSignSucessed(client);
 }
 
@@ -564,19 +563,6 @@ public void SQLCallback_GetAdvData(Handle owner, Handle hndl, const char[] error
 	}
 }
 
-public void SQLCallback_NothingCallback(Handle owner, Handle hndl, const char[] error, int userid)
-{
-	if(hndl == INVALID_HANDLE)
-	{
-		int client = GetClientOfUserId(userid);
-		LogToFileEx(g_szLogFile, "INSERT Failed: client:%L ERROR:%s", client, error);
-		return;
-	}
-	
-	int client = GetClientOfUserId(userid);
-	g_eClient[client][bLoginProc] = false;
-}
-
 public void SQLCallback_SaveDatabase(Handle owner, Handle hndl, const char[] error, any data)
 {
 	if(hndl == INVALID_HANDLE)
@@ -589,12 +575,6 @@ public void SQLCallback_SaveDatabase(Handle owner, Handle hndl, const char[] err
 		LogToFileEx(g_szLogFile, "Native SaveDatabase[%s].  Error: %s", database == 0 ? "csgo" : "discuz", error);
 		LogToFileEx(g_szLogFile, "Query: %s", m_szQuery);
 		LogToFileEx(g_szLogFile, "==========================================================");
-		
-		if(StrContains(error, "lost connection", false) != -1)
-		{
-			MySQL_Query(database == 0 ? g_eHandle[DB_Game] : g_eHandle[DB_Discuz], SQLCallback_NothingCallback, m_szQuery, data);
-			return;
-		}
 	}
 	CloseHandle(data);
 }
