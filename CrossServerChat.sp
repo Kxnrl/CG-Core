@@ -26,7 +26,7 @@ public Plugin myinfo =
     name		= "Broadcast System - Client",
     author		= "Kyle",
     description	= "Send message on all connected server !",
-    version		= "2.3.1",
+    version		= "2.3.2",
     url			= "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -185,7 +185,7 @@ public void CG_OnLilyCouple(int Neptune, int Noire)
 	Format(m_szQuery, 1024, "INSERT INTO `dz_plugin_ahome_laba` (`username`, `tousername`, `level`, `lid`, `dateline`, `content`, `color`, `url`) VALUES ('Lily System', '', 'system', 0, '%d', '%s', '', '')", GetTime(), EscapeString);
 	CG_SaveForumData(m_szQuery);
 	
-	Format(m_szFinalMsg, 1024, "\x04[\x0ELily\x04]  \x07>\x05>\x0C> %s", m_szFinalMsg);
+	Format(m_szFinalMsg, 1024, " \x04[\x0ELily\x04]  \x07>\x05>\x0C> %s", m_szFinalMsg);
 	PrintToChatAll(m_szFinalMsg);
 
 	Format(m_szFinalMsg, 1024, "%s%s", key, m_szFinalMsg);
