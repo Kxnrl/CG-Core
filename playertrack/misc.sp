@@ -247,20 +247,8 @@ void SettingAdver()
 	Handle kv = CreateKeyValues("ServerAdvertisement", "", "");
 	char FILE_PATH[256];
 	BuildPath(Path_SM, FILE_PATH, 256, "configs/ServerAdvertisement.cfg");
-	
-	//创建Key
-	if(KvJumpToKey(kv, "Settings", true))
-	{
-		KvSetString(kv, "enable", "1");
-		KvSetFloat(kv, "Delay_between_messages", 30.0);
-		KvSetString(kv, "Advertisement_tag", "[{blue}CG{default}] ^");
-		KvSetString(kv, "Time_Format", "%H:%M:%S");
-		KvRewind(kv);
-		KeyValuesToFile(kv, FILE_PATH);
-	}
-
+	KeyValuesToFile(kv, FILE_PATH);
 	CloseHandle(kv);
-	kv = INVALID_HANDLE;
 
 	if(0 < g_iServerId)
 	{

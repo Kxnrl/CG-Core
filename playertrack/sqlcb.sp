@@ -536,14 +536,16 @@ public void SQLCallback_GetAdvData(Handle owner, Handle hndl, const char[] error
 		char m_szPath[256];
 		BuildPath(Path_SM, m_szPath, 256, "configs/ServerAdvertisement.cfg");
 		FileToKeyValues(kv, m_szPath);
-		KvDeleteKey(kv, "Messages");
+
 		int Count = 0;
 		while(SQL_FetchRow(hndl))
 		{
-			char m_szType[4], m_szText_EN[256], m_szText_CN[256], m_szCount[16];
-			SQL_FetchString(hndl, 2, m_szType, 4);
-			SQL_FetchString(hndl, 3, m_szText_EN, 256);  // 0=ID 1=SID 2=TYPE 3=EN 4=CN
-			SQL_FetchString(hndl, 4, m_szText_CN, 256);
+			char m_szType[4], m_szText_EN[256], m_szText_CN[256], m_szCount[16], m_szText_HUD[256];
+			SQL_FetchString(hndl, 2,  m_szType, 4);
+			SQL_FetchString(hndl, 3,  m_szText_EN, 256);  // 0=ID 1=SID 2=TYPE 3=EN 4=CN
+			SQL_FetchString(hndl, 4,  m_szText_CN, 256);
+			SQL_FetchString(hndl, 5, m_szText_HUD, 256);
+
 			IntToString(Count, m_szCount, 16);
 			if(KvJumpToKey(kv, "Messages", true))
 			{
@@ -552,6 +554,7 @@ public void SQLCallback_GetAdvData(Handle owner, Handle hndl, const char[] error
 					Count++;
 					KvSetString(kv, "default", m_szText_EN);
 					KvSetString(kv, "trans", m_szText_CN);
+					KvSetString(kv, "hud", m_szText_HUD);
 					KvSetString(kv, "type", m_szType);
 					KvRewind(kv);
 				}

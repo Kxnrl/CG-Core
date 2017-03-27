@@ -3,8 +3,8 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 395
-#define PLUGIN_VERSION " 7.3.1 - 2017/03/15 04:49 "
+#define Build 396
+#define PLUGIN_VERSION " 7.3.2 - 2017/03/23 03:25 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12574
 
