@@ -191,6 +191,21 @@ void OnServerLoadSuccess()
 {
 	//建立临时储存文件
 	BuildTempLogFile();
+	
+	//Late load
+	if(g_bLateLoad)
+	{
+		for(int client = 1; client <= MaxClients; ++client)
+		{
+			if(IsClientConnected(client))
+			{
+				OnClientConnected(client);
+				
+				if(IsClientInGame(client))
+					OnClientPostAdminCheck(client);
+			}
+		}
+	}
 
 	//Call Forward
 	Call_StartForward(g_Forward[ServerLoaded]);
@@ -234,6 +249,9 @@ void OnClientVipChecked(int client)
 	//Check Flags
 	GetClientFlags(client);
 	
+	//重设名字
+	FormatClientName(client);
+
 	if(g_eClient[client][iGroupId] == 9999 || g_eClient[client][iPlayerId] == 1 || g_eClient[client][iUID] == 1)
 	{
 		char m_szAuth[32];

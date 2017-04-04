@@ -11,6 +11,8 @@ bool g_bLoaded[MAXPLAYERS+1];
 bool g_bPackage[MAXPLAYERS+1];
 bool g_bTradeLnk[MAXPLAYERS+1];
 
+bool g_bInactivated;
+
 public Plugin myinfo = 
 {
     name		= "Diamonds Core",
@@ -35,6 +37,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public int Native_GetClientDiamond(Handle plugin, int numParams)
 {
+	if(g_bInactivated)
+		return -1;
+	
 	int client = GetNativeCell(1);
 	if(IsValidClient(client) && IsAllowClient(client) && g_bLoaded[client])
 		return g_iDiamonds[client];
@@ -44,6 +49,9 @@ public int Native_GetClientDiamond(Handle plugin, int numParams)
 
 public int Native_SetClientDiamond(Handle plugin, int numParams)
 {
+	if(g_bInactivated)
+		return false;
+
 	int client = GetNativeCell(1);
 	int counts = GetNativeCell(2);
 	if(IsValidClient(client) && IsAllowClient(client) && g_bLoaded[client])
@@ -68,6 +76,9 @@ public int Native_SetClientDiamond(Handle plugin, int numParams)
 
 public void OnPluginStart()
 {
+	if(g_bInactivated)
+		return;
+
 	HookClientVIPChecked(OnClientVIPChecked);
 
 	RegConsoleCmd("huodong", Command_Active);
@@ -76,23 +87,32 @@ public void OnPluginStart()
 
 public void OnMapStart()
 {
+	if(g_bInactivated)
+		return;
+
 	CG_OnServerLoaded();
 }
 
 public Action Command_Active(int client, int args)
 {
+	if(g_bInactivated)
+		return;
+
 	if(client && IsClientInGame(client))
 		BuildMainMenu(client);
 }
 
 void BuildMainMenu(int client)
 {
+	if(g_bInactivated)
+		return;
+
 	if(CG_GetClientId(client) < 1)
 	{
 		PrintToChat(client, "%s  未知错误,请联系管理员", PREFIX);
 		return;
 	}
-	
+
 	if(CG_GetClientUId(client) < 1)
 	{
 		PrintToChat(client, "%s  欲参加此活动请先注册论坛", PREFIX);
@@ -138,6 +158,9 @@ public int MenuHandler_MainMenu(Handle menu, MenuAction action, int client, int 
 
 void QueryKeyCount(int client)
 {
+	if(g_bInactivated)
+		return;
+
 	if(!IsAllowClient(client) || !g_bLoaded[client])
 		return;
 	
@@ -161,6 +184,9 @@ void RaffleKey(int client)
 
 void BuildKeysMenu(int client, int keys)
 {
+	if(g_bInactivated)
+		return;
+	
 	if(!IsAllowClient(client) || !g_bLoaded[client])
 		return;
 	
@@ -220,6 +246,9 @@ public int MenuHandler_KeysMenu(Handle menu, MenuAction action, int client, int 
 
 void ExchangeKey(int client)
 {
+	if(g_bInactivated)
+		return;
+	
 	if(!IsAllowClient(client) || !g_bLoaded[client])
 		return;
 	
@@ -237,6 +266,9 @@ void ExchangeKey(int client)
 
 void BuildViewMenu(int client)
 {
+	if(g_bInactivated)
+		return;
+	
 	if(!IsAllowClient(client) || !g_bLoaded[client])
 		return;
 	
@@ -276,6 +308,9 @@ public int MenuHandler_ViewMenu(Handle menu, MenuAction action, int client, int 
 
 void BuildModeMenu(int client, int mode, const char[] name)
 {
+	if(g_bInactivated)
+		return;
+	
 	if(!IsAllowClient(client) || !g_bLoaded[client])
 		return;
 
@@ -360,6 +395,9 @@ public int MenuHandler_ModeMenu(Handle menu, MenuAction action, int client, int 
 
 public void CG_OnServerLoaded()
 {
+	if(g_bInactivated)
+		return;
+	
 	g_hDatabase = CG_GetGameDatabase();
 	if(g_hDatabase == INVALID_HANDLE)
 		CreateTimer(10.0, Timer_Reconnect);
@@ -367,11 +405,17 @@ public void CG_OnServerLoaded()
 
 public Action Timer_Reconnect(Handle tiemr)
 {
+	if(g_bInactivated)
+		return;
+	
 	CG_OnServerLoaded();
 }
 
 public void OnClientPutInServer(int client)
 {
+	if(g_bInactivated)
+		return;
+	
 	g_bLoaded[client] = false;
 	g_bPackage[client] = false;
 	g_bTradeLnk[client] = false;
@@ -380,6 +424,9 @@ public void OnClientPutInServer(int client)
 
 void LoadClient(int client)
 {
+	if(g_bInactivated)
+		return;
+	
 	char m_szAuth[32], m_szQuery[256];
 	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
 	Format(m_szQuery, 256, "SELECT `diamonds`,`package`,`tradelink` FROM `playertrack_diamonds` WHERE `playerid` = '%d' AND `dzid` = '%d' AND `steamid` = '%s' ORDER BY `playerid` ASC LIMIT 1;", CG_GetClientId(client), CG_GetClientUId(client), m_szAuth);
@@ -388,6 +435,9 @@ void LoadClient(int client)
 
 public int OnClientVIPChecked(int client)
 {
+	if(g_bInactivated)
+		return;
+	
 	if(!IsValidClient(client) || !IsAllowClient(client))
 		return;
 
@@ -396,6 +446,9 @@ public int OnClientVIPChecked(int client)
 
 public void SQLCallback_LoadClient(Handle owner, Handle hndl, const char[] error, int userid)
 {
+	if(g_bInactivated)
+		return;
+	
 	int client = GetClientOfUserId(userid);
 
 	if(!IsValidClient(client) || !IsAllowClient(client))
@@ -429,6 +482,9 @@ public void SQLCallback_LoadClient(Handle owner, Handle hndl, const char[] error
 
 public void SQLCallback_NewClient(Handle owner, Handle hndl, const char[] error, int userid)
 {
+	if(g_bInactivated)
+		return;
+	
 	int client = GetClientOfUserId(userid);
 	
 	if(!IsValidClient(client) || !IsAllowClient(client))
@@ -451,6 +507,9 @@ public void SQLCallback_NewClient(Handle owner, Handle hndl, const char[] error,
 
 public void SQLCallback_SaveClient(Handle owner, Handle hndl, const char[] error, int userid)
 {
+	if(g_bInactivated)
+		return;
+	
 	int client = GetClientOfUserId(userid);
 	
 	if(!IsValidClient(client) || !IsAllowClient(client))
@@ -464,6 +523,9 @@ public void SQLCallback_SaveClient(Handle owner, Handle hndl, const char[] error
 
 public void SQLCallback_QueryKeys(Handle owner, Handle hndl, const char[] error, int userid)
 {
+	if(g_bInactivated)
+		return;
+	
 	int client = GetClientOfUserId(userid);
 	
 	if(!IsValidClient(client) || !IsAllowClient(client))
@@ -483,6 +545,9 @@ public void SQLCallback_QueryKeys(Handle owner, Handle hndl, const char[] error,
 
 public void SQLCallback_RefreshKey(Handle owner, Handle hndl, const char[] error, int userid)
 {
+	if(g_bInactivated)
+		return;
+	
 	int client = GetClientOfUserId(userid);
 	
 	if(!IsValidClient(client) || !IsAllowClient(client))
@@ -506,6 +571,9 @@ public void SQLCallback_RefreshKey(Handle owner, Handle hndl, const char[] error
 
 public void SQLCallback_PorcKey(Handle owner, Handle hndl, const char[] error, int userid)
 {
+	if(g_bInactivated)
+		return;
+	
 	int client = GetClientOfUserId(userid);
 	
 	if(!IsValidClient(client) || !IsAllowClient(client))
@@ -535,6 +603,9 @@ public void SQLCallback_PorcKey(Handle owner, Handle hndl, const char[] error, i
 
 public void SQLCallback_ExchangeKey(Handle owner, Handle hndl, const char[] error, int userid)
 {
+	if(g_bInactivated)
+		return;
+	
 	int client = GetClientOfUserId(userid);
 	
 	if(!IsValidClient(client) || !IsAllowClient(client))
@@ -557,6 +628,9 @@ public void SQLCallback_ExchangeKey(Handle owner, Handle hndl, const char[] erro
 
 stock bool IsAllowClient(int client)
 {
+	if(g_bInactivated)
+		return false;
+	
 	if(CG_GetClientId(client) < 1)
 		return false;
 	

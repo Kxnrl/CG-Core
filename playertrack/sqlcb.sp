@@ -54,7 +54,7 @@ public void SQL_TConnect_Callback_csgo(Handle owner, Handle hndl, const char[] e
 
 	SQL_SetCharset(g_eHandle[DB_Game], "utf8");
 	
-	PrintToServer("[CG-Core] Connection to database 'csgo' successful!");
+	PrintToServer("[Core] Connection to database 'csgo' successful!");
 
 	char m_szQuery[256];
 	
@@ -95,7 +95,7 @@ public void SQL_TConnect_Callback_discuz(Handle owner, Handle hndl, const char[]
 	//SQL_FastQuery(g_eHandle[DB_Discuz], "SET NAMES 'UTF8'");
 	SQL_SetCharset(g_eHandle[DB_Discuz], "utf8");
 	
-	PrintToServer("[CG-Core] Connection to database 'discuz' successful!");
+	PrintToServer("[Core] Connection to database 'discuz' successful!");
 
 	g_iConnect_discuz = 1;
 }
@@ -131,7 +131,7 @@ public void SQLCallback_GetServerIP(Handle owner, Handle hndl, const char[] erro
 			Format(m_szQuery, 256, "SELECT `id`,`servername` FROM playertrack_server WHERE serverip = '%s'", g_szIP);
 			MySQL_Query(g_eHandle[DB_Game], SQLCallback_GetServerIP, m_szQuery, _, DBPrio_High);
 		}
-		
+
 		return;
 	}
 	
@@ -162,15 +162,6 @@ public void SQLCallback_GetServerIP(Handle owner, Handle hndl, const char[] erro
 		LogToFileEx(g_szLogFile, "Not Found this server in playertrack_server , now Register this!  %s", m_szQuery);
 		MySQL_Query(g_eHandle[DB_Game], SQLCallback_InsertServerIP, m_szQuery, _, DBPrio_High);
 	}
-	
-	if(g_bLateLoad)
-	{
-		for(int client = 1; client <= MaxClients; ++client)
-		{
-			if(IsClientInGame(client))
-				OnClientPostAdminCheck(client);
-		}
-	}
 }
 
 public void SQLCallback_InsertServerIP(Handle owner, Handle hndl, const char[] error, any data)
@@ -192,8 +183,8 @@ public void SQLCallback_InsertServerIP(Handle owner, Handle hndl, const char[] e
 public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] error, int userid)
 {
 	int client = GetClientOfUserId(userid);
-	//如果是BOT, 取消查询
-	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
+
+	if(!IsValidClient(client))
 		return;
 
 	//如果操作失败
@@ -269,7 +260,7 @@ public void SQLCallback_GetClientDiscuzName(Handle owner, Handle hndl, const cha
 {
 	int client = GetClientOfUserId(userid);
 	
-	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
+	if(!IsValidClient(client))
 		return;
 
 	if(hndl == INVALID_HANDLE)
@@ -318,7 +309,7 @@ public void SQLCallback_CheckVIP(Handle owner, Handle hndl, const char[] error, 
 {
 	int client = GetClientOfUserId(userid);
 	
-	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
+	if(!IsValidClient(client))
 		return;
 
 	if(hndl == INVALID_HANDLE)
@@ -370,7 +361,7 @@ public void SQLCallback_InsertClientStat(Handle owner, Handle hndl, const char[]
 	//定义客户
 	int client = GetClientOfUserId(userid);
 
-	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
+	if(!IsValidClient(client))
 		return;
 
 	if(hndl == INVALID_HANDLE)
@@ -398,7 +389,7 @@ public void SQLCallback_SaveClientStat(Handle owner, Handle hndl, const char[] e
 {
 	int client = GetClientOfUserId(userid);	
 
-	if(!client)
+	if(!IsValidClient(client))
 		return;
 
 	//操作失败
@@ -427,7 +418,7 @@ public void SQLCallback_InsertPlayerStat(Handle owner, Handle hndl, const char[]
 	//定义客户
 	int client = GetClientOfUserId(userid);
 
-	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
+	if(!IsValidClient(client))
 		return;
 
 	//SQL如果操作失败
@@ -451,7 +442,7 @@ public void SQLCallback_InsertPlayerStatFailed(Handle owner, Handle hndl, const 
 {
 	int client = GetClientOfUserId(userid);
 
-	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
+	if(!IsValidClient(client))
 		return;
 	
 	if(hndl == INVALID_HANDLE)
@@ -475,7 +466,7 @@ public void SQLCallback_GetSigninStat(Handle owner, Handle hndl, const char[] er
 {
 	int client = GetClientOfUserId(userid);
 
-	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot] || g_eClient[client][iDaily] < 900)
+	if(!IsValidClient(client) || g_eClient[client][iDaily] < 900)
 		return;
 	
 	if(hndl == INVALID_HANDLE)
@@ -506,7 +497,7 @@ public void SQLCallback_SignCallback(Handle owner, Handle hndl, const char[] err
 {
 	int client = GetClientOfUserId(userid);
 	
-	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot] || g_eClient[client][iDaily] < 900)
+	if(!IsValidClient(client) || g_eClient[client][iDaily] < 900)
 		return;
 
 	if(hndl == INVALID_HANDLE)
@@ -635,7 +626,9 @@ public void SQLCallback_UpdateCP(Handle owner, Handle hndl, const char[] error, 
 		Call_PushCell(target);
 		Call_Finish();
 		
-		tPrintToChatAll("%s  %t", PLUGIN_PREFIX, "cp married", client, target);
+		for(int i = 1; i <= MaxClients; ++i)
+			if(IsClientInGame(i))
+				tPrintToChat(i, "%s  %T", PLUGIN_PREFIX, "cp married", i, client, target);
 	}
 	
 	if(client && IsClientInGame(client) && (!target || !IsClientInGame(target)))
@@ -659,7 +652,7 @@ public void SQLCallback_CheckDivorce(Handle owner, Handle hndl, const char[] err
 {
 	int client = GetClientOfUserId(userid);
 	
-	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
+	if(!IsValidClient(client))
 		return;
 	
 	if(hndl == INVALID_HANDLE)
@@ -687,14 +680,15 @@ public void SQLCallback_CheckDivorce(Handle owner, Handle hndl, const char[] err
 public void SQLCallback_UpdateDivorce(Handle owner, Handle hndl, const char[] error, Handle pack)
 {
 	int client = GetClientOfUserId(ReadPackCell(pack));
+
 	int m_iId = ReadPackCell(pack);
 	char m_szName[64];
 	ReadPackString(pack, m_szName, 64);
 	CloseHandle(pack);
-	
-	if(client < 1 || client > MaxClients || !IsClientInGame(client) || g_eClient[client][bIsBot])
+
+	if(!IsValidClient(client))
 		return;
-	
+
 	if(hndl == INVALID_HANDLE)
 	{
 		tPrintToChat(client, "%s  %T:\x02 x06", PLUGIN_PREFIX, "system error", client);
@@ -704,7 +698,9 @@ public void SQLCallback_UpdateDivorce(Handle owner, Handle hndl, const char[] er
 
 	int m_iPartner = FindClientByPlayerId(m_iId);
 
-	tPrintToChatAll("%s  %t", PLUGIN_PREFIX, "cp divorce", client, m_szName, (GetTime()-g_eClient[client][iCPDate])/86400);
+	for(int i = 1; i <= MaxClients; ++i)
+		if(IsClientInGame(i))
+			tPrintToChat(i, "%s  %T", PLUGIN_PREFIX, "cp divorce", i, client, m_szName, (GetTime()-g_eClient[client][iCPDate])/86400);
 
 	if(m_iPartner > 0)
 	{
@@ -753,6 +749,8 @@ public void SQLCallback_GiveAuth(Handle owner, Handle hndl, const char[] error, 
 		g_eClient[client][iGroupId] = 0;
 		return;
 	}
-
-	tPrintToChatAll("%s  {blue}%N{green}%t", PLUGIN_PREFIX, client, "auth get new auth");
+	
+	for(int i = 1; i <= MaxClients; ++i)
+		if(IsClientInGame(i))
+			tPrintToChat(i, "%s  {blue}%N{green}%T", PLUGIN_PREFIX, client, "auth get new auth", i);
 }

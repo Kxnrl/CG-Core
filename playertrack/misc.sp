@@ -37,6 +37,16 @@ void InitCommands()
 	RegAdminCmd("sm_reloadadv", Command_ReloadAdv, ADMFLAG_BAN);
 }
 
+void MarkNative()
+{
+	//Cstrike EXT
+	MarkNativeAsOptional("CS_SetClientClanTag");
+	
+	//SDKTools EXT
+	MarkNativeAsOptional("SetClientName");
+	MarkNativeAsOptional("GetClientName");
+}
+
 void InitForward()
 {
 	g_Forward[ServerLoaded] = CreateGlobalForward("CG_OnServerLoaded", ET_Ignore);
@@ -57,6 +67,7 @@ void InitForward()
 	g_eEvents[player_team] = CreateGlobalForward("CG_OnClientTeam", ET_Ignore, Param_Cell);
 	g_eEvents[player_jump] = CreateGlobalForward("CG_OnClientJump", ET_Ignore, Param_Cell);
 	g_eEvents[weapon_fire] = CreateGlobalForward("CG_OnClientFire", ET_Ignore, Param_Cell, Param_String);
+	g_eEvents[player_name] = CreateGlobalForward("CG_OnClientName", ET_Ignore, Param_Cell, Param_String, Param_String);
 
 	g_Forward[ClientVipChecked] = CreateForward(ET_Ignore, Param_Cell);
 	CreateNative("HookClientVIPChecked", Native_HookOnClientVipChecked);
@@ -122,6 +133,10 @@ void InitEvents()
 	//Hook 武器射击
 	if(!HookEventEx("weapon_fire", Event_WeaponFire, EventHookMode_Post))
 		LogToFileEx(g_szLogFile, "Hook Event \"weapon_fire\" Failed");
+	
+	//Hook 玩家改名
+	if(!HookEventEx("player_changename", Event_PlayerName, EventHookMode_Pre))
+		LogToFileEx(g_szLogFile, "Hook Event \"player_changename\" Failed");
 }
 
 void InitClient(int client)
@@ -153,7 +168,8 @@ void InitClient(int client)
 	strcopy(g_eClient[client][szInsertData], 512, "");
 	strcopy(g_eClient[client][szUpdateData], 512, "");
 	strcopy(g_eClient[client][szGroupName], 64, "未认证");
-	strcopy(g_eClient[client][szNewSignature], 256, "");
+	strcopy(g_eClient[client][szNewSignature], 256, "该玩家未设置签名");
+	strcopy(g_eClient[client][szClientName], 32, "无名氏");
 }
 
 void GetNowDate()
@@ -413,7 +429,7 @@ void PrintConsoleInfo(int client)
 	PrintToConsole(client, "                                                                                               ");
 	PrintToConsole(client, "                                     欢迎来到[CG]游戏社区                                      ");	
 	PrintToConsole(client, "                                                                                               ");
-	PrintToConsole(client, "当前服务器:  %s   -   Tickrate: %i.0", szHostname, RoundToNearest(1.0 / GetTickInterval()));
+	PrintToConsole(client, "当前服务器:  %s   -   Tickrate: %i.0   -   主程序版本: %s", szHostname, RoundToNearest(1.0 / GetTickInterval()), PLUGIN_VERSION);
 	PrintToConsole(client, " ");
 	PrintToConsole(client, "论坛地址: https://csgogamers.com  官方QQ群: 107421770  官方YY: 435773");
 	PrintToConsole(client, "当前地图: %s   剩余时间: %s", szMap, szTimeleft);
@@ -607,4 +623,62 @@ public Action Timer_ReLoadClient(Handle timer, int userid)
 	int client = GetClientOfUserId(userid);
 	if(client && IsClientInGame(client))
 		OnClientPostAdminCheck(client);
+}
+
+void FormatClientName(int client)
+{
+	if(g_eClient[client][iUID] > 0)
+	{
+		strcopy(g_eClient[client][szClientName], 32, g_eClient[client][szDiscuzName]);
+		ReplaceString(g_eClient[client][szClientName], 32, "◇", "");
+		ReplaceString(g_eClient[client][szClientName], 32, "◆", "");
+		ReplaceString(g_eClient[client][szClientName], 32, "☆", "");
+		ReplaceString(g_eClient[client][szClientName], 32, "★", "");
+		ReplaceString(g_eClient[client][szClientName], 32, "✪", "");
+		ReplaceString(g_eClient[client][szClientName], 32, "♜", "");
+		ReplaceString(g_eClient[client][szClientName], 32, "♚", "");
+		if(g_eClient[client][iGroupId] >= 9990)
+			Format(g_eClient[client][szClientName], 32, "♚ %s", g_eClient[client][szClientName]);
+		else if(GetUserFlagBits(client) & ADMFLAG_BAN)
+			Format(g_eClient[client][szClientName], 32, "♜ %s", g_eClient[client][szClientName]);
+		else
+		{
+			switch(g_eClient[client][iVipType])
+			{
+				case 0: Format(g_eClient[client][szClientName], 32, "◆ %s", g_eClient[client][szClientName]);
+				case 1: Format(g_eClient[client][szClientName], 32, "☆ %s", g_eClient[client][szClientName]);
+				case 2: Format(g_eClient[client][szClientName], 32, "★ %s", g_eClient[client][szClientName]);
+				case 3: Format(g_eClient[client][szClientName], 32, "✪ %s", g_eClient[client][szClientName]);
+			}
+		}
+	}
+	else
+	{
+		GetClientName(client, g_eClient[client][szClientName], 32);
+		ReplaceString(g_eClient[client][szClientName], 32, "◇", "");
+		ReplaceString(g_eClient[client][szClientName], 32, "◆", "");
+		ReplaceString(g_eClient[client][szClientName], 32, "☆", "");
+		ReplaceString(g_eClient[client][szClientName], 32, "★", "");
+		ReplaceString(g_eClient[client][szClientName], 32, "✪", "");
+		ReplaceString(g_eClient[client][szClientName], 32, "♜", "");
+		ReplaceString(g_eClient[client][szClientName], 32, "♚", "");
+
+		Format(g_eClient[client][szClientName], 32, "◇ %s", g_eClient[client][szClientName]);
+		
+		if(g_eGame == Engine_CSGO)
+			CS_SetClientClanTag(client, "[未注册]");
+	}
+
+	SetClientName(client, g_eClient[client][szClientName]);
+}
+
+void CheckClientName(int client)
+{
+	char name[32];
+	GetClientName(client, name, 32);
+
+	if(StrEqual(name, g_eClient[client][szClientName]))
+		return;
+
+	SetClientName(client, g_eClient[client][szClientName]);
 }

@@ -92,7 +92,7 @@ void SaveClient(int client)
 {
 	if(g_eClient[client][iAnalyticsId] == -1 || g_eClient[client][iPlayerId] == 0)
 		return;
-	
+
 	//获得统计结果
 	int duration = -1;
 	if(g_eClient[client][iConnectTime] < (GetTime()-86400))

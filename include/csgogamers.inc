@@ -1,4 +1,7 @@
+#undef REQUIRE_EXTENSIONS
 #include <sdktools>
+#include <cstrike>
+#define REQUIRE_EXTENSIONS
 
 //////////////////////////////
 //			ENUMS			// 
@@ -24,13 +27,13 @@ enum Clients
 	iCPDate,
 	iDaily,
 	bool:bLoaded,
-	bool:bIsBot,
 	bool:bListener,
 	bool:bSignIn,
 	String:szIP[32],
 	String:szGroupName[64],
 	String:szSignature[256],
 	String:szDiscuzName[128],
+	String:szClientName[32],
 	String:szAdminFlags[64],
 	String:szInsertData[512],
 	String:szUpdateData[512],
@@ -44,7 +47,6 @@ enum Handles
 {
 	Handle:DB_Game,
 	Handle:DB_Discuz,
-	Handle:CV_Hiden,
 	Handle:KV_Local
 }
 
@@ -73,7 +75,8 @@ enum hEvents
 	Handle:player_hurt,
 	Handle:player_team,
 	Handle:player_jump,
-	Handle:weapon_fire
+	Handle:weapon_fire,
+	Handle:player_name
 }
 
 //Motd Cmd

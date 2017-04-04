@@ -71,3 +71,24 @@ public void Event_WeaponFire(Event event, const char[] name, bool dontBroadcast)
 	Call_PushString(weapon);
 	Call_Finish();
 }
+
+public Action Event_PlayerName(Event event, const char[] name, bool dontBroadcast)
+{
+	int client = GetClientOfUserId(GetEventInt(event, "userid"))
+
+	Call_StartForward(g_eEvents[player_name]);
+	Call_PushCell(client);
+	char oldname[32];
+	GetEventString(event, "oldname", oldname, 32, "");
+	Call_PushString(oldname);
+	char newname[32];
+	GetEventString(event, "newname", newname, 32, "");
+	Call_PushString(newname);
+	Call_Finish();
+
+	RequestFrame(CheckClientName, client);
+	
+	SetEventBroadcast(event, true);
+	
+	return Plugin_Changed;
+}

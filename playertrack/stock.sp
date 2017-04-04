@@ -45,7 +45,7 @@ stock bool AddMenuItemEx(Handle menu, int style, const char[] info, const char[]
 	return AddMenuItem(menu, info, m_szBuffer, style);
 }
 
-stock bool IsValidClient(int client, bool checkBOT = false)
+stock bool IsValidClient(int client)
 {
 	if(!(1 <= client <= MaxClients))
 		return false;
@@ -53,17 +53,8 @@ stock bool IsValidClient(int client, bool checkBOT = false)
 	if(!IsClientInGame(client))
 		return false;
 
-	if(checkBOT)
-	{
-		if(IsFakeClient(client))
-			return false;
-
-		char m_szAuth[64];
-		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32);
-
-		if(StrEqual(m_szAuth, "BOT", false))
-			return false;
-	}
+	if(IsFakeClient(client))
+		return false;
 
 	return true;
 }
@@ -89,29 +80,13 @@ stock int FindClientByPlayerId(int PlayerId)
 
 stock void tPrintToChat(int client, const char[] szMessage, any ...)
 {
-	if(!IsValidClient(client, true))
+	if(!IsValidClient(client))
 		ThrowError("Invalid client index %d", client);
 
 	char szBuffer[256];
 	VFormat(szBuffer, 256, szMessage, 3);
 	ReplaceColorsCode(szBuffer, 256);
 	PrintToChat(client, szBuffer);
-}
-
-stock void tPrintToChatAll(const char[] szMessage, any ...)
-{
-	char szBuffer[256];
-
-	for(int client = 1; client <= MaxClients; client++)
-	{
-		if(IsValidClient(client, true))
-		{
-			SetGlobalTransTarget(client);
-			VFormat(szBuffer, 256, szMessage, 2);
-			ReplaceColorsCode(szBuffer, 256);
-			PrintToChat(client, szBuffer);
-		}
-	}
 }
 
 stock bool TalentAvailable()
@@ -266,7 +241,7 @@ stock void TranslationToFile(const char[] m_szPath)
 	WriteFileLine(file, "}");
 	WriteFileLine(file, "\"sign allow sign\"");
 	WriteFileLine(file, "{");
-	WriteFileLine(file, "\"en\"	\"{green}You can sign now - Type{lightred}!sign{green} in chat to sign\"");
+	WriteFileLine(file, "\"en\"	\"{green}You can sign now - Type{lightred} !sign{green} in chat to sign\"");
 	WriteFileLine(file, "\"chi\"	\"{green}你现在可以签到了,按Y输入{lightred}!sign{green}来签到!\"");
 	WriteFileLine(file, "\"zho\"	\"{green}你現在可以簽到了,按Y輸入{lightred}!sign{green}來簽到!\"");
 	WriteFileLine(file, "}");

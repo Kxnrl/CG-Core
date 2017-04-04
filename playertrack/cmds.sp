@@ -5,21 +5,27 @@ public Action Command_ReloadAdv(int client, int args)
 {
 	//重载广告
 	SettingAdver();
+	return Plugin_Handled;
 }
 
 public Action Command_Online(int client, int args)
 {
+	if(!IsValidClient(client) || !g_eClient[client][bLoaded])
+		return Plugin_Handled;
+	
 	//查询在线时间
 	int m_iHours = g_eClient[client][iOnline] / 3600;
 	int m_iMins = g_eClient[client][iOnline] % 3600;
 	int t_iMins = (GetTime() - g_eClient[client][iConnectTime]) / 60;
 	tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "cmd onlines", client, client, m_iHours, m_iMins/60, g_eClient[client][iNumber], t_iMins);
+
+	return Plugin_Handled;
 }
 
 public Action Command_Track(int client, int args)
 {
 	//控制台查看玩家数据
-	if(!client || !IsClientInGame(client) || IsFakeClient(client))
+	if(!IsValidClient(client))
 		return Plugin_Handled;
 
 	char szItem[512], szAuth32[32], szAuth64[64];
@@ -34,10 +40,10 @@ public Action Command_Track(int client, int args)
 		{
 			connected++;
 			
-			if(IsValidClient(i, true))
+			if(IsClientInGame(i))
 			{
 				ingame++;
-				
+
 				GetClientAuthId(i, AuthId_Steam2, szAuth32, 32, true);
 				GetClientAuthId(i, AuthId_SteamID64, szAuth64, 64, true);
 				Format(szItem, 512, " %d    %N    %d    %s    %s    %s    %s", g_eClient[i][iPlayerId], i, g_eClient[i][iUID], g_eClient[i][szDiscuzName], szAuth32, szAuth64, g_eClient[i][szGroupName]);
@@ -79,7 +85,7 @@ public Action Command_Menu(int client, int args)
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "radio", "%T", "main radio desc", client);
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "online", "%T", "main online desc", client);
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "setrp", "%T", "main setrp desc", client);
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "huodo", "%T", "main act desc", client);
+	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "huodo", "%T", "main act desc", client);
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "lang", "%T", "main select language", client);
 
 	SetMenuExitButton(menu, true);
@@ -205,4 +211,6 @@ public Action Command_Language(int client, int args)
 
 	if(args < 0)
 		FakeClientCommand(client, "sm_cg");
+	
+	return Plugin_Handled;
 }

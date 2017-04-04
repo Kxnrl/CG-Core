@@ -3,14 +3,14 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 396
-#define PLUGIN_VERSION " 7.3.2 - 2017/03/23 03:25 "
+#define Build 399
+#define PLUGIN_VERSION " 7.4.1 - 2017/04/03 07:44 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
-#define TRANSDATASIZE 12574
+#define TRANSDATASIZE 12439
 
-//////////////////////////////////
-//		GLOBAL VARIABLES		//
-//////////////////////////////////
+//////////////////////////////
+//		GLOBAL VARIABLES	//
+//////////////////////////////
 //enum
 Clients g_eClient[MAXPLAYERS+1][Clients];
 Handles g_eHandle[Handles];
@@ -61,21 +61,25 @@ public Plugin myinfo =
 //////////////////////////////
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
+	//Mark native
+	MarkNative();
+
 	//创建API
 	InitNative();
 	
 	//创建全局Forward
 	InitForward();
 
+	//Late load?
 	g_bLateLoad = late;
 
 	//注册函数库
 	RegPluginLibrary("csgogamers");
-	
+
 	//Fix Plugin Load
 	SetConVarInt(FindConVar("sv_hibernate_when_empty"), 0);
 	Format(g_szRconPwd, 32, "%d", GetRandomInt(10000000, 99999999));
-	SetConVarString(FindConVar("rcon_password"), g_szRconPwd);
+	SetConVarString(FindConVar("rcon_password"), g_szRconPwd); 
 
 	return APLRes_Success;
 }
@@ -118,6 +122,7 @@ public void OnPluginEnd()
 
 public void OnConfigsExecuted()
 {
+	//Lock Cvars
 	SetConVarInt(FindConVar("sv_hibernate_when_empty"), 0);
 	SetConVarString(FindConVar("hostname"), g_szHostName, false, false);
 	SetConVarString(FindConVar("rcon_password"), g_szRconPwd, false, false);
@@ -134,19 +139,12 @@ public void OnClientConnected(int client)
 
 public void OnClientPostAdminCheck(int client)
 {
-	//过滤BOT和FakeClient
-	g_eClient[client][bIsBot] = false;
-
-	if(!IsValidClient(client, true))
+	if(!IsValidClient(client))
 	{
-		g_eClient[client][bIsBot] = true;
 		OnClientDataLoaded(client);
 		OnClientVipChecked(client);
 		return;
 	}
-
-	//re fixed
-	InitClient(client);
 
 	//从数据库查询初始数据
 	//如果连不上数据库直接就跳过了
@@ -169,8 +167,8 @@ public void OnClientPostAdminCheck(int client)
 
 public void OnClientDisconnect(int client)
 {
-	//Bot直接返回
-	if(g_eClient[client][bIsBot])
+	//玩家还没加入到游戏就断线了
+	if(!IsClientInGame(client) || IsFakeClient(client))
 		return;
 
 	//检查CP在线情况
