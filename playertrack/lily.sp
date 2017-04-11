@@ -82,7 +82,7 @@ void BuildSelectCPMenu(int client)
 	{
 		if(IsClientInGame(target) && target != client)
 		{
-			if(g_eClient[target][bLoaded] && g_eClient[target][iCPId] == -2)
+			if(g_eClient[target][bLoaded] && g_eClient[target][iUID] >= 1 && g_eClient[target][iCPId] == -2)
 			{
 				Format(m_szId, 8, "%d", GetClientUserId(target));
 				GetClientName(target, m_szItem, 128);
@@ -113,7 +113,7 @@ public int MenuHandler_CPSelect(Handle menu, MenuAction action, int client, int 
 			
 			int target = GetClientOfUserId(StringToInt(info));
 
-			if(!target || !IsClientInGame(target) || g_eClient[target][iCPId] != -2)
+			if(!target || !IsClientInGame(target) || g_eClient[target][iUID] < 1 || g_eClient[target][iCPId] != -2)
 			{
 				tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "cp invalid target", client);
 				BuildCPMenu(client);

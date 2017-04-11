@@ -3,8 +3,8 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 399
-#define PLUGIN_VERSION " 7.4.1 - 2017/04/03 07:44 "
+#define Build 403
+#define PLUGIN_VERSION " 7.4.5 - 2017/04/12 02:03 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12439
 
@@ -16,6 +16,7 @@ Clients g_eClient[MAXPLAYERS+1][Clients];
 Handles g_eHandle[Handles];
 Forward g_Forward[Forward];
 hEvents g_eEvents[hEvents];
+TextHud g_TextHud[MAX_CHANNEL][TextHud];
 
 //全部变量
 int g_iServerId;
@@ -118,6 +119,18 @@ public void OnPluginEnd()
 	for(int i = 1; i <= MaxClients; ++i)
 		if(IsClientInGame(i))
 			OnClientDisconnect(i);
+}
+
+public void OnMapStart()
+{
+	for(int channel = 0; channel < MAX_CHANNEL; ++channel)
+	{
+		g_TextHud[channel][iEntRef] = INVALID_ENT_REFERENCE;
+		g_TextHud[channel][fHolded] = GetGameTime();
+		g_TextHud[channel][hTimer] = INVALID_HANDLE;
+		g_TextHud[channel][szPosX][0] = '\0';
+		g_TextHud[channel][szPosY][0] = '\0';
+	}
 }
 
 public void OnConfigsExecuted()

@@ -24,6 +24,12 @@ public void CheckClientAuthTerm(int client, int AuthId)
 		return;
 	}
 	
+	if(1000 < AuthId)
+	{
+		tPrintToChat(client, "%s  此认证需要猫灵手动发放", PLUGIN_PREFIX);
+		return;
+	}
+	
 	tPrintToChat(client, "%s  {blue}%T", PLUGIN_PREFIX, "querying", client);
 	
 	if(OnCheckAuthTerm(client, AuthId))

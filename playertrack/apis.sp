@@ -187,6 +187,145 @@ public int Native_RemoveMotd(Handle plugin, int numParams)
 	return true;
 }
 
+public int Native_ShowGameText(Handle plugin, int numParams)
+{
+	char color[32], message[256], holdtime[16], szX[16], szY[160];
+	if
+	(
+		GetNativeString(1, message, 256) != SP_ERROR_NONE ||
+		GetNativeString(2, holdtime, 16) != SP_ERROR_NONE ||
+		GetNativeString(3, color,    32) != SP_ERROR_NONE ||
+		GetNativeString(4, szX,      16) != SP_ERROR_NONE ||
+		GetNativeString(5, szY,      16) != SP_ERROR_NONE
+	)
+		return false;
+		
+	int channel = GetFreelyChannel(szX, szY);
+
+	if(channel < 0 || channel >= MAX_CHANNEL)
+		return false;
+
+	ArrayList array_client = GetNativeCell(6);
+	
+	if(array_client == INVALID_HANDLE)
+		return false;
+	
+	int arraysize = GetArraySize(array_client);
+	
+	if(arraysize < 1)
+		return false;
+
+	if(g_TextHud[channel][hTimer] != INVALID_HANDLE)
+		KillTimer(g_TextHud[channel][hTimer]);
+
+	float hold = StringToFloat(holdtime);
+
+	g_TextHud[channel][fHolded] = GetGameTime()+hold;
+	g_TextHud[channel][hTimer] = CreateTimer(hold, Timer_ResetChannel, channel, TIMER_FLAG_NO_MAPCHANGE);
+	strcopy(g_TextHud[channel][szPosX], 16, szX);
+	strcopy(g_TextHud[channel][szPosY], 16, szY);
+
+	int entity = -1;
+	if(!IsValidEntity(g_TextHud[channel][iEntRef]))
+	{
+		entity = CreateEntityByName("game_text");
+		g_TextHud[channel][iEntRef] = EntIndexToEntRef(entity);
+		
+		char tname[32]
+		Format(tname, 32, "game_text_%i", entity);
+		DispatchKeyValue(entity,"targetname", tname);
+	}
+	else
+		entity = EntRefToEntIndex(g_TextHud[channel][iEntRef]);
+	
+	char szChannel[4];
+	IntToString(channel, szChannel, 4);
+	
+	DispatchKeyValue(entity, "message", message);
+	DispatchKeyValue(entity, "spawnflags", "0");
+	DispatchKeyValue(entity, "channel", szChannel);
+	DispatchKeyValue(entity, "holdtime", holdtime);
+	DispatchKeyValue(entity, "fxtime", "99.9");
+	DispatchKeyValue(entity, "fadeout", "0");
+	DispatchKeyValue(entity, "fadein", "0");
+	DispatchKeyValue(entity, "x", szX);
+	DispatchKeyValue(entity, "y", szY);
+	DispatchKeyValue(entity, "color", color);
+	DispatchKeyValue(entity, "color2", color);
+	DispatchKeyValue(entity, "effect", "0");
+
+	DispatchSpawn(entity);
+
+	for(int x = 0; x < arraysize; ++x)
+		AcceptEntityInput(entity, "Display", GetArrayCell(array_client, x));
+
+	return true;
+}
+
+public int Native_ShowGameTextAll(Handle plugin, int numParams)
+{
+	char color[32], message[256], holdtime[16], szX[16], szY[160];
+	if
+	(
+		GetNativeString(1, message, 256) != SP_ERROR_NONE ||
+		GetNativeString(2, holdtime, 16) != SP_ERROR_NONE ||
+		GetNativeString(3, color,    32) != SP_ERROR_NONE ||
+		GetNativeString(4, szX,      16) != SP_ERROR_NONE ||
+		GetNativeString(5, szY,      16) != SP_ERROR_NONE
+	)
+		return false;
+		
+	int channel = GetFreelyChannel(szX, szY);
+
+	if(channel < 0 || channel >= MAX_CHANNEL)
+		return false;
+	
+	if(g_TextHud[channel][hTimer] != INVALID_HANDLE)
+		KillTimer(g_TextHud[channel][hTimer]);
+
+	float hold = StringToFloat(holdtime);
+
+	g_TextHud[channel][fHolded] = GetGameTime()+hold;
+	g_TextHud[channel][hTimer] = CreateTimer(hold, Timer_ResetChannel, channel, TIMER_FLAG_NO_MAPCHANGE);
+	strcopy(g_TextHud[channel][szPosX], 16, szX);
+	strcopy(g_TextHud[channel][szPosY], 16, szY);
+
+	int entity = -1;
+	if(!IsValidEntity(g_TextHud[channel][iEntRef]))
+	{
+		entity = CreateEntityByName("game_text");
+		g_TextHud[channel][iEntRef] = EntIndexToEntRef(entity);
+		
+		char tname[32]
+		Format(tname, 32, "game_text_%i", entity);
+		DispatchKeyValue(entity,"targetname", tname);
+	}
+	else
+		entity = EntRefToEntIndex(g_TextHud[channel][iEntRef]);
+
+	char szChannel[4];
+	IntToString(channel, szChannel, 4);
+	
+	DispatchKeyValue(entity, "message", message);
+	DispatchKeyValue(entity, "spawnflags", "1");
+	DispatchKeyValue(entity, "channel", szChannel);
+	DispatchKeyValue(entity, "holdtime", holdtime);
+	DispatchKeyValue(entity, "fxtime", "99.9");
+	DispatchKeyValue(entity, "fadeout", "0");
+	DispatchKeyValue(entity, "fadein", "0");
+	DispatchKeyValue(entity, "x", szX);
+	DispatchKeyValue(entity, "y", szY);
+	DispatchKeyValue(entity, "color", color);
+	DispatchKeyValue(entity, "color2", color);
+	DispatchKeyValue(entity, "effect", "0");
+
+	DispatchSpawn(entity);
+	
+	AcceptEntityInput(entity, "Display");
+
+	return true;
+}
+
 void OnServerLoadSuccess()
 {
 	//建立临时储存文件

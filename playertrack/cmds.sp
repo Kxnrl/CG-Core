@@ -177,6 +177,9 @@ public Action Command_GetAuth(int client, int args)
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "302", "[混战休闲] 混战指挥");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "303", "[混战休闲] 爆头狂魔");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "304", "[混战休闲] 助攻之神");
+	
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "1001", "[全服认证] 女装大佬");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "1002", "[全服认证] 援交少女");
 
 	SetMenuExitBackButton(menu, true);
 	SetMenuExitButton(menu, true);

@@ -90,3 +90,14 @@ enum
 	MOTDPANEL_CMD_CLOSED_HTMLPAGE,
 	MOTDPANEL_CMD_CHOOSE_TEAM,
 };
+
+//Game Text
+#define MAX_CHANNEL 6
+enum TextHud
+{
+	iEntRef,
+	Float:fHolded,
+	String:szPosX[16],
+	String:szPosY[16],
+	Handle:hTimer
+}

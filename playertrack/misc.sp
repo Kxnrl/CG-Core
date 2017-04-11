@@ -98,6 +98,8 @@ void InitNative()
 	CreateNative("CG_GetClientGName", Native_GetGroupName);
 	CreateNative("CG_GetGameDatabase", Native_GetGameDatabase);
 	CreateNative("CG_GetDiscuzDatabase", Native_GetDiscuzDatabase);
+	CreateNative("CG_ShowGameText", Native_ShowGameText);
+	CreateNative("CG_ShowGameTextAll", Native_ShowGameTextAll);
 }
 
 void InitEvents()
@@ -627,6 +629,9 @@ public Action Timer_ReLoadClient(Handle timer, int userid)
 
 void FormatClientName(int client)
 {
+	if(IsFakeClient(client))
+		return;
+	
 	if(g_eClient[client][iUID] > 0)
 	{
 		strcopy(g_eClient[client][szClientName], 32, g_eClient[client][szDiscuzName]);
@@ -674,6 +679,9 @@ void FormatClientName(int client)
 
 void CheckClientName(int client)
 {
+	if(IsFakeClient(client))
+		return;
+
 	char name[32];
 	GetClientName(client, name, 32);
 
@@ -681,4 +689,24 @@ void CheckClientName(int client)
 		return;
 
 	SetClientName(client, g_eClient[client][szClientName]);
+}
+
+int GetFreelyChannel(const char[] szX, const char[] szY)
+{
+	for(int channel = 0; channel < MAX_CHANNEL; ++channel)
+		if(StrEqual(g_TextHud[channel][szPosX], szX) && StrEqual(g_TextHud[channel][szPosY], szY))
+			return channel;
+
+	for(int channel = 0; channel < MAX_CHANNEL; ++channel)
+		if(g_TextHud[channel][fHolded] <= GetGameTime())
+			return channel;
+
+	return -1;
+}
+
+public Action Timer_ResetChannel(Handle timer, int channel)
+{
+	g_TextHud[channel][hTimer] = INVALID_HANDLE;
+	g_TextHud[channel][szPosX][0] = '\0';
+	g_TextHud[channel][szPosY][0] = '\0';
 }
