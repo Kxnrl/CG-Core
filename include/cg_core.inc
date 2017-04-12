@@ -13,7 +13,7 @@ forward void CG_OnRoundEnd(int winner);
 forward void CG_OnClientSpawn(int client);
 forward void CG_OnClientDeath(int client, int attacker, int assister, bool headshot, const char[] weapon);
 forward void CG_OnClientHurted(int client, int attacker, int damage, int hitgroup, const char[] weapon);
-forward void CG_OnClientTeam(int client);
+forward void CG_OnClientTeam(int client, int oldteam, int newteam);
 forward void CG_OnClientJump(int client);
 forward void CG_OnClientFire(int client, const char[] weapon);
 

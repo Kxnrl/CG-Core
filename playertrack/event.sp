@@ -50,8 +50,10 @@ public Action Event_PlayerTeam(Event event, const char[] name, bool dontBroadcas
 	
 	Call_StartForward(g_eEvents[player_team]);
 	Call_PushCell(GetClientOfUserId(GetEventInt(event, "userid")));
+	Call_PushCell(GetEventInt(event, "oldteam"));
+	Call_PushCell(GetEventInt(event, "team"));
 	Call_Finish();
-	
+
 	return Plugin_Changed;
 }
 

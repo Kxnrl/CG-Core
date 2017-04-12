@@ -4,7 +4,7 @@
 //		DEFINITIONS			//
 //////////////////////////////
 #define Build 403
-#define PLUGIN_VERSION " 7.4.5 - 2017/04/12 02:03 "
+#define PLUGIN_VERSION " 7.4.6 - 2017/04/12 19:09 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12439
 

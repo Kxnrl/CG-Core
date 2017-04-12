@@ -64,7 +64,7 @@ void InitForward()
 	g_eEvents[player_spawn] = CreateGlobalForward("CG_OnClientSpawn", ET_Ignore, Param_Cell);
 	g_eEvents[player_death] = CreateGlobalForward("CG_OnClientDeath", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_String);
 	g_eEvents[player_hurt] = CreateGlobalForward("CG_OnClientHurted", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_String);
-	g_eEvents[player_team] = CreateGlobalForward("CG_OnClientTeam", ET_Ignore, Param_Cell);
+	g_eEvents[player_team] = CreateGlobalForward("CG_OnClientTeam", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
 	g_eEvents[player_jump] = CreateGlobalForward("CG_OnClientJump", ET_Ignore, Param_Cell);
 	g_eEvents[weapon_fire] = CreateGlobalForward("CG_OnClientFire", ET_Ignore, Param_Cell, Param_String);
 	g_eEvents[player_name] = CreateGlobalForward("CG_OnClientName", ET_Ignore, Param_Cell, Param_String, Param_String);
