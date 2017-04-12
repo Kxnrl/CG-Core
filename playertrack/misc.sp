@@ -642,7 +642,9 @@ void FormatClientName(int client)
 		ReplaceString(g_eClient[client][szClientName], 32, "✪", "");
 		ReplaceString(g_eClient[client][szClientName], 32, "♜", "");
 		ReplaceString(g_eClient[client][szClientName], 32, "♚", "");
-		if(g_eClient[client][iGroupId] >= 9990)
+		if(g_eClient[client][iGroupId] >= 9999)
+			Format(g_eClient[client][szClientName], 32, "✪ %s", g_eClient[client][szClientName]);
+		else if(g_eClient[client][iGroupId] >= 9990)
 			Format(g_eClient[client][szClientName], 32, "♚ %s", g_eClient[client][szClientName]);
 		else if(GetUserFlagBits(client) & ADMFLAG_BAN)
 			Format(g_eClient[client][szClientName], 32, "♜ %s", g_eClient[client][szClientName]);
