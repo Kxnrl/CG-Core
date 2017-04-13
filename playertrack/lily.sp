@@ -140,21 +140,23 @@ void ConfirmCPRequest(int client, int target)
 {
 	//接受lily请求菜单
 	Handle menu = CreateMenu(MenuHandler_CPConfirm)
-	SetMenuTitleEx(menu, "[CP]  %T", "cp request", client);
+	SetMenuTitleEx(menu, "[CP]  %T", "cp request", target);
 
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", "%T", "cp request item target", client, target);
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", "%T", "cp 7days", client);
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", "%T", "cp buff", client);
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", "%T", "cp confirm", client);
+	//CP请求说明
+	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%T", "cp request item target", target, client);
+	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%T", "cp 7days", target);
+	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%T", "cp buff", target);
+	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%T", "cp confirm", target);
 
 	char m_szItem[32];
-	
+	//接受按钮
 	Format(m_szItem, 32, "Accept%d", GetClientUserId(client));
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, m_szItem, "%T", "cp accept", client);
-	
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, m_szItem, "%T", "cp accept", target);
+	//拒绝按钮
 	Format(m_szItem, 32, "Refuse%d", GetClientUserId(client));
-	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, m_szItem, "%T", "cp refuse", client);
-	
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, m_szItem, "%T", "cp refuse", target);
+
+	//返回菜单就绪 => 输出
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, target, 0);
 }
@@ -167,7 +169,7 @@ public int MenuHandler_CPConfirm(Handle menu, MenuAction action, int target, int
 		GetMenuItem(menu, itemNum, info, 32);
 
 		//接受?
-		if(StrContains(info, "Accept", false) != -1)
+		if(StrContains(info, "Accept", false) == -1)
 		{
 			//移除标识符
 			ReplaceString(info, 32, "Accept", "", false);
@@ -183,7 +185,7 @@ public int MenuHandler_CPConfirm(Handle menu, MenuAction action, int target, int
 		}
 		
 		//拒绝?
-		if(StrContains(info, "Refuse", false) != -1)
+		if(StrContains(info, "Refuse", false) == -1)
 		{
 			ReplaceString(info, 32, "Refuse", "", false);
 			int client = GetClientOfUserId(StringToInt(info));
@@ -266,9 +268,9 @@ void ConfirmDivorce(int client, const int m_iId, const char[] m_szName)
 	
 	char m_szItem[128];
 
-	Format(m_szItem, 128, "%T", "cp your cp", client, m_szName);
+	Format(m_szItem, 128, "%T", client, "cp your cp", m_szName);
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", m_szItem);
-	
+
 	Format(m_szItem, 128, "%T", "cp your days", client, (GetTime() - g_eClient[client][iCPDate])/86400);
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", m_szItem);
 
