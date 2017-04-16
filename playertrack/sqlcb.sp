@@ -627,7 +627,7 @@ public void SQLCallback_UpdateCP(Handle owner, Handle hndl, const char[] error, 
 		Call_Finish();
 		
 		for(int i = 1; i <= MaxClients; ++i)
-			if(IsClientInGame(i))
+			if(IsClientInGame(i) && !IsFakeClient(i))
 				tPrintToChat(i, "%s  %T", PLUGIN_PREFIX, "cp married", i, client, target);
 	}
 	
@@ -699,7 +699,7 @@ public void SQLCallback_UpdateDivorce(Handle owner, Handle hndl, const char[] er
 	int m_iPartner = FindClientByPlayerId(m_iId);
 
 	for(int i = 1; i <= MaxClients; ++i)
-		if(IsClientInGame(i))
+		if(IsClientInGame(i) && !IsFakeClient(i))
 			tPrintToChat(i, "%s  %T", PLUGIN_PREFIX, "cp divorce", i, client, m_szName, (GetTime()-g_eClient[client][iCPDate])/86400);
 
 	if(m_iPartner > 0)
@@ -751,6 +751,6 @@ public void SQLCallback_GiveAuth(Handle owner, Handle hndl, const char[] error, 
 	}
 	
 	for(int i = 1; i <= MaxClients; ++i)
-		if(IsClientInGame(i))
+		if(IsClientInGame(i) && !IsFakeClient(i))
 			tPrintToChat(i, "%s  {blue}%N{green}%T", PLUGIN_PREFIX, client, "auth get new auth", i);
 }

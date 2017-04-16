@@ -80,9 +80,6 @@ stock int FindClientByPlayerId(int PlayerId)
 
 stock void tPrintToChat(int client, const char[] szMessage, any ...)
 {
-	if(!IsValidClient(client))
-		ThrowError("Invalid client index %d", client);
-
 	char szBuffer[256];
 	VFormat(szBuffer, 256, szMessage, 3);
 	ReplaceColorsCode(szBuffer, 256);

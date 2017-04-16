@@ -113,7 +113,7 @@ public int MenuHandler_CPSelect(Handle menu, MenuAction action, int client, int 
 			
 			int target = GetClientOfUserId(StringToInt(info));
 
-			if(!target || !IsClientInGame(target) || g_eClient[target][iUID] < 1 || g_eClient[target][iCPId] != -2)
+			if(!IsValidClient(target) || g_eClient[target][iUID] < 1 || g_eClient[target][iCPId] != -2)
 			{
 				tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "cp invalid target", client);
 				BuildCPMenu(client);
@@ -169,13 +169,13 @@ public int MenuHandler_CPConfirm(Handle menu, MenuAction action, int target, int
 		GetMenuItem(menu, itemNum, info, 32);
 
 		//接受?
-		if(StrContains(info, "Accept", false) == -1)
+		if(StrContains(info, "Accept", false) == 0)
 		{
 			//移除标识符
 			ReplaceString(info, 32, "Accept", "", false);
 			int client = GetClientOfUserId(StringToInt(info));
 			
-			if(!client || !IsClientInGame(client) || g_eClient[client][iCPId] != -2)
+			if(!IsValidClient(client) || g_eClient[client][iCPId] != -2)
 			{
 				tPrintToChat(target, "%s  %T", PLUGIN_PREFIX, "cp invalid target", client);
 				return;
@@ -185,16 +185,14 @@ public int MenuHandler_CPConfirm(Handle menu, MenuAction action, int target, int
 		}
 		
 		//拒绝?
-		if(StrContains(info, "Refuse", false) == -1)
+		if(StrContains(info, "Refuse", false) == 0)
 		{
 			ReplaceString(info, 32, "Refuse", "", false);
 			int client = GetClientOfUserId(StringToInt(info));
 			
-			if(!client || !IsClientInGame(client))
-			{
+			if(!IsValidClient(client))
 				return;
-			}
-			
+		
 			tPrintToChat(target, "%s  %T", PLUGIN_PREFIX, "cp refuse target", target, client);
 			tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "cp refuse client", client, target);
 		}
@@ -208,13 +206,13 @@ public int MenuHandler_CPConfirm(Handle menu, MenuAction action, int target, int
 public void CP_AddNewCouple(int client, int target)
 {
 	//对象无效?
-	if(!IsClientInGame(client))
+	if(!IsValidClient(client))
 	{
 		tPrintToChat(target, "%s  %T 000000", PLUGIN_PREFIX, "system error", target);
 		return;
 	}
 	
-	if(!IsClientInGame(target))
+	if(!IsValidClient(target))
 	{
 		tPrintToChat(client, "%s  %T 000000", PLUGIN_PREFIX, "system error", client);
 		return;
@@ -268,7 +266,7 @@ void ConfirmDivorce(int client, const int m_iId, const char[] m_szName)
 	
 	char m_szItem[128];
 
-	Format(m_szItem, 128, "%T", client, "cp your cp", m_szName);
+	Format(m_szItem, 128, "%T", "cp your cp", client, m_szName);
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", m_szItem);
 
 	Format(m_szItem, 128, "%T", "cp your days", client, (GetTime() - g_eClient[client][iCPDate])/86400);
