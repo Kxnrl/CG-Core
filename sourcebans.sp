@@ -230,6 +230,7 @@ public void OnClientAuthorized(int client, const char[] auth)
 			KillTimer(PlayerRecheck[client]);
 
 		PlayerRecheck[client] = CreateTimer(30.0, ClientRecheck, client);
+		return;
 	}
 
 	char m_szQuery[512], ip[16];
