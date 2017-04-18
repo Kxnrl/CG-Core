@@ -8,9 +8,6 @@
 #include <geoip>
 
 #define Prefix "[\x02SourceBans\x01]  "
-#define DISABLE_ADDBAN		1
-#define DISABLE_UNBAN		2
-
 
 enum State
 {
@@ -42,12 +39,8 @@ char groupsLoc[128];
 char adminsLoc[128];
 char overridesLoc[128];
 
-/* Cvar handle*/
-Handle CvarHostIp;
-
 /* Database handle */
 Handle g_hDatabase;
-Handle g_hSQLite;
 
 /* Menu file globals */
 Handle ReasonMenuHandle;
@@ -69,6 +62,7 @@ int g_ownReasons[MAXPLAYERS+1] = {false, ...};
 bool g_bLateLoaded;
 bool g_bConnecting = false;
 
+/* Server Id */
 int g_iServerId = -1;
 
 /* Ban Type */
@@ -79,10 +73,9 @@ public Plugin myinfo =
 	name		= "SourceBans - [CG] Community Edition",
 	author		= "SourceBans Development Team, Sarabveer(VEER™), Kyle",
 	description	= "Advanced ban management for the Source engine",
-	version		= "2.0.1+dev-7",
+	version		= "2.1+dev-8",
 	url			= "http://steamcommunity.com/id/_xQy_/"
 };
-
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -102,16 +95,11 @@ public void OnPluginStart()
 	LoadTranslations("basebans.phrases");
 
 	loadAdmins = loadGroups = false;
-	
-	CvarHostIp = FindConVar("hostip");
 
 	RegServerCmd("Server_Rehash", Server_Rehash, "Reload SQL admins");
 
 	RegAdminCmd("sm_ban", CommandBan, ADMFLAG_BAN, "sm_ban <#userid|name> <minutes|0> [reason]", "sourcebans");
 	RegAdminCmd("sb_reload", _CmdReload, ADMFLAG_RCON, "Reload sourcebans config and ban reason menu options", "sourcebans");
-
-	RegConsoleCmd("say", ChatHook);
-	RegConsoleCmd("say_team", ChatHook);
 
 	if((ReasonMenuHandle = CreateMenu(ReasonSelected)) != INVALID_HANDLE)
 	{
@@ -146,24 +134,16 @@ public void OnPluginStart()
 	g_FlagLetters['s'-'a'] = Admin_Custom5;
 	g_FlagLetters['t'-'a'] = Admin_Custom6;
 	g_FlagLetters['z'-'a'] = Admin_Root;
-
-	BuildPath(Path_SM, logFile, 128, "logs/sourcebans.log");
+	
 	g_bConnecting = true;
 
-
 	SQL_TConnect(GotDatabase, "csgo");
-	
+
+	BuildPath(Path_SM, logFile, 128, "logs/sourcebans.log");
 	BuildPath(Path_SM , groupsLoc, 128,"configs/admin_groups.cfg");
-	
 	BuildPath(Path_SM, adminsLoc, 128,"configs/admins.cfg");
-	
 	BuildPath(Path_SM, overridesLoc, 128,"configs/sourcebans/overrides_backup.cfg");
-	
-	InitializeBackupDB();
-	
-	// This timer is what processes the SQLite queue when the database is unavailable
-	CreateTimer(180.0, ProcessQueue);
-	
+
 	if(g_bLateLoaded)
 	{
 		char auth[32];
@@ -238,10 +218,18 @@ public bool OnClientConnect(int client, char[] rejectmsg, int maxlen)
 
 public void OnClientAuthorized(int client, const char[] auth)
 {
-	if(auth[0] == 'B' || auth[9] == 'L' || auth[0] == 'G' || g_hDatabase == INVALID_HANDLE)
+	if(auth[0] == 'B' || auth[9] == 'L' || auth[0] == 'G')
 	{
 		PlayerStatus[client] = true;
 		return;
+	}
+	
+	if(g_hDatabase == INVALID_HANDLE)
+	{
+		if(PlayerRecheck[client] != INVALID_HANDLE)
+			KillTimer(PlayerRecheck[client]);
+
+		PlayerRecheck[client] = CreateTimer(30.0, ClientRecheck, client);
 	}
 
 	char m_szQuery[512], ip[16];
@@ -260,28 +248,30 @@ public void OnRebuildAdminCache(AdminCachePart part)
 		case AdminCache_Admins:
 			loadAdmins = true;
 	}
-	if(g_hDatabase == INVALID_HANDLE) {
-		if(!g_bConnecting) {
+	
+	if(g_hDatabase == INVALID_HANDLE)
+	{
+		if(!g_bConnecting)
+		{
 			g_bConnecting = true;
 			SQL_TConnect(GotDatabase,"sourcebans");
 		}
 	}
-	else {
+	else
+	{
 		LoadAdminsAndGroups();
 	}
 }
 
-public Action ChatHook(int client, int args)
+public Action OnClientSayCommand(int client, const char[] command, const char[] sArgs)
 {
 	if(g_ownReasons[client])
 	{
 		char reason[512];
-		GetCmdArgString(reason, 512);
+		strcopy(reason, 512, sArgs);
 		StripQuotes(reason);
-		
 		g_ownReasons[client] = false;
-
-		PrepareBan(client, g_BanTarget[client], g_BanTime[client], reason, 512);
+		PrepareBan(client, g_BanTarget[client], g_BanTime[client], reason);
 
 		return Plugin_Handled;
 	}
@@ -313,7 +303,6 @@ public Action CommandBan(int client, int args)
 		return Plugin_Handled;
 	}
 
-
 	GetCmdArg(2, buffer, 64);
 	int time = StringToInt(buffer);
 	if(!time && client && !(CheckCommandAccess(client, "sm_unban", ADMFLAG_UNBAN|ADMFLAG_ROOT)))
@@ -335,10 +324,10 @@ public Action CommandBan(int client, int args)
 	{
 		reason[0] = '\0';
 	}
-	
+
 	g_BanTarget[client] = target;
 	g_BanTime[client] = time;
-	
+
 	if(!PlayerStatus[target])
 	{
 		PrintToChat(admin, "%s \x05封禁正在验证中,请稍后再试...", Prefix);
@@ -406,7 +395,7 @@ public int ReasonSelected(Handle menu, MenuAction action, int param1, int param2
 		}
 		if(g_BanTarget[param1] != -1 && g_BanTime[param1] != -1)
 		{
-			PrepareBan(param1, g_BanTarget[param1], g_BanTime[param1], info, 128);
+			PrepareBan(param1, g_BanTarget[param1], g_BanTime[param1], info);
 		}
 	}
 	else if(action == MenuAction_Cancel && param2 == MenuCancel_Disconnected)
@@ -433,7 +422,7 @@ public int HackingSelected(Handle menu, MenuAction action, int param1, int param
 		GetMenuItem(menu, param2, key, 128, _, info, 128);
 		
 		if(g_BanTarget[param1] != -1 && g_BanTime[param1] != -1)
-			PrepareBan(param1, g_BanTarget[param1], g_BanTime[param1], info, 128);
+			PrepareBan(param1, g_BanTarget[param1], g_BanTime[param1], info);
 		
 	} else if(action == MenuAction_Cancel && param2 == MenuCancel_Disconnected) {
 
@@ -526,7 +515,6 @@ public int MenuHandler_BanTimeList(Handle menu, MenuAction action, int param1, i
 		AddMenuItem(btypeMenu, "2", "全服封禁", (GetUserFlagBits(param1) & ADMFLAG_CONVARS) ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 		SetMenuExitButton(btypeMenu, false);
 		DisplayMenu(btypeMenu, param1, MENU_TIME_FOREVER);
-		//DisplayMenu(ReasonMenuHandle, param1, MENU_TIME_FOREVER);
 	}
 }
 
@@ -545,7 +533,7 @@ public int MenuHandler_BanType(Handle menu, MenuAction action, int param1, int p
 	}
 }
 
-stock void DisplayBanTargetMenu(int client)
+void DisplayBanTargetMenu(int client)
 {
 	Handle menu = CreateMenu(MenuHandler_BanPlayerList);
 	
@@ -563,7 +551,7 @@ stock void DisplayBanTargetMenu(int client)
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);		// Show the menu to the client FOREVER!
 }
 
-stock void DisplayBanTimeMenu(int client)
+void DisplayBanTimeMenu(int client)
 {
 	Handle menu = CreateMenu(MenuHandler_BanTimeList);
 	
@@ -583,7 +571,7 @@ stock void DisplayBanTimeMenu(int client)
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
 
-stock void ResetMenu()
+void ResetMenu()
 {
 	if(ReasonMenuHandle != INVALID_HANDLE)
 	{
@@ -595,7 +583,7 @@ public void GotDatabase(Handle owner, Handle hndl, const char[] error, any data)
 {
 	if(hndl == INVALID_HANDLE)
 	{
-		LogToFile(logFile, "Database failure: %s.", error);
+		LogToFileEx(logFile, "Database failure: %s.", error);
 		g_bConnecting = false;
 		return;
 	}
@@ -613,13 +601,13 @@ public void VerifyInsert(Handle owner, Handle hndl, const char[] error, any data
 {
 	if(dataPack == INVALID_HANDLE)
 	{
-		LogToFile(logFile, "Ban Failed: %s", error);
+		LogToFileEx(logFile, "Ban Failed: %s", error);
 		return;
 	}
 
 	if(hndl == INVALID_HANDLE || error[0])
 	{
-		LogToFile(logFile, "Verify Insert Query Failed: %s", error);
+		LogToFileEx(logFile, "Verify Insert Query Failed: %s", error);
 		int admin = ReadPackCell(dataPack);
 		ReadPackCell(dataPack); // target
 		ReadPackCell(dataPack); // admin userid
@@ -642,13 +630,14 @@ public void VerifyInsert(Handle owner, Handle hndl, const char[] error, any data
 		ResetPack(reasonPack);
 
 		PlayerDataPack[admin] = INVALID_HANDLE;
-		UTIL_InsertTempBan(time, name, auth, ip, reason, adminAuth, adminIp, view_as<Handle>(dataPack));
+
+		LogToFileEx(logFile, "VerifyInsert => admin: \"%L\" client: \"%s<%s>\" length: %d", admin, name, auth, time);
 		return;
 	}
 
 	int admin = ReadPackCell(dataPack);
 	int client = ReadPackCell(dataPack);
-	
+
 	if(!IsClientConnected(client) || IsFakeClient(client))
 		return;
 
@@ -665,18 +654,16 @@ public void VerifyInsert(Handle owner, Handle hndl, const char[] error, any data
 	if(!time)
 	{
 		if(Reason[0] == '\0')
-		{
 			ShowActivityEx(admin, "[SourceBans]", "%t", "Permabanned player", Name);
-		} else {
+		else
 			ShowActivityEx(admin, "[SourceBans]", "%t","Permabanned player reason", Name, Reason);
-		}
-	} else {
+	}
+	else
+	{
 		if(Reason[0] == '\0')
-		{
 			ShowActivityEx(admin, "[SourceBans]", "%t", "Banned player", Name, time);
-		} else {
+		else
 			ShowActivityEx(admin, "[SourceBans]", "%t", "Banned player reason", Name, time, Reason);
-		}
 	}
 
 	LogAction(admin, client, "\"%L\" banned \"%L\" (minutes \"%d\") (reason \"%s\")", admin, client, time, Reason);
@@ -727,7 +714,7 @@ public void SelectAddbanCallback(Handle owner, Handle hndl, const char[] error, 
 	
 	if(error[0])
 	{
-		LogToFile(logFile, "Add Ban Select Query Failed: %s", error);
+		LogToFileEx(logFile, "Add Ban Select Query Failed: %s", error);
 		if(admin && IsClientInGame(admin))
 			PrintToChat(admin, "%s 封禁 %s[%s] 失败", Prefix, nickName, authid);
 
@@ -775,7 +762,7 @@ public void InsertAddbanCallback(Handle owner, Handle hndl, const char[] error, 
 
 	if(error[0] != '\0')
 	{
-		LogToFile(logFile, "Add Ban Insert Query Failed: %s", error);
+		LogToFileEx(logFile, "Add Ban Insert Query Failed: %s", error);
 		if(admin && IsClientInGame(admin))
 		{
 			PrintToChat(admin, "%s 封禁失败[AddBan]", Prefix);
@@ -794,96 +781,9 @@ public void SQLCallback_CheckAdminLog(Handle owner, Handle hndl, const char[] er
 {
 	if(hndl==INVALID_HANDLE)
 	{
-		LogToFile(logFile, "INSERT Admin Log to Database Failed! Error: %s", error);
+		LogToFileEx(logFile, "INSERT Admin Log to Database Failed! Error: %s", error);
 		return;
 	}
-}
-
-public void ProcessQueueCallback(Handle owner, Handle hndl, const char[] error, any data)
-{
-	if(hndl == INVALID_HANDLE || strlen(error) > 0)
-	{
-		LogToFile(logFile, "Failed to retrieve queued bans from sqlite database, %s", error);
-		return;
-	}
-
-	char auth[30];
-	int time;
-	int startTime;
-	char reason[128];
-	char name[128];
-	char ip[20];
-	char adminAuth[30];
-	char adminIp[20];
-	char query[1024];
-	char banName[128];
-	char banReason[256];
-	while(SQL_MoreRows(hndl))
-	{
-		if(!SQL_FetchRow(hndl))
-			continue;
-
-		SQL_FetchString(hndl, 0, auth, 30);
-		time = SQL_FetchInt(hndl, 1);
-		startTime = SQL_FetchInt(hndl, 2);
-		SQL_FetchString(hndl, 3, reason, 128);
-		SQL_FetchString(hndl, 4, name, 128);
-		SQL_FetchString(hndl, 5, ip, 20);
-		SQL_FetchString(hndl, 6, adminAuth, 30);
-		SQL_FetchString(hndl, 7, adminIp, 20);
-		SQL_EscapeString(g_hSQLite, name, banName, 128);
-		SQL_EscapeString(g_hSQLite, reason, banReason, 256);
-		
-		char country[4];
-		GeoipCode2(ip, country);
-		char bantype[32];
-		strcopy(bantype, 32, "全服封禁");
-		if(FindPluginByFile("ct.smx")) strcopy(bantype, 32, "匪镇谍影封禁");
-		if(FindPluginByFile("mg_stats.smx")) strcopy(bantype, 32, "娱乐休闲封禁");
-		if(FindPluginByFile("sm_hosties.smx")) strcopy(bantype, 32, "越狱搞基封禁");
-		if(FindPluginByFile("zombiereloaded.smx")) strcopy(bantype, 32, "僵尸逃跑封禁");
-		if(FindPluginByFile("deathmatch.smx") || FindPluginByFile("public_ext.smx") || FindPluginByFile("warmod.smx")) strcopy(bantype, 32, "竞技模式封禁");
-		if(FindPluginByFile("KZTimerGlobal.smx")) strcopy(bantype, 32, "KZ跳跃封禁");
-
-		if(startTime + time * 60 > GetTime() || time == 0)
-		{
-			FormatEx(query, 1024,
-						"INSERT INTO sb_bans (ip, authid, name, created, ends, length, reason, aid, adminIp, sid, btype, country) VALUES  \
-						('%s', '%s', '%s', %d, %d, %d, '%s', (SELECT aid FROM sb_admins WHERE authid = '%s' OR authid REGEXP '^STEAM_[0-9]:%s$'), '%s', \
-						%d, '%s', '%s')",
-						ip, auth, banName, startTime, startTime + time * 60, time * 60, banReason, adminAuth, adminAuth[8], adminIp, g_iServerId, bantype, country);
-			Handle authPack = CreateDataPack();
-			WritePackString(authPack, auth);
-			ResetPack(authPack);
-			SQL_TQuery(g_hDatabase, AddedFromSQLiteCallback, query, authPack);
-		} else {
-			FormatEx(query, 1024, "DELETE FROM queue WHERE steam_id = '%s'", auth);
-			SQL_TQuery(g_hSQLite, ErrorCheckCallback, query);
-		}
-	}
-
-	CreateTimer(180.0, ProcessQueue);
-}
-
-public void AddedFromSQLiteCallback(Handle owner, Handle hndl, const char[] error, any data)
-{
-	char buffer[512];
-	char auth[40];
-	ReadPackString(data, auth, 40);
-	if(error[0] == '\0')
-	{
-		FormatEx(buffer, 512, "DELETE FROM queue WHERE steam_id = '%s'", auth);
-		SQL_TQuery(g_hSQLite, ErrorCheckCallback, buffer);
-
-		RemoveBan(auth, BANFLAG_AUTHID);
-		
-	}
-	else
-	{
-		FormatEx(buffer, 512, "banid 3 %s", auth);
-		ServerCommand(buffer);
-	}
-	CloseHandle(data);
 }
 
 void LoadAdminsAndGroups()
@@ -911,7 +811,7 @@ public void ServerInfoCallback(Handle owner, Handle hndl, const char[] error, an
 {
 	if(error[0] || hndl	== INVALID_HANDLE)
 	{
-		LogToFile(logFile, "Server Select Query Failed: %s", error);
+		LogToFileEx(logFile, "Server Select Query Failed: %s", error);
 		return;
 	}
 	
@@ -925,11 +825,11 @@ public void ErrorCheckCallback(Handle owner, Handle hndl, const char[] error, an
 {
 	if(error[0])
 	{
-		LogToFile(logFile, "Query Failed: %s", error);
+		LogToFileEx(logFile, "Query Failed: %s", error);
 	}
 }
 
-public void VerifyBan(Handle owner, Handle hndl, const char[] error, any userid)
+public void VerifyBan(Handle owner, Handle hndl, const char[] error, int userid)
 {
 	int client = GetClientOfUserId(userid);
 	
@@ -938,53 +838,50 @@ public void VerifyBan(Handle owner, Handle hndl, const char[] error, any userid)
 
 	if(hndl == INVALID_HANDLE)
 	{
-		LogToFile(logFile, "Verify Ban Query Failed: %s", error);
+		LogToFileEx(logFile, "Verify Ban Query Failed: %s", error);
 		PlayerRecheck[client] = CreateTimer(30.0, ClientRecheck, client);
 		return;
 	}
+
 	char clientName[128];
 	char clientAuth[128];
 	char clientIp[128];
 	GetClientIP(client, clientIp, 128);
 	GetClientAuthId(client, AuthId_Steam2, clientAuth, 128, true);
 	GetClientName(client, clientName, 128);
-	if(SQL_GetRowCount(hndl) && SQL_FetchRow(hndl))
+	if(SQL_GetRowCount(hndl))
 	{
-		char buffer[40];
-		char Name[128];
-		char m_szQuery[512];
-		char KickMsg[256];
-		char Reason[128];
-		char Expired[128];
-		char bType[32];
-		char bantype[32];
+		char buffer[40], Name[128], m_szQuery[512], KickMsg[256], Reason[128], Expired[128], bType[32], bantype[32];
 		if(FindPluginByFile("ct.smx")) strcopy(bantype, 32, "匪镇谍影封禁");
 		if(FindPluginByFile("mg_stats.smx")) strcopy(bantype, 32, "娱乐休闲封禁");
 		if(FindPluginByFile("sm_hosties.smx")) strcopy(bantype, 32, "越狱搞基封禁");
 		if(FindPluginByFile("zombiereloaded.smx")) strcopy(bantype, 32, "僵尸逃跑封禁");
 		if(FindPluginByFile("deathmatch.smx") || FindPluginByFile("public_ext.smx") || FindPluginByFile("warmod.smx")) strcopy(bantype, 32, "竞技模式封禁");
 		if(FindPluginByFile("KZTimerGlobal.smx")) strcopy(bantype, 32, "KZ跳跃封禁");
-		
-		int StartTime = SQL_FetchInt(hndl, 1);
-		int Length = SQL_FetchInt(hndl, 2);
-		SQL_FetchString(hndl, 3, Reason, 128);
-		int sid = SQL_FetchInt(hndl, 4);
-		SQL_FetchString(hndl, 5, bType, 32);
-		if(StrEqual(bType, "全服封禁") || StrEqual(bType, bantype) || (StrEqual(bType, "单服封禁") && sid == g_iServerId))
+
+		while(SQL_FetchRow(hndl))
 		{
-			SQL_EscapeString(g_hDatabase, clientName, Name, 128);
-			FormatEx(m_szQuery, 512, "INSERT INTO sb_banlog VALUES (%d, UNIX_TIMESTAMP(), '%s', '%s', %d)", g_iServerId, Name, clientIp, SQL_FetchInt(hndl, 0));
-			SQL_TQuery(g_hDatabase, ErrorCheckCallback, m_szQuery, client, DBPrio_High);
-			FormatEx(buffer, 40, "banid 2 %s", clientAuth);
-			ServerCommand(buffer);
-			if(Length != 0)
-				FormatTime(Expired, 128, "%Y.%m.%d %H:%M:%S", StartTime+Length);
-			else
-				FormatEx(Expired, 128, "永久封禁");
-			FormatEx(KickMsg, 256, "你已被: %s[原因:%s][到期时间:%s]  请登陆 https://csgogamers.com/banned/ 查看详细信息", bType, Reason, Expired);
-			KickClient(client, KickMsg);
+			int StartTime = SQL_FetchInt(hndl, 1);
+			int Length = SQL_FetchInt(hndl, 2);
+			SQL_FetchString(hndl, 3, Reason, 128);
+			int sid = SQL_FetchInt(hndl, 4);
+			SQL_FetchString(hndl, 5, bType, 32);
+			if(StrEqual(bType, "全服封禁") || StrEqual(bType, bantype) || (StrEqual(bType, "单服封禁") && sid == g_iServerId))
+			{
+				SQL_EscapeString(g_hDatabase, clientName, Name, 128);
+				FormatEx(m_szQuery, 512, "INSERT INTO sb_banlog VALUES (%d, UNIX_TIMESTAMP(), '%s', '%s', %d)", g_iServerId, Name, clientIp, SQL_FetchInt(hndl, 0));
+				SQL_TQuery(g_hDatabase, ErrorCheckCallback, m_szQuery, client, DBPrio_High);
+				FormatEx(buffer, 40, "banid 2 %s", clientAuth);
+				ServerCommand(buffer);
+				if(Length != 0)
+					FormatTime(Expired, 128, "%Y.%m.%d %H:%M:%S", StartTime+Length);
+				else
+					FormatEx(Expired, 128, "永久封禁");
+				FormatEx(KickMsg, 256, "你已被: %s[原因:%s][到期时间:%s]  请登陆 https://csgogamers.com/banned/ 查看详细信息", bType, Reason, Expired);
+				KickClient(client, KickMsg);
+				return;
+			}
 		}
-		return;
 	}
 
 	PlayerStatus[client] = true;
@@ -996,9 +893,10 @@ public void AdminsDone(Handle owner, Handle hndl, const char[] error, any data)
 	{
 		--curLoading;
 		CheckLoadAdmins();
-		LogToFile(logFile, "Failed to retrieve admins from the database, %s", error);
+		LogToFileEx(logFile, "Failed to retrieve admins from the database, %s", error);
 		return;
 	}
+
 	char authType[] = "steam";
 	char identity[66];
 	char password[66];
@@ -1052,12 +950,12 @@ public void AdminsDone(Handle owner, Handle hndl, const char[] error, any data)
 			curAdm = CreateAdmin(name);
 			if(!BindAdminIdentity(curAdm, authType, identity))
 			{
-				LogToFile(logFile, "Unable to bind admin %s to identity %s", name, identity);
+				LogToFileEx(logFile, "Unable to bind admin %s to identity %s", name, identity);
 				RemoveAdmin(curAdm);
 				continue;
 			}
 		}
-		
+
 		int curPos = 0;
 		GroupId curGrp = INVALID_GROUP_ID;
 		int numGroups;
@@ -1068,7 +966,7 @@ public void AdminsDone(Handle owner, Handle hndl, const char[] error, any data)
 			curGrp = FindAdmGroup(groups[curPos]);
 			if(curGrp == INVALID_GROUP_ID)
 			{
-				LogToFile(logFile, "Unknown group \"%s\"",groups[curPos]);
+				LogToFileEx(logFile, "Unknown group \"%s\"",groups[curPos]);
 			}
 			else
 			{
@@ -1085,7 +983,7 @@ public void AdminsDone(Handle owner, Handle hndl, const char[] error, any data)
 
 				if(numGroups != -2 && !AdminInheritGroup(curAdm,curGrp))
 				{
-					LogToFile(logFile, "Unable to inherit group \"%s\"",groups[curPos]);
+					LogToFileEx(logFile, "Unable to inherit group \"%s\"",groups[curPos]);
 				}
 
 				if(GetAdminImmunityLevel(curAdm) < Immunity)
@@ -1094,7 +992,7 @@ public void AdminsDone(Handle owner, Handle hndl, const char[] error, any data)
 				}
 			}
 		}
-		
+
 		if(strlen(password) > 0)
 			SetAdminPassword(curAdm, password);
         
@@ -1130,7 +1028,7 @@ public void GroupsDone(Handle owner, Handle hndl, const char[] error, any data)
 	{
 		curLoading--;
 		CheckLoadAdmins();
-		LogToFile(logFile, "Failed to retrieve groups from the database, %s",error);
+		LogToFileEx(logFile, "Failed to retrieve groups from the database, %s",error);
 		return;
 	}
 	
@@ -1208,13 +1106,6 @@ public Action ClientRecheck(Handle timer, int client)
 
 	PlayerRecheck[client] =  INVALID_HANDLE;
 	return Plugin_Stop;
-}
-
-public Action ProcessQueue(Handle timer)
-{
-	char buffer[512];
-	Format(buffer, 512, "SELECT steam_id, time, start_time, reason, name, ip, admin_id, admin_ip FROM queue");
-	SQL_TQuery(g_hSQLite, ProcessQueueCallback, buffer);
 }
 
 // PARSER //
@@ -1318,7 +1209,7 @@ public int Native_SBBanPlayer(Handle plugin, int numParams)
 		}
 	}
 
-	PrepareBan(client, target, time, reason, 128);
+	PrepareBan(client, target, time, reason);
 	return true;
 }
 
@@ -1349,22 +1240,19 @@ public int Native_SBAddBan(Handle plugin, int numParams)
 	WritePackString(dataPack, adminAuth);
 	WritePackString(dataPack, adminIp);
 	WritePackString(dataPack, nickName);
+	
+	char bantype[32];
+	strcopy(bantype, 32, "全服封禁");
+	if(FindPluginByFile("ct.smx")) strcopy(bantype, 32, "匪镇谍影封禁");
+	if(FindPluginByFile("mg_stats.smx")) strcopy(bantype, 32, "娱乐休闲封禁");
+	if(FindPluginByFile("sm_hosties.smx")) strcopy(bantype, 32, "越狱搞基封禁");
+	if(FindPluginByFile("zombiereloaded.smx")) strcopy(bantype, 32, "僵尸逃跑封禁");
+	if(FindPluginByFile("deathmatch.smx") || FindPluginByFile("public_ext.smx") || FindPluginByFile("warmod.smx")) strcopy(bantype, 32, "竞技模式封禁");
+	if(FindPluginByFile("KZTimerGlobal.smx")) strcopy(bantype, 32, "KZ跳跃封禁");
 
 	char Query[256];
-	FormatEx(Query, 256, "SELECT bid FROM sb_bans WHERE type = 0 AND authid = '%s' AND (length = 0 OR ends > UNIX_TIMESTAMP()) AND RemoveType IS NULL", authid);
+	FormatEx(Query, 256, "SELECT bid FROM sb_bans WHERE type = 0 AND authid = '%s' AND (length = 0 OR ends > UNIX_TIMESTAMP()) AND RemoveType IS NULL AND btype = '%s'", authid, bantype);
 	SQL_TQuery(g_hDatabase, SelectAddbanCallback, Query, dataPack, DBPrio_High);
-}
-
-public void InitializeBackupDB()
-{
-	char error[255];
-	g_hSQLite = SQLite_UseDatabase("sourcebans-queue", error, 255);
-	if(g_hSQLite == INVALID_HANDLE)
-		SetFailState(error);
-
-	SQL_LockDatabase(g_hSQLite);
-	SQL_FastQuery(g_hSQLite, "CREATE TABLE IF NOT EXISTS queue (steam_id TEXT PRIMARY KEY ON CONFLICT REPLACE, time INTEGER, start_time INTEGER, reason TEXT, name TEXT, ip TEXT, admin_id TEXT, admin_ip TEXT);");
-	SQL_UnlockDatabase(g_hSQLite);
 }
 
 public bool CreateBan(int client, int target, int time, char[] reason)
@@ -1383,11 +1271,12 @@ public bool CreateBan(int client, int target, int time, char[] reason)
 		// setup dummy adminAuth and adminIp for server
 		strcopy(adminAuth, 128, "STEAM_ID_SERVER");
 		strcopy(adminIp, 24, ServerIp);
-	} else {
+	}
+	else
+	{
 		GetClientIP(admin, adminIp, 24);
 		GetClientAuthId(admin, AuthId_Steam2, adminAuth, 128, true);
 	}
-
 
 	char ip[24], auth[128], name[128];
 
@@ -1420,12 +1309,9 @@ public bool CreateBan(int client, int target, int time, char[] reason)
 	if(reason[0] != '\0')
 	{
 		if(g_hDatabase != INVALID_HANDLE)
-		{
 			UTIL_InsertBan(time, name, auth, ip, reason, adminAuth, adminIp, dataPack);
-		} else
-		{
-			UTIL_InsertTempBan(time, name, auth, ip, reason, adminAuth, adminIp, dataPack);
-		}
+		else
+			LogToFileEx(logFile, "CreateBan => admin: \"%L\" client: \"%s<%s>\" length: %d", admin, name, auth, time);
 	}
 	else
 	{
@@ -1433,11 +1319,11 @@ public bool CreateBan(int client, int target, int time, char[] reason)
 		DisplayMenu(ReasonMenuHandle, admin, MENU_TIME_FOREVER);
 		PrintToChat(admin, "%s %t", Prefix, "Check Menu");
 	}
-	
+
 	return true;
 }
 
-stock void UTIL_InsertBan(int time, const char[] Name, const char[] Authid, const char[] Ip, const char[] Reason, const char[] AdminAuthid, const char[] AdminIp, Handle Pack)
+void UTIL_InsertBan(int time, const char[] Name, const char[] Authid, const char[] Ip, const char[] Reason, const char[] AdminAuthid, const char[] AdminIp, Handle Pack)
 {
 	char banName[128], banReason[256], m_szQuery[1024], country[4], bantype[32];
 	SQL_EscapeString(g_hDatabase, Name, banName, 128);
@@ -1473,7 +1359,7 @@ stock void UTIL_InsertBan(int time, const char[] Name, const char[] Authid, cons
 	SQL_TQuery(g_hDatabase, VerifyInsert, m_szQuery, Pack, DBPrio_High);
 }
 
-stock int FindClientBySteamId(const char[] steamid)
+int FindClientBySteamId(const char[] steamid)
 {
 	char m_szAuth[32];
 	for(int client  = 1; client <= MaxClients; ++client)
@@ -1484,36 +1370,7 @@ stock int FindClientBySteamId(const char[] steamid)
 	return 0;
 }
 
-stock void UTIL_InsertTempBan(int time, const char[] name, const char[] auth, const char[] ip, const char[] reason, const char[] adminAuth, const char[] adminIp, Handle dataPack)
-{
-	ReadPackCell(dataPack); // admin index
-	int client = ReadPackCell(dataPack);
-	ReadPackCell(dataPack); // admin userid
-	ReadPackCell(dataPack); // target userid
-	ReadPackCell(dataPack); // time
-	Handle reasonPack = view_as<Handle>(ReadPackCell(dataPack));
-	if(reasonPack != INVALID_HANDLE)
-	{
-		CloseHandle(reasonPack);
-	}
-	CloseHandle(dataPack);
-	
-	char buffer[50];
-	Format(buffer, 50, "banid 3 %s", auth);
-	ServerCommand(buffer);
-	if(IsClientInGame(client))
-		KickClient(client, "%t", "Banned Check Site", "https://csgogamers.com");
-	
-	char banName[128];
-	char banReason[256];
-	char query[512];
-	SQL_EscapeString(g_hSQLite, name, banName, 128);
-	SQL_EscapeString(g_hSQLite, reason, banReason, 256);
-	FormatEx(query, 512, "INSERT INTO queue VALUES ('%s', %i, %i, '%s', '%s', '%s', '%s', '%s')", auth, time, GetTime(), banReason, banName, ip, adminAuth, adminIp);
-	SQL_TQuery(g_hSQLite, ErrorCheckCallback, query);
-}
-
-stock void CheckLoadAdmins()
+void CheckLoadAdmins()
 {
 	for(int i = 1; i <= MaxClients; i++)
 	{
@@ -1525,50 +1382,45 @@ stock void CheckLoadAdmins()
 	}
 }
 
-stock void InsertServerInfo()
+void InsertServerInfo()
 {
-	if(g_hDatabase == INVALID_HANDLE)
-	{
-		return;
-	}
-	
 	char query[100];
-	int ip = GetConVarInt(CvarHostIp);
+	int ip = GetConVarInt(FindConVar("hostip"));
 	Format(ServerIp, 64, "%d.%d.%d.%d", ((ip & 0xFF000000) >> 24) & 0xFF, ((ip & 0x00FF0000) >> 16) & 0xFF, ((ip & 0x0000FF00) >>  8) & 0xFF, ((ip & 0x000000FF) >>  0) & 0xFF);
 
 	FormatEx(query, 100, "SELECT sid FROM sb_servers WHERE ip = '%s' AND port = '%d'", ServerIp, GetConVarInt(FindConVar("hostport")));
 	SQL_TQuery(g_hDatabase, ServerInfoCallback, query);
 }
 
-stock void PrepareBan(int client, int target, int time, char[] reason, int size)
+void PrepareBan(int client, int target, int time, char[] reason)
 {
 	if(!target || !IsClientInGame(target))
 		return;
+
 	char authid[128], name[32], bannedSite[512];
 	if(!GetClientAuthId(target, AuthId_Steam2, authid, 128, true))
 		return;
+
 	GetClientName(target, name, 32);
-	
+
 	if(CreateBan(client, target, time, reason))
 	{
 		if(!time)
 		{
 			if(reason[0] == '\0')
-			{
 				ShowActivity(client, "%t", "Permabanned player", name);
-			} else {
+			else
 				ShowActivity(client, "%t", "Permabanned player reason", name, reason);
-			}
-		} else {
+		}
+		else
+		{
 			if(reason[0] == '\0')
-			{
 				ShowActivity(client, "%t", "Banned player", name, time);
-			} else {
+			else
 				ShowActivity(client, "%t", "Banned player reason", name, time, reason);
-			}
 		}
 		LogAction(client, target, "\"%L\" banned \"%L\" (minutes \"%d\") (reason \"%s\")", client, target, time, reason);
-		
+
 		if(time > 5 || time == 0)
 			time = 5;
 		Format(bannedSite, 512, "%T", "Banned Check Site", target, "https://csgogamers.com");
@@ -1579,7 +1431,7 @@ stock void PrepareBan(int client, int target, int time, char[] reason, int size)
 	g_BanTime[client] = -1;
 }
 
-stock void ReadConfig()
+void ReadConfig()
 {
 	InitializeConfigParser();
 
@@ -1596,12 +1448,12 @@ stock void ReadConfig()
 		InternalReadConfig(ConfigFile);
 		PrintToServer("[SourceBans] Loading configs/sourcebans.cfg config file");
 	} else {
-		LogToFile(logFile, "FATAL *** ERROR *** can not find %s", ConfigFile);
+		LogToFileEx(logFile, "FATAL *** ERROR *** can not find %s", ConfigFile);
 		SetFailState("FATAL *** ERROR *** can not find configs/sourcebans/sourcebans.cfg");
 	}
 }
 
-stock void ResetSettings()
+void ResetSettings()
 {
 	ResetMenu();
 	ReadConfig();
