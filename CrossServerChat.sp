@@ -547,6 +547,9 @@ stock void GetServerTag(char[] m_szServerTag, int maxLen)
 		case 10: strcopy(m_szServerTag, maxLen, "KreedZ①");
 		case 11: strcopy(m_szServerTag, maxLen, "KreedZ②");
 		case 15: strcopy(m_szServerTag, maxLen, "回防对抗");
+		case 21: strcopy(m_szServerTag, maxLen, "测试调试");
+		case 22: strcopy(m_szServerTag, maxLen, "饥饿游戏");
+		case 23: strcopy(m_szServerTag, maxLen, "死亡滑翔");
 		default: strcopy(m_szServerTag, maxLen, "论坛");
 	}
 }
