@@ -46,11 +46,6 @@ public int Native_Broadcast(Handle plugin, int numParams)
 	char m_szContent[512];
 	if(GetNativeString(2, m_szContent, 512) == SP_ERROR_NONE)
 	{
-		
-		ReplaceString(m_szContent, 512, "[通用]", "");
-		ReplaceString(m_szContent, 512, "[CT]", "");
-		ReplaceString(m_szContent, 512, "[TE]", "");
-	
 		if(GetNativeCell(1))
 		{
 			Handle db = CG_GetDiscuzDatabase();
@@ -76,9 +71,9 @@ public void OnPluginStart()
 {
 	RegConsoleCmd("sm_msg", Command_PubMessage);
 	RegConsoleCmd("sm_xlb", Command_PubMessage);
-	RegConsoleCmd("sm_dlb", Command_PnlMessage);
+	RegConsoleCmd("sm_dlb", Command_PubMessage);
 	RegConsoleCmd("sm_pbcsc", Command_PbCSC);
-	
+
 	g_hCookie = RegClientCookie("csc_pb", "pb csc chat", CookieAccess_Private);
 
 	CreateTimer(3.0, Timer_Reconnect);
@@ -220,7 +215,7 @@ public Action Command_PubMessage(int client, int args)
 	if(g_hSocket == INVALID_HANDLE)
 		return Plugin_Continue;
 
-	if(Store_GetClientCredits(client) < 100)
+	if(Store_GetClientCredits(client) < 200)
 	{
 		PrintToChat(client, "[\x04Store\x01]  \x01没钱还想发小喇叭?");
 		return Plugin_Handled;
@@ -239,8 +234,8 @@ public Action Command_PubMessage(int client, int args)
 	if(!UpdateMessageToDiscuz(client, message))
 		return Plugin_Handled;
 	
-	Store_SetClientCredits(client, Store_GetClientCredits(client)-100, "发送小喇叭");
-	PrintToChat(client, "[\x04Store\x01]  \x01你花费\x0450信用点\x01发送了一条小喇叭");
+	Store_SetClientCredits(client, Store_GetClientCredits(client)-200, "发送小喇叭");
+	PrintToChat(client, "[\x04Store\x01]  \x01你花费\x04200信用点\x01发送了一条小喇叭");
 	
 	if(IsClientGag(client))
 	{
@@ -248,49 +243,12 @@ public Action Command_PubMessage(int client, int args)
 		return Plugin_Handled;
 	}
 
-	PrintToChatAll(m_szFinalMsg);
-
-	Format(m_szFinalMsg, 1024, "%s%s", key, m_szFinalMsg);
-	SocketSend(g_hSocket, m_szFinalMsg, 1024);
-	strcopy(g_szLAST, 1024, m_szFinalMsg);
-
-	return Plugin_Handled;
-}
-
-public Action Command_PnlMessage(int client, int args)
-{
-	if(g_hSocket == INVALID_HANDLE)
-		return Plugin_Continue;
-
-	if(Store_GetClientCredits(client) < 500)
-	{
-		PrintToChat(client, "[\x04Store\x01]  \x01没钱还想发大喇叭?");
-		return Plugin_Handled;
-	}
-	
-	if(args < 1)
-		return Plugin_Handled;
-	
-	char message[512], m_szFinalMsg[1024], m_szServerTag[32];
-	GetCmdArgString(message, 512);
-	PrepareString(message, 512);
-	GetServerTag(m_szServerTag, 32);
-
-	if(!UpdateMessageToDiscuz(client, message))
-		return Plugin_Handled;
-
-	Format(m_szFinalMsg, 1024, "[\x02大\x04喇\x0C叭\x01]  \x04%N\x01 :   \x07%s", client, message);
-	
-	Store_SetClientCredits(client, Store_GetClientCredits(client)-500, "发送大喇叭");
-	PrintToChat(client, "[\x04Store\x01]  \x01你花费\x04500信用点\x01发送了一条小喇叭");
-	
-	if(IsClientGag(client))
-	{
-		PrintToChat(client, "[\x04Store\x01]  \x01你被口球了还想发喇叭?");
-		return Plugin_Handled;
-	}
-
-	PrintToMenuAll(m_szFinalMsg);
+	char fmt[512];
+	strcopy(fmt, 512, m_szFinalMsg);
+	ReplaceString(fmt, 512, "[\x02小\x04喇\x0C叭\x01] ", "", false);
+	PrepareString(fmt, 512);
+	Format(fmt, 512, ">>> 小喇叭 <<<\n%s", fmt);
+	CG_ShowGameTextAll(fmt, "20.0", "57 197 187", "-1.0", "0.2");
 
 	Format(m_szFinalMsg, 1024, "%s%s", key, m_szFinalMsg);
 	SocketSend(g_hSocket, m_szFinalMsg, 1024);
@@ -346,14 +304,12 @@ public int OnChildSocketReceive(Handle socket, char[] receiveData, const int dat
 
 	if(StrContains(receiveData, "[\x02小\x04喇\x0C叭\x01]", false) != -1)
 	{
-		PrintToChatAll(receiveData);
-		PrintToChatAll(receiveData);
-	}
-	else if(StrContains(receiveData, "[\x02大\x04喇\x0C叭\x01]", false) != -1)
-	{
-		PrintToChatAll(receiveData);
-		PrintToChatAll(receiveData);
-		PrintToMenuAll(receiveData);
+		char fmt[512];
+		strcopy(fmt, 512, receiveData);
+		ReplaceString(fmt, 512, "[\x02小\x04喇\x0C叭\x01] ", "", false);
+		PrepareString(fmt, 512);
+		Format(fmt, 512, ">>> 小喇叭 <<<\n%s", fmt);
+		CG_ShowGameTextAll(fmt, "20.0", "57 197 187", "-1.0", "0.2");
 	}
 
 	PrintToChatAll(receiveData);
@@ -377,37 +333,6 @@ stock void ConnecToMasterServer()
 	SocketConnect(g_hSocket, OnClientSocketConnected, OnChildSocketReceive, OnChildSocketDisconnected, MasterServer, StringToInt(port));
 }
 
-stock void PrintToMenuAll(char[] message)
-{
-	ReplaceString(message, 512, "[\x02大\x04喇\x0C叭\x01]  ", "");
-	ReplaceString(message, 512, "[\x02小\x04喇\x0C叭\x01] ", "");
-	PrepareString(message, 512);
-
-	char title[100];
-	Format(title, 64, "全服/全站 大喇叭：");
-	
-	Panel mSayPanel = CreatePanel();
-	mSayPanel.SetTitle(title);
-
-	DrawPanelItem(mSayPanel, "", ITEMDRAW_SPACER);
-	DrawPanelText(mSayPanel, message);
-	DrawPanelItem(mSayPanel, "", ITEMDRAW_SPACER);
-
-	SetPanelCurrentKey(mSayPanel, 10);
-	DrawPanelItem(mSayPanel, "Exit", ITEMDRAW_CONTROL);
-
-	for(int i = 1; i <= MaxClients; i++)
-		if(IsClientInGame(i) && !IsFakeClient(i))
-			SendPanelToClient(mSayPanel, i, Handler_DoNothing, 10);
-
-	delete mSayPanel;
-}
-
-public int Handler_DoNothing(Menu menu, MenuAction action, int param1, int param2)
-{
-
-}
-
 public bool UpdateMessageToDiscuz(int client, const char[] message)
 {
 	Handle database = CG_GetDiscuzDatabase();
@@ -426,7 +351,7 @@ public bool UpdateMessageToDiscuz(int client, const char[] message)
 		PrintToChat(client, "[\x0CCG\x01]  未注册论坛不能发送喇叭");
 		return false;
 	}
-	
+
 	char m_szName[64];
 	CG_GetClientDName(client, m_szName, 64);
 	
@@ -446,7 +371,7 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 	if(sArgs[startidx] != '#')
 		return Plugin_Continue;
 	
-	if(Store_GetClientCredits(client) < 100)
+	if(Store_GetClientCredits(client) < 200)
 		return Plugin_Continue;
 
 	startidx++;
@@ -464,8 +389,8 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 		if(!UpdateMessageToDiscuz(client, message))
 			return Plugin_Stop;
 
-		Store_SetClientCredits(client, Store_GetClientCredits(client)-100, "发送小喇叭");
-		PrintToChat(client, "[\x04Store\x01]  \x01你花费\x0450信用点\x01发送了一条小喇叭");
+		Store_SetClientCredits(client, Store_GetClientCredits(client)-200, "发送小喇叭");
+		PrintToChat(client, "[\x04Store\x01]  \x01你花费\x04200信用点\x01发送了一条小喇叭");
 		
 		if(IsClientGag(client))
 		{
@@ -485,7 +410,7 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 	return Plugin_Continue;
 }
 
-stock void PrepareString(char[] message, int maxLen)
+void PrepareString(char[] message, int maxLen)
 {
 	ReplaceString(message, maxLen, "!msg ", "", false);
 	ReplaceString(message, maxLen, "!xlb ", "", false);
@@ -531,7 +456,7 @@ stock void PrepareString(char[] message, int maxLen)
 	ReplaceString(message, maxLen, "\x0F", "", false);
 }
 
-stock void GetServerTag(char[] m_szServerTag, int maxLen)
+void GetServerTag(char[] m_szServerTag, int maxLen)
 {
 	switch(CG_GetServerId())
 	{
@@ -554,7 +479,7 @@ stock void GetServerTag(char[] m_szServerTag, int maxLen)
 	}
 }
 
-stock void ReplaceAllColors(char[] message, int maxLen)
+void ReplaceAllColors(char[] message, int maxLen)
 {
 	ReplaceString(message, maxLen, "{normal}", "\x01", false);
 	ReplaceString(message, maxLen, "{default}", "\x01", false);
@@ -580,7 +505,7 @@ stock void ReplaceAllColors(char[] message, int maxLen)
 	ReplaceString(message, maxLen, "{darkorange}", "\x0F", false);
 }
 
-stock bool IsClientGag(int client)
+bool IsClientGag(int client)
 {
 	if(GetFeatureStatus(FeatureType_Native, "BaseComm_IsClientGagged") != FeatureStatus_Available)
 		return false;
