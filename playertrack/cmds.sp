@@ -180,6 +180,10 @@ public Action Command_GetAuth(int client, int args)
 	
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "1001", "[全服认证] 女装大佬");
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "1002", "[全服认证] 援交少女");
+	
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "9901", "[全服认证] CG地图组");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "9902", "[全服认证] CG测试组");
+	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "9903", "[全服认证] CG技术组");
 
 	SetMenuExitBackButton(menu, true);
 	SetMenuExitButton(menu, true);

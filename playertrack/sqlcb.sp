@@ -21,10 +21,10 @@ void SQL_TConnect_discuz()
 	
 	g_eHandle[DB_Discuz] = INVALID_HANDLE;
 	
-	if(SQL_CheckConfig("vip"))
-		SQL_TConnect(SQL_TConnect_Callback_discuz, "vip");
+	if(SQL_CheckConfig("discuz"))
+		SQL_TConnect(SQL_TConnect_Callback_discuz, "discuz");
 	else
-		SetFailState("Connect to Database Failed! Error: no config entry found for 'vip' in databases.cfg");
+		SetFailState("Connect to Database Failed! Error: no config entry found for 'discuz' in databases.cfg");
 }
 
 public void SQL_TConnect_Callback_csgo(Handle owner, Handle hndl, const char[] error, any data)
@@ -216,7 +216,7 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 		g_eClient[client][iSignNum] = SQL_FetchInt(hndl, 5);
 		g_eClient[client][iSignTime] = SQL_FetchInt(hndl, 6);
 		g_eClient[client][iGroupId] = SQL_FetchInt(hndl, 7);
-		SQL_FetchString(hndl, 8, g_eClient[client][szGroupName], 256);
+		SQL_FetchString(hndl, 8, g_eClient[client][szGroupName], 16);
 		InitializeCP(client, SQL_FetchInt(hndl, 9), SQL_FetchInt(hndl, 10));
 		g_eClient[client][iVitality] = SQL_FetchInt(hndl, 11);
 		g_eClient[client][iDaily] = SQL_FetchInt(hndl, 12);
@@ -238,7 +238,7 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 			OnClientVipChecked(client);
 			OnClientDataLoaded(client);
 			g_eClient[client][iUID] = -1;
-			strcopy(g_eClient[client][szDiscuzName], 128, "未注册");
+			strcopy(g_eClient[client][szDiscuzName], 32, "未注册");
 		}
 
 		CreateTimer(10.0, Timer_HandleConnect, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
@@ -272,7 +272,7 @@ public void SQLCallback_GetClientDiscuzName(Handle owner, Handle hndl, const cha
 			OnClientVipChecked(client);
 			OnClientDataLoaded(client);
 			g_eClient[client][iUID] = -1;
-			strcopy(g_eClient[client][szDiscuzName], 128, "未注册");
+			strcopy(g_eClient[client][szDiscuzName], 32, "未注册");
 			return;
 		}
 		
@@ -288,7 +288,7 @@ public void SQLCallback_GetClientDiscuzName(Handle owner, Handle hndl, const cha
 	if(SQL_FetchRow(hndl))
 	{
 		g_eClient[client][iUID] = SQL_FetchInt(hndl, 0);
-		SQL_FetchString(hndl, 1, g_eClient[client][szDiscuzName], 128);
+		SQL_FetchString(hndl, 1, g_eClient[client][szDiscuzName], 32);
 		
 		OnClientDataLoaded(client);
 		
@@ -301,7 +301,7 @@ public void SQLCallback_GetClientDiscuzName(Handle owner, Handle hndl, const cha
 		OnClientVipChecked(client);
 		OnClientDataLoaded(client);
 		g_eClient[client][iUID] = -1;
-		strcopy(g_eClient[client][szDiscuzName], 128, "未注册");
+		strcopy(g_eClient[client][szDiscuzName], 32, "未注册");
 	}
 }
 

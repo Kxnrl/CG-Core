@@ -29,15 +29,15 @@ public void CheckClientAuthTerm(int client, int AuthId)
 		tPrintToChat(client, "%s  此认证需要猫灵手动发放", PLUGIN_PREFIX);
 		return;
 	}
-	
+
 	tPrintToChat(client, "%s  {blue}%T", PLUGIN_PREFIX, "querying", client);
-	
+
 	if(OnCheckAuthTerm(client, AuthId))
 	{
 		g_eClient[client][iGroupId] = AuthId;
 		char m_szQuery[256], m_szAuthId[32];
 		GetClientAuthId(client, AuthId_Steam2, m_szAuthId, 32, true);
-		GetClientAuthName(client, g_eClient[client][szGroupName], 32);
+		GetClientAuthName(client, g_eClient[client][szGroupName], 16);
 		Format(m_szQuery, 256, "UPDATE `playertrack_player` SET `groupid` = '%d', `groupname` = '%s' WHERE `id` = '%d' and `steamid` = '%s';", AuthId, g_eClient[client][szGroupName], g_eClient[client][iPlayerId], m_szAuthId);
 		MySQL_Query(g_eHandle[DB_Game], SQLCallback_GiveAuth, m_szQuery, GetClientUserId(client));
 		tPrintToChat(client, "%s  {blue}正在同步数据库...", PLUGIN_PREFIX);

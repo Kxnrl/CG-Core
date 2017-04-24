@@ -165,11 +165,11 @@ void InitClient(int client)
 
 	strcopy(g_eClient[client][szIP], 32, "127.0.0.1");
 	strcopy(g_eClient[client][szSignature], 256, "数据读取中...");
-	strcopy(g_eClient[client][szDiscuzName], 256, "未注册");
-	strcopy(g_eClient[client][szAdminFlags], 64, "Unknown");
+	strcopy(g_eClient[client][szDiscuzName], 32, "未注册");
+	strcopy(g_eClient[client][szAdminFlags], 16, "Unknown");
 	strcopy(g_eClient[client][szInsertData], 512, "");
 	strcopy(g_eClient[client][szUpdateData], 512, "");
-	strcopy(g_eClient[client][szGroupName], 64, "未认证");
+	strcopy(g_eClient[client][szGroupName], 16, "未认证");
 	strcopy(g_eClient[client][szNewSignature], 256, "该玩家未设置签名");
 	strcopy(g_eClient[client][szClientName], 32, "无名氏");
 }
@@ -373,44 +373,37 @@ void GetClientFlags(int client)
 	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
 
 	//Main判定
-	if(g_eClient[client][iGroupId] == 9999)
+	if(g_eClient[client][iGroupId] >= 9990)
 	{
-		strcopy(g_eClient[client][szAdminFlags], 64, "CTO");
-	}
-	//狗管理CEO
-	else if(g_eClient[client][iGroupId] == 9998)
-	{
-		strcopy(g_eClient[client][szAdminFlags], 64, "CEO");
-	}
-	//狗管理CIO
-	else if(g_eClient[client][iGroupId] == 9992)
-	{
-		strcopy(g_eClient[client][szAdminFlags], 64, "CIO");
+		strcopy(g_eClient[client][szAdminFlags], 16, "Admin");
 	}
 	//狗OP权限为 CHANGEMAP
 	else if(flags & ADMFLAG_CHANGEMAP)
 	{
-		strcopy(g_eClient[client][szAdminFlags], 64, "OP");
+		if(g_eClient[client][iVipType])
+			strcopy(g_eClient[client][szAdminFlags], 16, "OP+VIP");
+		else
+			strcopy(g_eClient[client][szAdminFlags], 16, "OP");
 	}
 	//永久VIP权限为 Custom5
-	else if(flags & ADMFLAG_CUSTOM5)
+	else if(g_eClient[client][iVipType] == 3)
 	{
-		strcopy(g_eClient[client][szAdminFlags], 64, "SVIP");
+		strcopy(g_eClient[client][szAdminFlags], 16, "VIP"); //SVIP
 	}
 	//年费VIP权限为 Custom6
-	else if(flags & ADMFLAG_CUSTOM6)
+	else if(g_eClient[client][iVipType] == 2)
 	{
-		strcopy(g_eClient[client][szAdminFlags], 64, "AVIP");
+		strcopy(g_eClient[client][szAdminFlags], 16, "VIP"); //AVIP
 	}
 	//月费VIP权限为 Custom2
-	else if(flags & ADMFLAG_CUSTOM2)
+	else if(g_eClient[client][iVipType] == 1)
 	{
-		strcopy(g_eClient[client][szAdminFlags], 64, "MVIP");
+		strcopy(g_eClient[client][szAdminFlags], 16, "VIP"); //MVIP
 	}
 	//以上都不是则为普通玩家
 	else
 	{
-		strcopy(g_eClient[client][szAdminFlags], 64, "CG玩家");
+		strcopy(g_eClient[client][szAdminFlags], 16, "荣誉会员");
 	}
 }
 
@@ -635,13 +628,7 @@ void FormatClientName(int client)
 	if(g_eClient[client][iUID] > 0)
 	{
 		strcopy(g_eClient[client][szClientName], 32, g_eClient[client][szDiscuzName]);
-		ReplaceString(g_eClient[client][szClientName], 32, "◇", "");
-		ReplaceString(g_eClient[client][szClientName], 32, "◆", "");
-		ReplaceString(g_eClient[client][szClientName], 32, "☆", "");
-		ReplaceString(g_eClient[client][szClientName], 32, "★", "");
-		ReplaceString(g_eClient[client][szClientName], 32, "✪", "");
-		ReplaceString(g_eClient[client][szClientName], 32, "♜", "");
-		ReplaceString(g_eClient[client][szClientName], 32, "♚", "");
+		RemoveCharFromName(g_eClient[client][szClientName], 32);
 		if(g_eClient[client][iGroupId] >= 9999)
 			Format(g_eClient[client][szClientName], 32, "✪ %s", g_eClient[client][szClientName]);
 		else if(g_eClient[client][iGroupId] >= 9990)
@@ -650,28 +637,19 @@ void FormatClientName(int client)
 			Format(g_eClient[client][szClientName], 32, "♜ %s", g_eClient[client][szClientName]);
 		else
 		{
-			switch(g_eClient[client][iVipType])
-			{
-				case 0: Format(g_eClient[client][szClientName], 32, "◆ %s", g_eClient[client][szClientName]);
-				case 1: Format(g_eClient[client][szClientName], 32, "☆ %s", g_eClient[client][szClientName]);
-				case 2: Format(g_eClient[client][szClientName], 32, "★ %s", g_eClient[client][szClientName]);
-				case 3: Format(g_eClient[client][szClientName], 32, "✪ %s", g_eClient[client][szClientName]);
-			}
+			if(g_eClient[client][iVipType])
+				Format(g_eClient[client][szClientName], 32, "✪ %s", g_eClient[client][szClientName]);
+			else
+				Format(g_eClient[client][szClientName], 32, "★ %s", g_eClient[client][szClientName]);
 		}
 	}
 	else
 	{
 		GetClientName(client, g_eClient[client][szClientName], 32);
-		ReplaceString(g_eClient[client][szClientName], 32, "◇", "");
-		ReplaceString(g_eClient[client][szClientName], 32, "◆", "");
-		ReplaceString(g_eClient[client][szClientName], 32, "☆", "");
-		ReplaceString(g_eClient[client][szClientName], 32, "★", "");
-		ReplaceString(g_eClient[client][szClientName], 32, "✪", "");
-		ReplaceString(g_eClient[client][szClientName], 32, "♜", "");
-		ReplaceString(g_eClient[client][szClientName], 32, "♚", "");
+		RemoveCharFromName(g_eClient[client][szClientName], 32);
 
 		Format(g_eClient[client][szClientName], 32, "◇ %s", g_eClient[client][szClientName]);
-		
+
 		if(g_eGame == Engine_CSGO)
 			CS_SetClientClanTag(client, "[未注册]");
 	}

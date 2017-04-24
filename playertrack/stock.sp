@@ -157,6 +157,17 @@ stock void GetClientAuthName(int client, char[] buffer, int maxLen)
 	}
 }
 
+stock void RemoveCharFromName(char[] name, int maxLen)
+{
+	ReplaceString(name, maxLen, "◇", "");
+	ReplaceString(name, maxLen, "◆", "");
+	ReplaceString(name, maxLen, "☆", "");
+	ReplaceString(name, maxLen, "★", "");
+	ReplaceString(name, maxLen, "✪", "");
+	ReplaceString(name, maxLen, "♜", "");
+	ReplaceString(name, maxLen, "♚", "");
+}
+
 stock void TranslationToFile(const char[] m_szPath)
 {
 	Handle file = OpenFile(m_szPath, "w");
