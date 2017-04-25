@@ -25,7 +25,7 @@ void BuildTempLogFile()
 	
 	while(KvGotoFirstSubKey(g_eHandle[KV_Local], true))
 	{
-		char m_szAuthId[32], m_szQuery[512], m_szIp[16], m_szFlag[32];
+		char m_szAuthId[32], m_szQuery[512], m_szIp[16];
 		KvGetSectionName(g_eHandle[KV_Local], m_szAuthId, 32);
 		
 		int m_iPlayerId = KvGetNum(g_eHandle[KV_Local], "PlayerId", 0);
@@ -33,10 +33,9 @@ void BuildTempLogFile()
 		int m_iTrackId = KvGetNum(g_eHandle[KV_Local], "TrackID", 0);
 		KvGetString(g_eHandle[KV_Local], "IP", m_szIp, 16, "127.0.0.1");
 		int m_iLastTime = KvGetNum(g_eHandle[KV_Local], "LastTime", 0);
-		KvGetString(g_eHandle[KV_Local], "Flag", m_szFlag, 32, "CG玩家");
 		int m_iOnlines = m_iLastTime - m_iConnect;
 		int m_iDaily = KvGetNum(g_eHandle[KV_Local], "DayTime", 0);
-		Format(m_szQuery, 512, "UPDATE playertrack_player AS a, playertrack_analytics AS b SET a.onlines = a.onlines+%d, a.lastip = '%s', a.lasttime = '%d', a.number = a.number+1, a.flags = '%s', a.daytime = '%d', b.duration = '%d' WHERE a.id = '%d' AND b.id = '%d' AND a.steamid = '%s' AND b.playerid = '%d'", m_iOnlines, m_szIp, m_iLastTime, m_szFlag, m_iDaily, m_iOnlines, m_iPlayerId, m_iTrackId, m_szAuthId, m_iPlayerId);
+		Format(m_szQuery, 512, "UPDATE playertrack_player AS a, playertrack_analytics AS b SET a.onlines = a.onlines+%d, a.lastip = '%s', a.lasttime = '%d', a.number = a.number+1, a.daytime = '%d', b.duration = '%d' WHERE a.id = '%d' AND b.id = '%d' AND a.steamid = '%s' AND b.playerid = '%d'", m_iOnlines, m_szIp, m_iLastTime, m_iDaily, m_iOnlines, m_iPlayerId, m_iTrackId, m_szAuthId, m_iPlayerId);
 
 		Handle data = CreateDataPack();
 		WritePackString(data, m_szQuery);
@@ -46,10 +45,11 @@ void BuildTempLogFile()
 		WritePackCell(data, m_iTrackId);
 		WritePackString(data, m_szIp);
 		WritePackCell(data, m_iLastTime);
-		WritePackString(data, m_szFlag);
 		ResetPack(data);
-		MySQL_Query(g_eHandle[DB_Game], SQLCallback_SaveTempLog, m_szQuery, data);
 		
+		if(!MySQL_Query(g_eHandle[DB_Game], SQLCallback_SaveTempLog, m_szQuery, data))
+			LogToFileEx(g_szLogFile, "Error On KV_Local Start: \n%s", m_szQuery);
+
 		if(KvDeleteThis(g_eHandle[KV_Local]))
 		{
 			char m_szAfter[32];
@@ -145,31 +145,48 @@ void SetClientVIP(int client)
 	OnClientVipChecked(client);
 }
 
-void GetClientFlags(int client)
+void UpdateClientFlags(int client)
 {
+	if(StrEqual(g_eClient[client][szAdminFlags], "OP+VIP"))
+		return;
+	
+	if(StrEqual(g_eClient[client][szAdminFlags], "OP") && !(GetUserFlagBits(client) & ADMFLAG_CHANGEMAP))
+		return;
+
+	char newflags[16];
+	
 	//Admin?
 	if(g_eClient[client][iGroupId] >= 9990)
 	{
-		strcopy(g_eClient[client][szAdminFlags], 16, "Admin");
+		strcopy(newflags, 16, "Admin");
 	}
 	//OP?
 	else if(GetUserFlagBits(client) & ADMFLAG_CHANGEMAP)
 	{
 		if(g_eClient[client][bVIP])
-			strcopy(g_eClient[client][szAdminFlags], 16, "OP+VIP");
+			strcopy(newflags, 16, "OP+VIP");
 		else
-			strcopy(g_eClient[client][szAdminFlags], 16, "OP");
+			strcopy(newflags, 16, "OP");
 	}
 	//VIP?
 	else if(g_eClient[client][bVIP])
 	{
-		strcopy(g_eClient[client][szAdminFlags], 16, "VIP"); //SVIP
+		strcopy(newflags, 16, "VIP"); //SVIP
 	}
 	//以上都不是则为普通玩家
 	else
 	{
-		strcopy(g_eClient[client][szAdminFlags], 16, "荣誉会员");
+		strcopy(newflags, 16, "荣誉会员");
 	}
+	
+	if(StrEqual(g_eClient[client][szAdminFlags], newflags))
+		return;
+
+	strcopy(g_eClient[client][szAdminFlags], 16, newflags);
+
+	char m_szQuery[128];
+	Format(m_szQuery, 128, "UPDATE `playertrack_player` SET `flags` = '%s' WHERE `id` = '%d'", g_eClient[client][szAdminFlags], g_eClient[client][iPlayerId]);
+	MySQL_Query(g_eHandle[DB_Game], SQLCallback_OnUpdateFlags, m_szQuery);
 }
 
 void PrintConsoleInfo(int client)

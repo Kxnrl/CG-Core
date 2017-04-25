@@ -377,7 +377,7 @@ void OnClientDataLoaded(int client)
 void OnClientVipChecked(int client)
 {
 	//Check Flags
-	GetClientFlags(client);
+	UpdateClientFlags(client);
 	
 	//重设名字
 	FormatClientName(client);

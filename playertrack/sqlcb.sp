@@ -199,7 +199,7 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 
 		char m_szAuth[32], m_szQuery[256];
 		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-		Format(m_szQuery, 256, "SELECT id, onlines, lasttime, number, signature, signnumber, signtime, groupid, groupname, lilyid, lilydate, active, daytime FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
+		Format(m_szQuery, 256, "SELECT id, onlines, lasttime, number, signature, signnumber, signtime, groupid, groupname, lilyid, lilydate, active, daytime, flags FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
 		MySQL_Query(g_eHandle[DB_Game], SQLCallback_GetClientStat, m_szQuery, GetClientUserId(client), DBPrio_High);
 		return;
 	}
@@ -221,6 +221,7 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 		g_eClient[client][iVitality] = SQL_FetchInt(hndl, 11);
 		g_eClient[client][iDaily] = SQL_FetchInt(hndl, 12);
 		g_eClient[client][bSignIn] = (g_eClient[client][iSignTime]>0) ? true : false;
+		SQL_FetchString(hndl, 13, g_eClient[client][szAdminFlags], 16);
 
 		g_eClient[client][bLoaded] = true;
 
@@ -363,7 +364,7 @@ public void SQLCallback_InsertClientStat(Handle owner, Handle hndl, const char[]
 		//重试检查  辣鸡阿里云RDS
 		char m_szAuth[32], m_szQuery[512];
 		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-		Format(m_szQuery, 256, "SELECT id, onlines, lasttime, number, signature, signnumber, signtime, groupid, groupname, lilyid, lilydate, active, daytime FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
+		Format(m_szQuery, 256, "SELECT id, onlines, lasttime, number, signature, signnumber, signtime, groupid, groupname, lilyid, lilydate, active, daytime, flags FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
 		MySQL_Query(g_eHandle[DB_Game], SQLCallback_GetClientStat, m_szQuery, GetClientUserId(client), DBPrio_High);
 	}
 	else
@@ -582,6 +583,15 @@ public void SQLCallback_OnRconPwd(Handle owner, Handle hndl, const char[] error,
 	}
 }
 
+public void SQLCallback_OnUpdateFlags(Handle owner, Handle hndl, const char[] error, int userid)
+{
+	if(hndl == INVALID_HANDLE)
+	{
+		LogToFileEx(g_szLogFile, "Update Flags Failed! Error:%s", error);
+		return;
+	}
+}
+
 public void SQLCallback_UpdateCP(Handle owner, Handle hndl, const char[] error, Handle pack)
 {
 	int client = GetClientOfUserId(ReadPackCell(pack));
@@ -712,7 +722,7 @@ public void SQLCallback_SaveTempLog(Handle owner, Handle hndl, const char[] erro
 {
 	if(hndl == INVALID_HANDLE)
 	{
-		char m_szAuthId[32], m_szQuery[512], m_szIp[16], m_szFlag[32];
+		char m_szAuthId[32], m_szQuery[512], m_szIp[16];
 		ReadPackString(data, m_szQuery, 512);
 		ReadPackString(data, m_szAuthId, 32);
 		int m_iPlayerId = ReadPackCell(data);
@@ -720,9 +730,8 @@ public void SQLCallback_SaveTempLog(Handle owner, Handle hndl, const char[] erro
 		int m_iTrackId = ReadPackCell(data);
 		ReadPackString(data, m_szIp, 32);
 		int m_iLastTime = ReadPackCell(data);
-		ReadPackString(data, m_szFlag, 32);
 
-		LogToFileEx(g_szLogFile, " \n------------------------------------------------------------------------------\nAuthId: %s\nPlayerId: %d\nConnect: %d\nTrackId: %d\nIP: %s\nLastTime: %d\nFlag: %s\nQuery: %s\n------------------------------------------------------------------------------", m_szAuthId, m_iPlayerId, m_iConnect, m_iTrackId, m_szIp, m_iLastTime, m_szFlag, m_szQuery);
+		LogToFileEx(g_szLogFile, " \n------------------------------------------------------------------------------\nAuthId: %s\nPlayerId: %d\nConnect: %d\nTrackId: %d\nIP: %s\nLastTime: %d\nQuery: %s\n------------------------------------------------------------------------------", m_szAuthId, m_iPlayerId, m_iConnect, m_iTrackId, m_szIp, m_iLastTime, m_szQuery);
 	}
 }
 
