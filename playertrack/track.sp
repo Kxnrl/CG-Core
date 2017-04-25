@@ -1,12 +1,10 @@
 //////////////////////////////
 //	TRACK CLIENT ANALYTICS	//
 //////////////////////////////
-public Action Timer_Tracking(Handle timer)
+void TrackClient()
 {
-	GetNowDate();
-	
 	if(g_eHandle[KV_Local] == INVALID_HANDLE)
-		return Plugin_Continue;
+		return;
 
 	for(int client = 1; client <= MaxClients; ++client)
 	{
@@ -21,7 +19,7 @@ public Action Timer_Tracking(Handle timer)
 
 		if(g_eClient[client][iAnalyticsId] < 1)
 			continue;
-		
+
 		g_eClient[client][iDaily]++;
 		
 		if(!g_eClient[client][bSignIn] && g_eClient[client][iDaily] >= 900 && g_eClient[client][hSignTimer] == INVALID_HANDLE)
@@ -47,8 +45,6 @@ public Action Timer_Tracking(Handle timer)
 	}
 
 	KeyValuesToFile(g_eHandle[KV_Local], g_szTempFile);
-	
-	return Plugin_Continue;
 }
 
 public void OnGetClientCVAR(QueryCookie cookie, int client, ConVarQueryResult result, char [] cvarName, char [] cvarValue)

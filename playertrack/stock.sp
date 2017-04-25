@@ -12,7 +12,7 @@ stock bool MySQL_Query(Handle database, SQLTCallback callback, const char[] quer
 		}
 		return false;
 	}
-	
+
 	SQL_TQuery(database, callback, query, data, prio);
 
 	return true;

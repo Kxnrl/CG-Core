@@ -3,8 +3,8 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 409
-#define PLUGIN_VERSION " 7.5a - 2017/04/24 10:47 "
+#define Build 411
+#define PLUGIN_VERSION " 7.5.1 - 2017/04/24 19:52 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12439
 
@@ -38,6 +38,7 @@ EngineVersion g_eGame;
 #include "playertrack/auth.sp"
 #include "playertrack/cmds.sp"
 #include "playertrack/event.sp"
+#include "playertrack/init.sp"
 #include "playertrack/lily.sp"
 #include "playertrack/misc.sp"
 #include "playertrack/sign.sp"
@@ -111,6 +112,9 @@ public void OnPluginStart()
 	
 	//获取游戏模式
 	InitGame();
+	
+	//通用Timer
+	CreateTimer(1.0, Timer_GlobalTimer, _, TIMER_REPEAT);
 }
 
 public void OnPluginEnd()

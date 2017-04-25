@@ -22,10 +22,10 @@ enum Clients
 	iDataRetry,
 	iAnalyticsId,
 	iGroupId,
-	iVipType,
 	iCPId,
 	iCPDate,
 	iDaily,
+	bool:bVIP,
 	bool:bLoaded,
 	bool:bListener,
 	bool:bSignIn,
@@ -62,7 +62,8 @@ enum Forward
 	Handle:ClientAuthTerm,
 	Handle:APIGetCredits,
 	Handle:APISetCredits,
-	Handle:OnNewDay
+	Handle:OnNewDay,
+	Handle:GlobalTimer
 }
 
 //Events

@@ -51,25 +51,17 @@ public int Native_GetSingature(Handle plugin, int numParams)
 
 public int Native_IsClientVIP(Handle plugin, int numParams)
 {
-	if(!g_eClient[GetNativeCell(1)][iVipType])
-		return false;
-	else
-		return true;
+	return g_eClient[GetNativeCell(1)][bVIP];
 }
 
 public int Native_SetClientVIP(Handle plugin, int numParams)
 {
-	SetClientVIP(GetNativeCell(1), 1);
-}
-
-public int Native_GetVipType(Handle plugin, int numParams)
-{
-	return g_eClient[GetNativeCell(1)][iVipType];
+	SetClientVIP(GetNativeCell(1));
 }
 
 public int Native_HookOnClientVipChecked(Handle plugin, int numParams)
 {
-	AddToForward(g_Forward[ClientVipChecked], plugin, GetNativeCell(1));
+	return AddToForward(g_Forward[ClientVipChecked], plugin, GetNativeCell(1));
 }
 
 public int Native_SaveDatabase(Handle plugin, int numParams)
@@ -158,11 +150,10 @@ public int Native_ShowNormalMotd(Handle plugin, int numParams)
 		ShowMOTDPanelEx(client, _, m_szUrl, MOTDPANEL_TYPE_URL, _, true);
 		return true;
 	}
-	else
-	{
-		ShowMOTDPanelEx(client, _, "about:blank", MOTDPANEL_TYPE_URL, _, false);
-		return false;
-	}
+	
+	ShowMOTDPanelEx(client, _, "about:blank", MOTDPANEL_TYPE_URL, _, false);
+
+	return false;
 }
 
 public int Native_ShowHiddenMotd(Handle plugin, int numParams)
@@ -458,5 +449,12 @@ void OnNewDayForward(int iDate)
 	//Call Forward
 	Call_StartForward(g_Forward[OnNewDay]);
 	Call_PushCell(g_iNowDate);
+	Call_Finish();
+}
+
+void OnGlobalTimer()
+{
+	//Call Forward
+	Call_StartForward(g_Forward[GlobalTimer]);
 	Call_Finish();
 }

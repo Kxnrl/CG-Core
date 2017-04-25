@@ -77,7 +77,7 @@ public Action Command_Menu(int client, int args)
 	AddMenuItemEx(menu, TalentAvailable() ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "talent", "%T", TalentAvailable() ? "main talent desc" : "main talent not allow", client);
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "sign", "%T", "main sign desc", client);
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "auth", "%T", "main auth desc", client);
-	AddMenuItemEx(menu, g_eClient[client][iVipType] > 1 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "vip", "%T", "main vip desc", client);
+	AddMenuItemEx(menu, g_eClient[client][bVIP] ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "vip", "%T", "main vip desc", client);
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "rule", "%T", "main rule desc", client);
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "group", "%T", "main group desc", client);
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "forum", "%T", "main forum desc", client);
