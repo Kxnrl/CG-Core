@@ -118,6 +118,8 @@ void SetClientVIP(int client)
 		SetAdminFlag(adm, Admin_Reservation, true);
 		SetAdminFlag(adm, Admin_Generic, true);
 		SetAdminFlag(adm, Admin_Custom2, true);
+		SetAdminFlag(adm, Admin_Custom5, true);
+		SetAdminFlag(adm, Admin_Custom6, true);
 
 		SetAdminImmunityLevel(adm, 10);
 	}
@@ -135,6 +137,12 @@ void SetClientVIP(int client)
 		
 			if(!GetAdminFlag(adm, Admin_Custom2))
 				SetAdminFlag(adm, Admin_Custom2, true);
+			
+			if(!GetAdminFlag(adm, Admin_Custom5))
+				SetAdminFlag(adm, Admin_Custom5, true);
+			
+			if(!GetAdminFlag(adm, Admin_Custom6))
+				SetAdminFlag(adm, Admin_Custom6, true);
 			
 			if(GetAdminImmunityLevel(adm) < 10)
 				SetAdminImmunityLevel(adm, 10);
