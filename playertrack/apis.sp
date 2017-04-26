@@ -151,7 +151,7 @@ public int Native_ShowNormalMotd(Handle plugin, int numParams)
 		return true;
 	}
 	
-	ShowMOTDPanelEx(client, _, "about:blank", MOTDPANEL_TYPE_URL, _, false);
+	ShowMOTDPanelEx(client, _, "https://csgogamers.com/portal.php", MOTDPANEL_TYPE_URL, _, false);
 
 	return false;
 }
@@ -174,7 +174,7 @@ public int Native_RemoveMotd(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
 	QueryClientConVar(client, "cl_disablehtmlmotd", view_as<ConVarQueryFinished>(OnGetClientCVAR), client);
-	ShowMOTDPanelEx(client, _, "about:blank", MOTDPANEL_TYPE_URL, _, false);
+	ShowMOTDPanelEx(client, _, "https://csgogamers.com/portal.php", MOTDPANEL_TYPE_URL, _, false);
 	return true;
 }
 
