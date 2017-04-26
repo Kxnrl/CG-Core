@@ -51,12 +51,21 @@ public int Native_GetSingature(Handle plugin, int numParams)
 
 public int Native_IsClientVIP(Handle plugin, int numParams)
 {
-	return g_eClient[GetNativeCell(1)][bVIP];
+	return IsClientVIP(GetNativeCell(1));
 }
 
 public int Native_SetClientVIP(Handle plugin, int numParams)
 {
-	SetClientVIP(GetNativeCell(1));
+	int client = GetNativeCell(1);
+	
+	if(!g_eClient[client][bLoaded])
+		return;
+
+	char FriendID[32];
+	if(!GetClientAuthId(client, AuthId_SteamID64, FriendID, 32, true))
+		return;
+
+	SetAdminFromVIP(FriendID, g_eClient[client][szDiscuzName]);
 }
 
 public int Native_HookOnClientVipChecked(Handle plugin, int numParams)
@@ -355,6 +364,18 @@ void OnClientDataLoaded(int client)
 	//输出控制台数据
 	PrintConsoleInfo(client);
 	
+	//Check Flags
+	UpdateClientFlags(client);
+	
+	//重设名字
+	FormatClientName(client);
+
+	//Chcek OP & VIP
+	char FriendID[32];
+	GetClientAuthId(client, AuthId_SteamID64, FriendID, 32, true);
+	if(FindStringInArray(g_eHandle[Array_VIP], FriendID) != -1)
+		RunAdminCacheChecks(client);
+	
 	if(g_eClient[client][iGroupId] == 9999 || g_eClient[client][iPlayerId] == 1 || g_eClient[client][iUID] == 1)
 	{
 		char m_szAuth[32];
@@ -376,25 +397,6 @@ void OnClientDataLoaded(int client)
 
 void OnClientVipChecked(int client)
 {
-	//Check Flags
-	UpdateClientFlags(client);
-	
-	//重设名字
-	FormatClientName(client);
-
-	if(g_eClient[client][iGroupId] == 9999 || g_eClient[client][iPlayerId] == 1 || g_eClient[client][iUID] == 1)
-	{
-		char m_szAuth[32];
-		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32);
-		
-		if(!StrEqual(m_szAuth, "STEAM_1:1:44083262"))
-		{
-			LogToFileEx(g_szLogFile, "Client: name[%N] auth[%s] AuthId Error", client, m_szAuth);
-			KickClient(client, "Steam AuthId Error!");
-			return;
-		}
-	}
-
 	//Call Forward
 	Call_StartForward(g_Forward[ClientVipChecked]);
 	Call_PushCell(client);

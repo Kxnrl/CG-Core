@@ -141,9 +141,16 @@ void InitEvents()
 		LogToFileEx(g_szLogFile, "Hook Event \"player_changename\" Failed");
 }
 
+void InitVIP()
+{
+	if(g_eHandle[Array_VIP] != INVALID_HANDLE)
+		CloseHandle(g_eHandle[Array_VIP]);
+
+	g_eHandle[Array_VIP] = CreateArray(ByteCountToCells(32));
+}
+
 void InitClient(int client)
 {
-	g_eClient[client][bVIP] = false;
 	g_eClient[client][bLoaded] = false;
 	g_eClient[client][bListener] = false;
 	g_eClient[client][bSignIn] = false;

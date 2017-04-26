@@ -3,8 +3,8 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 414
-#define PLUGIN_VERSION " 7.5.4 - 2017/04/26 20:14 "
+#define Build 416
+#define PLUGIN_VERSION " 7.6 - 2017/04/27 03:50 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12439
 
@@ -113,8 +113,14 @@ public void OnPluginStart()
 	//获取游戏模式
 	InitGame();
 	
+	//初始化VIP
+	InitVIP();
+	
 	//通用Timer
 	CreateTimer(1.0, Timer_GlobalTimer, _, TIMER_REPEAT);
+	
+	//VIP Timer_GlobalTimer
+	CreateTimer(1800.0, Timer_RebuildCache, _, TIMER_REPEAT);
 }
 
 public void OnPluginEnd()
@@ -145,6 +151,40 @@ public void OnConfigsExecuted()
 	SetConVarString(FindConVar("rcon_password"), g_szRconPwd, false, false);
 }
 
+public Action Timer_RebuildCache(Handle timer)
+{
+	//Rebuild Cache
+	DumpAdminCache(AdminCache_Admins, true);
+	
+	return Plugin_Continue;
+}
+
+public void OnRebuildAdminCache(AdminCachePart part)
+{
+	if(part != AdminCache_Admins)
+		return;
+
+	//Load VIP
+	CreateTimer(3.0, Timer_LoadVIP);
+}
+
+public Action Timer_LoadVIP(Handle timer)
+{
+	if(g_eHandle[DB_Discuz] == INVALID_HANDLE)
+	{
+		CreateTimer(5.0, Timer_LoadVIP, _, TIMER_FLAG_NO_MAPCHANGE);
+		return Plugin_Stop;
+	}
+	
+	ClearArray(g_eHandle[Array_VIP]);
+
+	char m_szQuery[256];
+	Format(m_szQuery, 256, "SELECT a.steamID64,b.username FROM dz_steam_users AS a LEFT JOIN dz_common_member b ON b.uid = a.uid WHERE b.uid = any(SELECT uid FROM dz_dc_vip where exptime > %d);", GetTime());
+	SQL_TQuery(g_eHandle[DB_Discuz], SQLCallback_LoadVIP, m_szQuery, _, DBPrio_High);
+	
+	return Plugin_Stop;
+}
+
 //////////////////////////////
 //		ON CLIENT EVENT		//
 //////////////////////////////
@@ -152,6 +192,30 @@ public void OnClientConnected(int client)
 {
 	//初始化Client数据
 	InitClient(client);
+	CreateTimer(0.1, Timer_AuthorizedClient, client, TIMER_REPEAT);
+}
+
+public Action Timer_AuthorizedClient(Handle timer, int client)
+{
+	if(!IsClientConnected(client))
+		return Plugin_Stop;
+
+	if(IsFakeClient(client))
+	{
+		OnClientVipChecked(client);
+		return Plugin_Stop;
+	}
+
+	char FriendID[32];
+	if(!GetClientAuthId(client, AuthId_SteamID64, FriendID, 32, true))
+		return Plugin_Continue;
+	
+	if(StrContains(FriendID, "765") != 0)
+		return Plugin_Continue;
+	
+	OnClientVipChecked(client);
+
+	return Plugin_Stop;
 }
 
 public void OnClientPostAdminCheck(int client)
@@ -159,7 +223,6 @@ public void OnClientPostAdminCheck(int client)
 	if(!IsValidClient(client))
 	{
 		OnClientDataLoaded(client);
-		OnClientVipChecked(client);
 		return;
 	}
 

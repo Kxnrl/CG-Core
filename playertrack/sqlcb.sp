@@ -194,6 +194,9 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 		if(StrContains(error, "lost connection", false) == -1)
 		{
 			LogToFileEx(g_szLogFile, "Query Client Stats Failed! Client:\"%L\" Error Happened: %s", client, error);
+			OnClientDataLoaded(client);
+			g_eClient[client][iUID] = -1;
+			strcopy(g_eClient[client][szDiscuzName], 32, "未注册");
 			return;
 		}
 
@@ -234,9 +237,7 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 		}
 		else
 		{
-			LogToFileEx(g_szLogFile, "Check '%L' DZ Error happened: %s", client, error);
-			RunAdminCacheChecks(client);
-			OnClientVipChecked(client);
+			LogToFileEx(g_szLogFile, "Check '%L' DZ Error happened: DB_Discuz is not available");
 			OnClientDataLoaded(client);
 			g_eClient[client][iUID] = -1;
 			strcopy(g_eClient[client][szDiscuzName], 32, "未注册");
@@ -269,8 +270,6 @@ public void SQLCallback_GetClientDiscuzName(Handle owner, Handle hndl, const cha
 		if(StrContains(error, "lost connection", false) == -1)
 		{
 			LogToFileEx(g_szLogFile, "Check '%L' DZ Error happened: %s", client, error);
-			RunAdminCacheChecks(client);
-			OnClientVipChecked(client);
 			OnClientDataLoaded(client);
 			g_eClient[client][iUID] = -1;
 			strcopy(g_eClient[client][szDiscuzName], 32, "未注册");
@@ -279,7 +278,7 @@ public void SQLCallback_GetClientDiscuzName(Handle owner, Handle hndl, const cha
 		
 		char m_szAuth[32], m_szQuery[256];
 		GetClientAuthId(client, AuthId_SteamID64, m_szAuth, 32, true);
-		
+
 		Format(m_szQuery, 256, "SELECT m.uid, m.username FROM dz_steam_users AS s LEFT JOIN dz_common_member m ON s.uid = m.uid WHERE s.steamID64 = '%s' LIMIT 1", m_szAuth);
 		MySQL_Query(g_eHandle[DB_Discuz], SQLCallback_GetClientDiscuzName, m_szQuery, GetClientUserId(client), DBPrio_High);
 
@@ -290,61 +289,34 @@ public void SQLCallback_GetClientDiscuzName(Handle owner, Handle hndl, const cha
 	{
 		g_eClient[client][iUID] = SQL_FetchInt(hndl, 0);
 		SQL_FetchString(hndl, 1, g_eClient[client][szDiscuzName], 32);
-		
 		OnClientDataLoaded(client);
-		
-		char m_szQuery[256];
-		Format(m_szQuery, 256, "SELECT exptime, isyear FROM dz_dc_vip WHERE uid = %d", g_eClient[client][iUID]);
-		MySQL_Query(g_eHandle[DB_Discuz], SQLCallback_CheckVIP, m_szQuery, GetClientUserId(client));
 	}
 	else
 	{
-		OnClientVipChecked(client);
 		OnClientDataLoaded(client);
 		g_eClient[client][iUID] = -1;
 		strcopy(g_eClient[client][szDiscuzName], 32, "未注册");
 	}
 }
 
-public void SQLCallback_CheckVIP(Handle owner, Handle hndl, const char[] error, int userid)
+public void SQLCallback_LoadVIP(Handle owner, Handle hndl, const char[] error, any unuse)
 {
-	int client = GetClientOfUserId(userid);
-	
-	if(!IsValidClient(client))
-		return;
-
 	if(hndl == INVALID_HANDLE)
 	{
-		if(StrContains(error, "lost connection", false) == -1)
-		{
-			RunAdminCacheChecks(client);
-			OnClientVipChecked(client);
-			LogToFileEx(g_szLogFile, "Check '%L' VIP Error happened: %s", client, error);
-		}
-		
-		char m_szQuery[128];
-		Format(m_szQuery, 128, "SELECT exptime, isyear FROM dz_dc_vip WHERE uid = %d", g_eClient[client][iUID]);
-		MySQL_Query(g_eHandle[DB_Discuz], SQLCallback_CheckVIP, m_szQuery, GetClientUserId(client));
-		
+		LogToFileEx(g_szLogFile, "Load VIP failed. Error happened: %s", error);
+		CreateTimer(5.0, Timer_LoadVIP, _, TIMER_FLAG_NO_MAPCHANGE);
 		return;
 	}
 
-	if(SQL_FetchRow(hndl))
+	if(SQL_GetRowCount(hndl) < 1)
+		return;
+
+	while(SQL_FetchRow(hndl))
 	{
-		if(SQL_FetchInt(hndl, 0) > GetTime())
-		{
-			SetClientVIP(client);
-		}
-		else
-		{
-			RunAdminCacheChecks(client);
-			OnClientVipChecked(client);
-		}
-	}
-	else
-	{
-		RunAdminCacheChecks(client);
-		OnClientVipChecked(client);
+		char steamid[32], username[32];
+		SQL_FetchString(hndl, 0, steamid, 32);
+		SQL_FetchString(hndl, 1, username, 32);
+		SetAdminFromVIP(steamid, username);
 	}
 }
 

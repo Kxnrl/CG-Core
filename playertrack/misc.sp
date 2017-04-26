@@ -97,60 +97,50 @@ void SettingAdver()
 	}
 }
 
-void SetClientVIP(int client)
+void SetAdminFromVIP(const char[] FriendID, const char[] username)
 {
-	//设置VIP(Allow API)
-	g_eClient[client][bVIP] = true;
-
 	char m_szAuth[32];
-	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-	
-	//查找玩家的AdminId
-	AdminId adm = GetUserAdmin(client);
+	FriendIDtoSteamID(FriendID, m_szAuth, 32);
 
-	//看看这个VIP是不是OP? 并且补起各个权限和权重
-	if(adm == INVALID_ADMIN_ID && FindAdminByIdentity(AUTHMETHOD_STEAM, m_szAuth) == INVALID_ADMIN_ID)
+	AdminId admin = FindAdminByIdentity(AUTHMETHOD_STEAM, m_szAuth);
+
+	if(admin == INVALID_ADMIN_ID)
 	{
-		adm = CreateAdmin(g_eClient[client][szDiscuzName]);
+		admin = CreateAdmin(username);
+		
+		BindAdminIdentity(admin, AUTHMETHOD_STEAM, m_szAuth);
+		
+		SetAdminFlag(admin, Admin_Reservation, true);
+		SetAdminFlag(admin, Admin_Generic, true);
+		SetAdminFlag(admin, Admin_Custom2, true);
+		SetAdminFlag(admin, Admin_Custom5, true);
+		SetAdminFlag(admin, Admin_Custom6, true);
 
-		BindAdminIdentity(adm, AUTHMETHOD_STEAM, m_szAuth);
-
-		SetAdminFlag(adm, Admin_Reservation, true);
-		SetAdminFlag(adm, Admin_Generic, true);
-		SetAdminFlag(adm, Admin_Custom2, true);
-		SetAdminFlag(adm, Admin_Custom5, true);
-		SetAdminFlag(adm, Admin_Custom6, true);
-
-		SetAdminImmunityLevel(adm, 10);
+		SetAdminImmunityLevel(admin, 10);
 	}
 	else
 	{
-		AdminId admid = FindAdminByIdentity(AUTHMETHOD_STEAM, m_szAuth);
-
-		if(adm == admid)
-		{
-			if(!GetAdminFlag(adm, Admin_Reservation))
-				SetAdminFlag(adm, Admin_Reservation, true);
-			
-			if(!GetAdminFlag(adm, Admin_Generic))
-				SetAdminFlag(adm, Admin_Generic, true);
+		if(!GetAdminFlag(admin, Admin_Reservation))
+			SetAdminFlag(admin, Admin_Reservation, true);
 		
-			if(!GetAdminFlag(adm, Admin_Custom2))
-				SetAdminFlag(adm, Admin_Custom2, true);
-			
-			if(!GetAdminFlag(adm, Admin_Custom5))
-				SetAdminFlag(adm, Admin_Custom5, true);
-			
-			if(!GetAdminFlag(adm, Admin_Custom6))
-				SetAdminFlag(adm, Admin_Custom6, true);
-			
-			if(GetAdminImmunityLevel(adm) < 10)
-				SetAdminImmunityLevel(adm, 10);
-		}
+		if(!GetAdminFlag(admin, Admin_Generic))
+			SetAdminFlag(admin, Admin_Generic, true);
+	
+		if(!GetAdminFlag(admin, Admin_Custom2))
+			SetAdminFlag(admin, Admin_Custom2, true);
+		
+		if(!GetAdminFlag(admin, Admin_Custom5))
+			SetAdminFlag(admin, Admin_Custom5, true);
+		
+		if(!GetAdminFlag(admin, Admin_Custom6))
+			SetAdminFlag(admin, Admin_Custom6, true);
+
+		if(GetAdminImmunityLevel(admin) < 10)
+			SetAdminImmunityLevel(admin, 10);
 	}
 
-	RunAdminCacheChecks(client);
-	OnClientVipChecked(client);
+	if(FindStringInArray(g_eHandle[Array_VIP], FriendID) == -1)
+		PushArrayString(g_eHandle[Array_VIP], FriendID);
 }
 
 void UpdateClientFlags(int client)
@@ -171,13 +161,13 @@ void UpdateClientFlags(int client)
 	//OP?
 	else if(GetUserFlagBits(client) & ADMFLAG_CHANGEMAP)
 	{
-		if(g_eClient[client][bVIP])
+		if(IsClientVIP(client))
 			strcopy(newflags, 16, "OP+VIP");
 		else
 			strcopy(newflags, 16, "OP");
 	}
 	//VIP?
-	else if(g_eClient[client][bVIP])
+	else if(IsClientVIP(client))
 	{
 		strcopy(newflags, 16, "VIP"); //SVIP
 	}
@@ -426,7 +416,7 @@ void FormatClientName(int client)
 		else if(GetUserFlagBits(client) & ADMFLAG_BAN)
 			Format(g_eClient[client][szClientName], 32, "♜ %s", g_eClient[client][szClientName]);
 		else
-			Format(g_eClient[client][szClientName], 32, "%s %s", g_eClient[client][bVIP] ? "✪" : "★", g_eClient[client][szClientName]);
+			Format(g_eClient[client][szClientName], 32, "%s %s", IsClientVIP(client) ? "✪" : "★", g_eClient[client][szClientName]);
 	}
 	else
 	{
@@ -481,4 +471,16 @@ public Action Timer_GlobalTimer(Handle timer)
 	GetNowDate();
 	TrackClient();
 	OnGlobalTimer();
+}
+
+bool IsClientVIP(int client)
+{
+	if(!IsClientAuthorized(client))
+		return false;
+
+	char FriendID[32];
+	if(!GetClientAuthId(client, AuthId_SteamID64, FriendID, 32, true))
+		return false;
+
+	return (FindStringInArray(g_eHandle[Array_VIP], FriendID) > -1);
 }

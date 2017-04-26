@@ -25,7 +25,6 @@ enum Clients
 	iCPId,
 	iCPDate,
 	iDaily,
-	bool:bVIP,
 	bool:bLoaded,
 	bool:bListener,
 	bool:bSignIn,
@@ -47,7 +46,8 @@ enum Handles
 {
 	Handle:DB_Game,
 	Handle:DB_Discuz,
-	Handle:KV_Local
+	Handle:KV_Local,
+	Handle:Array_VIP
 }
 
 //Forwards
