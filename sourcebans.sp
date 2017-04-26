@@ -73,7 +73,7 @@ public Plugin myinfo =
 	name		= "SourceBans - [CG] Community Edition",
 	author		= "SourceBans Development Team, Sarabveer(VEER™), Kyle",
 	description	= "Advanced ban management for the Source engine",
-	version		= "2.1+dev-8",
+	version		= "2.1+dev-9",
 	url			= "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -242,14 +242,17 @@ public void OnClientAuthorized(int client, const char[] auth)
 public void OnRebuildAdminCache(AdminCachePart part)
 {
 	loadPart = part;
-	switch(loadPart)
+	if(loadPart == AdminCache_Groups)
 	{
-		case AdminCache_Groups:
-			loadGroups = true;
-		case AdminCache_Admins:
-			loadAdmins = true;
+		loadGroups = true;
+		loadAdmins = false;
 	}
-	
+	else if(loadPart == AdminCache_Admins)
+	{
+		loadGroups = false;
+		loadAdmins = true;
+	}
+
 	if(g_hDatabase == INVALID_HANDLE)
 	{
 		if(!g_bConnecting)
