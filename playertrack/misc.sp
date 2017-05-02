@@ -112,9 +112,6 @@ void SetAdminFromVIP(const char[] FriendID, const char[] username)
 		
 		SetAdminFlag(admin, Admin_Reservation, true);
 		SetAdminFlag(admin, Admin_Generic, true);
-		SetAdminFlag(admin, Admin_Custom2, true);
-		SetAdminFlag(admin, Admin_Custom5, true);
-		SetAdminFlag(admin, Admin_Custom6, true);
 
 		SetAdminImmunityLevel(admin, 10);
 	}
@@ -125,15 +122,6 @@ void SetAdminFromVIP(const char[] FriendID, const char[] username)
 		
 		if(!GetAdminFlag(admin, Admin_Generic))
 			SetAdminFlag(admin, Admin_Generic, true);
-	
-		if(!GetAdminFlag(admin, Admin_Custom2))
-			SetAdminFlag(admin, Admin_Custom2, true);
-		
-		if(!GetAdminFlag(admin, Admin_Custom5))
-			SetAdminFlag(admin, Admin_Custom5, true);
-		
-		if(!GetAdminFlag(admin, Admin_Custom6))
-			SetAdminFlag(admin, Admin_Custom6, true);
 
 		if(GetAdminImmunityLevel(admin) < 10)
 			SetAdminImmunityLevel(admin, 10);

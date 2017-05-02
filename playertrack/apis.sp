@@ -371,9 +371,7 @@ void OnClientDataLoaded(int client)
 	FormatClientName(client);
 
 	//Chcek OP & VIP
-	char FriendID[32];
-	GetClientAuthId(client, AuthId_SteamID64, FriendID, 32, true);
-	if(FindStringInArray(g_eHandle[Array_VIP], FriendID) != -1)
+	if(IsClientVIP(client))
 		RunAdminCacheChecks(client);
 	
 	if(g_eClient[client][iGroupId] == 9999 || g_eClient[client][iPlayerId] == 1 || g_eClient[client][iUID] == 1)

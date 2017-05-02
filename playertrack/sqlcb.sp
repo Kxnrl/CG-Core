@@ -318,6 +318,10 @@ public void SQLCallback_LoadVIP(Handle owner, Handle hndl, const char[] error, a
 		SQL_FetchString(hndl, 1, username, 32);
 		SetAdminFromVIP(steamid, username);
 	}
+
+	for(int client = 1; client <= MaxClients; ++client)
+		if(IsClientInGame(client) && IsClientVIP(client))
+			RunAdminCacheChecks(client);
 }
 
 public void SQLCallback_InsertClientStat(Handle owner, Handle hndl, const char[] error, int userid)
