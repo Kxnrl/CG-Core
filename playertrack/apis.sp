@@ -149,6 +149,10 @@ public int Native_GetDiscuzDatabase(Handle plugin, int numParams)
 public int Native_ShowNormalMotd(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
+	
+	if(!IsValidClient(client))
+		return false;
+	
 	QueryClientConVar(client, "cl_disablehtmlmotd", view_as<ConVarQueryFinished>(OnGetClientCVAR), client);
 	int width = GetNativeCell(2)-12;
 	int height = GetNativeCell(3)-80;
@@ -168,6 +172,10 @@ public int Native_ShowNormalMotd(Handle plugin, int numParams)
 public int Native_ShowHiddenMotd(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
+	
+	if(!IsValidClient(client))
+		return false;
+
 	QueryClientConVar(client, "cl_disablehtmlmotd", view_as<ConVarQueryFinished>(OnGetClientCVAR), client);
 
 	char m_szUrl[192];
@@ -182,6 +190,10 @@ public int Native_ShowHiddenMotd(Handle plugin, int numParams)
 public int Native_RemoveMotd(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
+	
+	if(!IsValidClient(client))
+		return false;
+
 	QueryClientConVar(client, "cl_disablehtmlmotd", view_as<ConVarQueryFinished>(OnGetClientCVAR), client);
 	ShowMOTDPanelEx(client, _, "https://csgogamers.com/portal.php", MOTDPANEL_TYPE_URL, _, false);
 	return true;
