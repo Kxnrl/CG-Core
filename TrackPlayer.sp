@@ -3,10 +3,10 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 418
-#define PLUGIN_VERSION " 7.6.1 - 2017/05/03 03:15 "
+#define Build 419
+#define PLUGIN_VERSION " 7.6.2 - 2017/05/04 13:13 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
-#define TRANSDATASIZE 12439
+#define TRANSDATASIZE 12695
 
 //////////////////////////////
 //		GLOBAL VARIABLES	//
@@ -119,7 +119,10 @@ public void OnPluginStart()
 	//通用Timer
 	CreateTimer(1.0, Timer_GlobalTimer, _, TIMER_REPEAT);
 	
-	//VIP Timer_GlobalTimer
+	//注册Timer
+	CreateTimer(90.0, Timer_GotoRegister, _, TIMER_REPEAT);
+	
+	//VIP Timer
 	CreateTimer(1800.0, Timer_RebuildCache, _, TIMER_REPEAT);
 }
 

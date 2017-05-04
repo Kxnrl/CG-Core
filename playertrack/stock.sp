@@ -166,6 +166,14 @@ stock void RemoveCharFromName(char[] name, int maxLen)
 	ReplaceString(name, maxLen, "✪", "");
 	ReplaceString(name, maxLen, "♜", "");
 	ReplaceString(name, maxLen, "♚", "");
+	ReplaceString(name, maxLen, "'", "");
+	ReplaceString(name, maxLen, "\"", "");
+	ReplaceString(name, maxLen, "\\", "");
+	ReplaceString(name, maxLen, "^", "");
+	ReplaceString(name, maxLen, "(", "");
+	ReplaceString(name, maxLen, ")", "");
+	ReplaceString(name, maxLen, "`", "");
+	ReplaceString(name, maxLen, ";", "");
 }
 
 stock void FriendIDtoSteamID(const char[] szSteam64, char[] szSteam2, int iLen)
@@ -228,6 +236,14 @@ stock int NumberToChar(const int iNum)
 stock int CharToNumber(const int cNum)
 {
     return (cNum >= '0' && cNum <= '9') ? (cNum - '0') : 0;
+}
+
+stock bool AllowSelfName()
+{
+	if(FindPluginByFile("deathmatch.smx") || FindPluginByFile("warmod.smx"))
+		return true;
+
+	return false;
 }
 
 stock void TranslationToFile(const char[] m_szPath)
@@ -680,6 +696,12 @@ stock void TranslationToFile(const char[] m_szPath)
 	WriteFileLine(file, "\"en\"	\"Select your language\"");
 	WriteFileLine(file, "\"chi\"	\"选择你的语言\"");
 	WriteFileLine(file, "\"zho\"	\"選擇你的語言\"");
+	WriteFileLine(file, "}");
+	WriteFileLine(file, "\"go to forum to register\"");
+	WriteFileLine(file, "{");
+	WriteFileLine(file, "\"en\"	\"Your steamID hasn`t been connect the forum account.\"");
+	WriteFileLine(file, "\"chi\"	\"你的SteamID尚未关联论坛账户,部分功能将不可用!\"");
+	WriteFileLine(file, "\"zho\"	\"你的遊戲帳戶還沒有綁定論壇帳號,有的東西將無權使用!\"");
 	WriteFileLine(file, "}");
 	WriteFileLine(file, "}");
 	CloseHandle(file);
