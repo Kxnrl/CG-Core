@@ -26,7 +26,7 @@ public Plugin myinfo =
     name		= "Broadcast System - Client",
     author		= "Kyle",
     description	= "Send message on all connected server !",
-    version		= "2.3.2",
+    version		= "3.0",
     url			= "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -127,6 +127,14 @@ public Action Command_PbCSC(int client, int args)
     }
 }
 
+void ChatClientDisable(int client)
+{
+	if(!IsClientInGame(client))
+		return;
+	
+	tPrintToChat(client, "[\x0CCG\x01]   \x04您已关闭全服聊天功能,你所发送的内容无法被其它服务器的玩家收到");
+}
+
 public void CP_OnChatMessagePost(int client, ArrayList recipients, const char[] flagstring, const char[] formatstring, const char[] name, const char[] message, bool processcolors, bool removecolors)
 {
 	if(g_hSocket == INVALID_HANDLE)
@@ -134,7 +142,7 @@ public void CP_OnChatMessagePost(int client, ArrayList recipients, const char[] 
 
 	if(g_bPbCSC[client])
 	{
-		tPrintToChat(client, "[\x0CCG\x01]   \x04您已关闭全服聊天功能,你所发送的内容无法被其它服务器的玩家收到");
+		RequestFrame(ChatClientDisable, client);
 		return;
 	}
 
@@ -143,6 +151,8 @@ public void CP_OnChatMessagePost(int client, ArrayList recipients, const char[] 
 
 	if(StrContains(flagstring, "_All") == -1)
 		return;
+	
+	UpdateChatToDiscuz(client, message);
 
 	char m_szServerTag[32], m_szFinalMsg[1024];
 	GetServerTag(m_szServerTag, 32);
@@ -158,6 +168,30 @@ public void CP_OnChatMessagePost(int client, ArrayList recipients, const char[] 
 
 	SocketSend(g_hSocket, m_szFinalMsg, 1024);
 	strcopy(g_szLAST, 1024, m_szFinalMsg);
+}
+
+void UpdateChatToDiscuz(int client, const char[] message)
+{
+	Handle database = CG_GetGameDatabase();
+
+	if(database == INVALID_HANDLE)
+		return;
+
+	char msg[256], esc[256];
+	strcopy(msg, 256, message);
+	PrepareString(msg, 256);
+	SQL_EscapeString(database, msg, esc, 256);
+
+	char name[32], ename[64];
+	GetClientName(client, name, 32);
+	SQL_EscapeString(database, name, ename, 64);
+
+	char auth[32];
+	GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
+
+	char m_szQuery[512];
+	Format(m_szQuery, 512, "INSERT INTO `playertrack_csclog` VALUES (DEFAULT, '%d', '%d', '%s', '%s', '%d', '%s')", CG_GetServerId(), CG_GetClientUId(client), auth, ename, GetTime(), esc);
+	CG_SaveDatabase(m_szQuery);
 }
 
 public void CG_OnLilyCouple(int Neptune, int Noire)
