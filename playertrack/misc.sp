@@ -397,9 +397,7 @@ void FormatClientName(int client)
 	{
 		strcopy(g_eClient[client][szClientName], 32, g_eClient[client][szDiscuzName]);
 		RemoveCharFromName(g_eClient[client][szClientName], 32);
-		if(g_eClient[client][iGroupId] >= 9999)
-			Format(g_eClient[client][szClientName], 32, "✪%s", g_eClient[client][szClientName]);
-		else if(g_eClient[client][iGroupId] >= 9990)
+		if(g_eClient[client][iGroupId] >= 9990)
 			Format(g_eClient[client][szClientName], 32, "♚%s", g_eClient[client][szClientName]);
 		else if(GetUserFlagBits(client) & ADMFLAG_BAN)
 			Format(g_eClient[client][szClientName], 32, "♜%s", g_eClient[client][szClientName]);
@@ -416,8 +414,6 @@ void FormatClientName(int client)
 		}
 		else
 			Format(g_eClient[client][szClientName], 32, "[Visitor] #%6d", g_eClient[client][iPlayerId]);
-		
-		//Format(g_eClient[client][szClientName], "[unregistered] #%6d", g_eClient[client][iPlayerId]);
 
 		if(g_eGame == Engine_CSGO)
 			CS_SetClientClanTag(client, "[未注册]");
@@ -465,7 +461,7 @@ public Action Timer_GlobalTimer(Handle timer)
 	GetNowDate();
 	TrackClient();
 	OnGlobalTimer();
-	
+
 	return Plugin_Continue;
 }
 

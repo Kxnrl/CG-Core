@@ -166,6 +166,8 @@ stock void RemoveCharFromName(char[] name, int maxLen)
 	ReplaceString(name, maxLen, "✪", "");
 	ReplaceString(name, maxLen, "♜", "");
 	ReplaceString(name, maxLen, "♚", "");
+	ReplaceString(name, maxLen, "♪", "");
+	ReplaceString(name, maxLen, "♬", "");
 	ReplaceString(name, maxLen, "'", "");
 	ReplaceString(name, maxLen, "\"", "");
 	ReplaceString(name, maxLen, "\\", "");
