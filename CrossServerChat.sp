@@ -160,12 +160,6 @@ public void CP_OnChatMessagePost(int client, ArrayList recipients, const char[] 
 	Format(m_szFinalMsg, 1024, "%s \x04%s\x01>>>  %s \x01:  %s", key, m_szServerTag, name, message);
 	ReplaceAllColors(m_szFinalMsg, 1024);
 
-	ReplaceString(m_szFinalMsg, 1024, "◇ ", "");
-	ReplaceString(m_szFinalMsg, 1024, "◆ ", "");
-	ReplaceString(m_szFinalMsg, 1024, "☆ ", "");
-	ReplaceString(m_szFinalMsg, 1024, "★ ", "");
-	ReplaceString(m_szFinalMsg, 1024, "✪ ", "");
-
 	SocketSend(g_hSocket, m_szFinalMsg, 1024);
 	strcopy(g_szLAST, 1024, m_szFinalMsg);
 }
@@ -307,7 +301,7 @@ public int OnClientSocketConnected(Handle socket, any arg)
 public int OnClientSocketError(Handle socket, const int errorType, const int errorNum, any ary)
 {
 	g_bConnected = false;
-	LogError("socket error %d (errno %d)", errorType, errorNum);
+	LogMessage("socket error %d (errno %d)", errorType, errorNum);
 	CreateTimer(3.0, Timer_Reconnect);
 	CloseHandle(socket);
 	g_hSocket = INVALID_HANDLE;
@@ -317,11 +311,11 @@ public int OnChildSocketReceive(Handle socket, char[] receiveData, const int dat
 {
 	if(StrContains(receiveData, key) == -1)
 		return;
-
-	ReplaceString(receiveData, dataSize, key, "");
 	
 	if(StrContains(receiveData, g_szLAST) != -1)
 		return;
+
+	ReplaceString(receiveData, dataSize, key, "");
 
 	if(StrContains(receiveData, DISCONNECTSTR) != -1)
 		return;
@@ -332,7 +326,7 @@ public int OnChildSocketReceive(Handle socket, char[] receiveData, const int dat
 			if(IsClientInGame(client))
 				if(!g_bPbCSC[client])
 					PrintToChat(client, receiveData);
-				
+
 		return;
 	}
 
@@ -434,6 +428,13 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 
 		PrintToChatAll(m_szFinalMsg);
 
+		char fmt[512];
+		strcopy(fmt, 512, m_szFinalMsg);
+		ReplaceString(fmt, 512, "[\x02小\x04喇\x0C叭\x01] ", "", false);
+		PrepareString(fmt, 512);
+		Format(fmt, 512, ">>> 小喇叭 <<<\n%s", fmt);
+		CG_ShowGameTextAll(fmt, "20.0", "57 197 187", "-1.0", "0.2");
+	
 		Format(m_szFinalMsg, 1024, "%s%s", key, m_szFinalMsg);
 		SocketSend(g_hSocket, m_szFinalMsg, 1024);
 		strcopy(g_szLAST, 1024, m_szFinalMsg);
