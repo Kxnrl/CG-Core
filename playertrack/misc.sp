@@ -192,7 +192,7 @@ void PrintConsoleInfo(int client)
 	PrintToConsole(client, "                                                                                               ");
 	PrintToConsole(client, "                                     欢迎来到[CG]游戏社区                                      ");	
 	PrintToConsole(client, "                                                                                               ");
-	PrintToConsole(client, "当前服务器:  %s   -   Tickrate: %i.0   -   主程序版本: %s", szHostname, RoundToNearest(1.0 / GetTickInterval()), PLUGIN_VERSION);
+	PrintToConsole(client, "当前服务器:  %s   -   Tickrate: %d.0   -   主程序版本: %s", szHostname, RoundToNearest(1.0 / GetTickInterval()), PLUGIN_VERSION);
 	PrintToConsole(client, " ");
 	PrintToConsole(client, "论坛地址: https://csgogamers.com  官方QQ群: 107421770  官方YY: 435773");
 	PrintToConsole(client, "当前地图: %s   剩余时间: %s", szMap, szTimeleft);
