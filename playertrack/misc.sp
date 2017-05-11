@@ -115,13 +115,13 @@ void UpdateClientFlags(int client)
 	//OP?
 	else if(GetUserFlagBits(client) & ADMFLAG_CHANGEMAP)
 	{
-		if(IsClientVIP(client))
+		if(g_eClient[client][bVip])
 			strcopy(newflags, 16, "OP+VIP");
 		else
 			strcopy(newflags, 16, "OP");
 	}
 	//VIP?
-	else if(IsClientVIP(client))
+	else if(g_eClient[client][bVip])
 	{
 		strcopy(newflags, 16, "VIP"); //SVIP
 	}
@@ -368,7 +368,7 @@ void FormatClientName(int client)
 		else if(GetUserFlagBits(client) & ADMFLAG_BAN)
 			Format(g_eClient[client][szClientName], 32, "♜%s", g_eClient[client][szClientName]);
 		else
-			Format(g_eClient[client][szClientName], 32, "%s%s", IsClientVIP(client) ? "✪" : "★", g_eClient[client][szClientName]);
+			Format(g_eClient[client][szClientName], 32, "%s%s", g_eClient[client][bVip] ? "✪" : "★", g_eClient[client][szClientName]);
 	}
 	else
 	{
@@ -442,28 +442,14 @@ public Action Timer_GotoRegister(Handle timer)
 	}
 }
 
-public Action Timer_RefreshVIP(Handle timer)
+public Action Timer_RefreshDiscuzData(Handle timer)
 {
 	if(g_eHandle[DB_Discuz] == INVALID_HANDLE)
 		return Plugin_Continue;
 
-	char m_szQuery[256];
-	Format(m_szQuery, 256, "SELECT a.steamID64,b.username FROM dz_steam_users AS a LEFT JOIN dz_common_member b ON b.uid = a.uid WHERE b.uid = any(SELECT uid FROM dz_dc_vip where exptime > %d);", GetTime());
-	SQL_TQuery(g_eHandle[DB_Discuz], SQLCallback_LoadVIP, m_szQuery, _, DBPrio_High);
-	
+	MySQL_Query(g_eHandle[DB_Discuz], SQLCallback_LoadDiscuzData, "SELECT b.uid,a.steamID64,b.username,c.exptime FROM dz_steam_users a LEFT JOIN dz_common_member b ON a.uid=b.uid LEFT JOIN dz_dc_vip c ON a.uid=c.uid ORDER by b.uid ASC", _, DBPrio_High);
+
 	return Plugin_Continue;
-}
-
-bool IsClientVIP(int client)
-{
-	if(!IsClientAuthorized(client))
-		return false;
-
-	char FriendID[32];
-	if(!GetClientAuthId(client, AuthId_SteamID64, FriendID, 32, true))
-		return false;
-
-	return (FindStringInArray(g_eHandle[Array_VIP], FriendID) > -1);
 }
 
 bool MySQL_Query(Handle database, SQLTCallback callback, const char[] query, any data = 0, DBPriority prio = DBPrio_Normal)
@@ -545,6 +531,25 @@ void ShowMOTDPanelEx(int client, const char[] title = "CSGOGAMERS.COM", const ch
 	KvSetNum(m_hKv, "cmd", cmd);
 	ShowVGUIPanel(client, "info", m_hKv, show);
 	CloseHandle(m_hKv);
+}
+
+void LoadClientDiscuzData(int client, const char[] FriendID)
+{
+	int array_size = GetArraySize(g_eHandle[Array_Discuz]);
+	Discuz_Data data[Discuz_Data];
+
+	for(int i = 0; i < array_size; i++)
+	{
+		GetArrayArray(g_eHandle[Array_Discuz], i, data[0], view_as<int>(Discuz_Data));
+		
+		if(!StrEqual(FriendID, data[szSteamId64]))
+			continue;
+
+		g_eClient[client][bVip] = (data[iExpTime] > GetTime());
+		g_eClient[client][iUID] = data[iUId];
+		strcopy(g_eClient[client][szDiscuzName], 32, data[szDName]);
+		break;
+	}
 }
 
 void GetClientAuthName(int client, char[] buffer, int maxLen)

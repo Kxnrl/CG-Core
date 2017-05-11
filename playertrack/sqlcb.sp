@@ -97,9 +97,7 @@ public void SQL_TConnect_Callback_discuz(Handle owner, Handle hndl, const char[]
 	
 	PrintToServer("[Core] Connection to database 'discuz' successful!");
 	
-	char m_szQuery[256];
-	Format(m_szQuery, 256, "SELECT a.steamID64,b.username FROM dz_steam_users AS a LEFT JOIN dz_common_member b ON b.uid = a.uid WHERE b.uid = any(SELECT uid FROM dz_dc_vip where exptime > %d);", GetTime());
-	SQL_TQuery(g_eHandle[DB_Discuz], SQLCallback_LoadVIP, m_szQuery, _, DBPrio_High);
+	MySQL_Query(g_eHandle[DB_Discuz], SQLCallback_LoadDiscuzData, "SELECT b.uid,a.steamID64,b.username,c.exptime FROM dz_steam_users a LEFT JOIN dz_common_member b ON a.uid=b.uid LEFT JOIN dz_dc_vip c ON a.uid=c.uid ORDER by b.uid ASC", _, DBPrio_High);
 
 	g_iConnect_discuz = 1;
 }
@@ -199,8 +197,6 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 		{
 			LogToFileEx(g_szLogFile, "Query Client Stats Failed! Client:\"%L\" Error Happened: %s", client, error);
 			OnClientDataLoaded(client);
-			g_eClient[client][iUID] = -1;
-			strcopy(g_eClient[client][szDiscuzName], 32, "未注册");
 			return;
 		}
 
@@ -231,23 +227,10 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 		SQL_FetchString(hndl, 13, g_eClient[client][szAdminFlags], 16);
 
 		g_eClient[client][bLoaded] = true;
-
-		if(g_eHandle[DB_Discuz] != INVALID_HANDLE)
-		{
-			char m_szAuth[32], m_szQuery[256];
-			GetClientAuthId(client, AuthId_SteamID64, m_szAuth, 32, true);
-			Format(m_szQuery, 256, "SELECT m.uid, m.username FROM dz_steam_users AS s LEFT JOIN dz_common_member m ON s.uid = m.uid WHERE s.steamID64 = '%s' LIMIT 1", m_szAuth);
-			MySQL_Query(g_eHandle[DB_Discuz], SQLCallback_GetClientDiscuzName, m_szQuery, GetClientUserId(client), DBPrio_High);
-		}
-		else
-		{
-			LogToFileEx(g_szLogFile, "Check '%L' DZ Error happened: DB_Discuz is not available");
-			OnClientDataLoaded(client);
-			g_eClient[client][iUID] = -1;
-			strcopy(g_eClient[client][szDiscuzName], 32, "未注册");
-		}
-
+		
 		CreateTimer(10.0, Timer_HandleConnect, GetClientUserId(client), TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+		
+		OnClientDataLoaded(client);
 	}
 	else
 	{
@@ -262,48 +245,7 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 	}
 }
 
-public void SQLCallback_GetClientDiscuzName(Handle owner, Handle hndl, const char[] error, int userid)
-{
-	int client = GetClientOfUserId(userid);
-	
-	if(!IsValidClient(client))
-		return;
-
-	if(hndl == INVALID_HANDLE)
-	{
-		if(StrContains(error, "lost connection", false) == -1)
-		{
-			LogToFileEx(g_szLogFile, "Check '%L' DZ Error happened: %s", client, error);
-			OnClientDataLoaded(client);
-			g_eClient[client][iUID] = -1;
-			strcopy(g_eClient[client][szDiscuzName], 32, "未注册");
-			return;
-		}
-		
-		char m_szAuth[32], m_szQuery[256];
-		GetClientAuthId(client, AuthId_SteamID64, m_szAuth, 32, true);
-
-		Format(m_szQuery, 256, "SELECT m.uid, m.username FROM dz_steam_users AS s LEFT JOIN dz_common_member m ON s.uid = m.uid WHERE s.steamID64 = '%s' LIMIT 1", m_szAuth);
-		MySQL_Query(g_eHandle[DB_Discuz], SQLCallback_GetClientDiscuzName, m_szQuery, GetClientUserId(client), DBPrio_High);
-
-		return;
-	}
-
-	if(SQL_FetchRow(hndl))
-	{
-		g_eClient[client][iUID] = SQL_FetchInt(hndl, 0);
-		SQL_FetchString(hndl, 1, g_eClient[client][szDiscuzName], 32);
-		OnClientDataLoaded(client);
-	}
-	else
-	{
-		OnClientDataLoaded(client);
-		g_eClient[client][iUID] = -1;
-		strcopy(g_eClient[client][szDiscuzName], 32, "未注册");
-	}
-}
-
-public void SQLCallback_LoadVIP(Handle owner, Handle hndl, const char[] error, any unuse)
+public void SQLCallback_LoadDiscuzData(Handle owner, Handle hndl, const char[] error, any unuse)
 {
 	if(hndl == INVALID_HANDLE)
 	{
@@ -314,16 +256,17 @@ public void SQLCallback_LoadVIP(Handle owner, Handle hndl, const char[] error, a
 	if(SQL_GetRowCount(hndl) < 1)
 		return;
 	
-	ClearArray(g_eHandle[Array_VIP]);
+	ClearArray(g_eHandle[Array_Discuz]);
+
+	Discuz_Data data[Discuz_Data];
 
 	while(SQL_FetchRow(hndl))
 	{
-		char steamid[32], username[32];
-		SQL_FetchString(hndl, 0, steamid, 32);
-		SQL_FetchString(hndl, 1, username, 32);
-
-		if(FindStringInArray(g_eHandle[Array_VIP], steamid) == -1)
-			PushArrayString(g_eHandle[Array_VIP], steamid);
+		data[iUId] = SQL_FetchInt(hndl, 0);
+		SQL_FetchString(hndl, 1, data[szSteamId64], 32);
+		SQL_FetchString(hndl, 2, data[szDName], 32);
+		data[iExpTime] = SQL_FetchInt(hndl, 3);
+		PushArrayArray(g_eHandle[Array_Discuz], data[0], view_as<int>(Discuz_Data));
 	}
 }
 
@@ -350,7 +293,6 @@ public void SQLCallback_InsertClientStat(Handle owner, Handle hndl, const char[]
 	{
 		//客户获得ID从INSERT ID
 		g_eClient[client][iPlayerId] = SQL_GetInsertId(hndl);
-		Format(g_eClient[client][szSignature], 256, "该玩家未设置签名,请登录论坛设置");
 		OnClientDataLoaded(client);
 		g_eClient[client][bLoaded] = true;
 	}

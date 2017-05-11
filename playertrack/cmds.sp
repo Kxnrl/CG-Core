@@ -29,14 +29,14 @@ public Action Command_Track(int client, int args)
 		return Plugin_Handled;
 
 	char szItem[512], szAuth32[32], szAuth64[64];
-	Format(szItem, 512,"#PlayerId   玩家姓名    UID   论坛名称   steam32   steam64    认证\n========================================================================================");
+	Format(szItem, 512,"#PlayerId   玩家姓名    UID   论坛名称   steam32   steam64    认证    VIP\n========================================================================================");
 	PrintToConsole(client, szItem);
 	
 	int connected, ingame;
 
 	for(int i = 1; i <= MaxClients; ++i)
 	{
-		if(IsClientConnected(i))
+		if(IsClientConnected(i) && !IsFakeClient(i))
 		{
 			connected++;
 			
@@ -46,7 +46,7 @@ public Action Command_Track(int client, int args)
 
 				GetClientAuthId(i, AuthId_Steam2, szAuth32, 32, true);
 				GetClientAuthId(i, AuthId_SteamID64, szAuth64, 64, true);
-				Format(szItem, 512, " %d    %N    %d    %s    %s    %s    %s", g_eClient[i][iPlayerId], i, g_eClient[i][iUID], g_eClient[i][szDiscuzName], szAuth32, szAuth64, g_eClient[i][szGroupName]);
+				Format(szItem, 512, " %d    %N    %d    %s    %s    %s    %s    %s", g_eClient[i][iPlayerId], i, g_eClient[i][iUID], g_eClient[i][szDiscuzName], szAuth32, szAuth64, g_eClient[i][szGroupName], g_eClient[i][bVip] ? "Y" : "N");
 				PrintToConsole(client, szItem);
 			}
 		}
@@ -77,7 +77,7 @@ public Action Command_Menu(int client, int args)
 	AddMenuItemEx(menu, TalentAvailable() ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "talent", "%T", TalentAvailable() ? "main talent desc" : "main talent not allow", client);
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "sign", "%T", "main sign desc", client);
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "auth", "%T", "main auth desc", client);
-	AddMenuItemEx(menu, IsClientVIP(client) ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "vip", "%T", "main vip desc", client);
+	AddMenuItemEx(menu, g_eClient[client][bVip] ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "vip", "%T", "main vip desc", client);
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "rule", "%T", "main rule desc", client);
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "group", "%T", "main group desc", client);
 	AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "forum", "%T", "main forum desc", client);

@@ -25,6 +25,7 @@ enum Clients
 	iCPId,
 	iCPDate,
 	iDaily,
+	bool:bVip,
 	bool:bLoaded,
 	bool:bListener,
 	bool:bSignIn,
@@ -41,13 +42,21 @@ enum Clients
 	Handle:hListener,
 }
 
+enum Discuz_Data
+{
+	iUId,
+	iExpTime,
+	String:szDName[32],
+	String:szSteamId64[32]
+}
+
 //Handles
 enum Handles
 {
 	Handle:DB_Game,
 	Handle:DB_Discuz,
 	Handle:KV_Local,
-	Handle:Array_VIP
+	Handle:Array_Discuz
 }
 
 //Forwards

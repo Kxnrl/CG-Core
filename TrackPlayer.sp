@@ -4,8 +4,8 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 423
-#define PLUGIN_VERSION " 7.7 - 2017/05/12 01:41 "
+#define Build 424
+#define PLUGIN_VERSION " 7.7 - 2017/05/12 04:15 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12695
 
@@ -113,8 +113,8 @@ public void OnPluginStart()
 	//获取游戏模式
 	InitGame();
 	
-	//初始化VIP
-	InitVIP();
+	//初始化论坛数据
+	InitDiscuz();
 	
 	//通用Timer
 	CreateTimer(1.0, Timer_GlobalTimer, _, TIMER_REPEAT);
@@ -123,7 +123,7 @@ public void OnPluginStart()
 	CreateTimer(90.0, Timer_GotoRegister, _, TIMER_REPEAT);
 	
 	//VIP Timer
-	CreateTimer(1800.0, Timer_RefreshVIP, _, TIMER_REPEAT);
+	CreateTimer(900.0, Timer_RefreshDiscuzData, _, TIMER_REPEAT);
 }
 
 public void OnPluginEnd()
@@ -182,6 +182,7 @@ public Action Timer_AuthorizedClient(Handle timer, int client)
 	if(StrContains(FriendID, "765") != 0)
 		return Plugin_Continue;
 
+	LoadClientDiscuzData(client, FriendID);
 	OnClientVipChecked(client);
 
 	return Plugin_Stop;

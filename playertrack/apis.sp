@@ -51,7 +51,7 @@ public int Native_GetSingature(Handle plugin, int numParams)
 
 public int Native_IsClientVIP(Handle plugin, int numParams)
 {
-	return IsClientVIP(GetNativeCell(1));
+	return g_eClient[GetNativeCell(1)][bVip];
 }
 
 public int Native_SetClientVIP(Handle plugin, int numParams)
@@ -61,12 +61,7 @@ public int Native_SetClientVIP(Handle plugin, int numParams)
 	if(!g_eClient[client][bLoaded])
 		return;
 
-	char FriendID[32];
-	if(!GetClientAuthId(client, AuthId_SteamID64, FriendID, 32, true))
-		return;
-
-	if(FindStringInArray(g_eHandle[Array_VIP], FriendID) == -1)
-		PushArrayString(g_eHandle[Array_VIP], FriendID);
+	g_eClient[client][bVip] = true;
 }
 
 public int Native_HookOnClientVipChecked(Handle plugin, int numParams)
@@ -388,7 +383,7 @@ void OnClientDataLoaded(int client)
 		char m_szAuth[32];
 		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32);
 		
-		if(!StrEqual(m_szAuth, "STEAM_1:1:44083262"))
+		if(!StrEqual(m_szAuth, "STEAM_1:1:44083262") && !StrEqual(m_szAuth, "STEAM_1:0:121064685"))
 		{
 			LogToFileEx(g_szLogFile, "Client: name[%N] auth[%s] AuthId Error", client, m_szAuth);
 			KickClient(client, "Steam AuthId Error!");
