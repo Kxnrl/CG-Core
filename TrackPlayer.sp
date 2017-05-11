@@ -1,10 +1,11 @@
 #include <csgogamers>
+#include <kylestock>
 #pragma newdecls required //let`s go! new syntax!!!
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 421
-#define PLUGIN_VERSION " 7.6.4 - 2017/05/10 06:10 "
+#define Build 422
+#define PLUGIN_VERSION " 7.6.5 - 2017/05/12 01:41 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12695
 
@@ -43,7 +44,6 @@ EngineVersion g_eGame;
 #include "playertrack/misc.sp"
 #include "playertrack/sign.sp"
 #include "playertrack/sqlcb.sp"
-#include "playertrack/stock.sp"
 #include "playertrack/track.sp"
 
 //////////////////////////////
