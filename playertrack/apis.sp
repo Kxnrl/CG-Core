@@ -65,7 +65,8 @@ public int Native_SetClientVIP(Handle plugin, int numParams)
 	if(!GetClientAuthId(client, AuthId_SteamID64, FriendID, 32, true))
 		return;
 
-	SetAdminFromVIP(FriendID, g_eClient[client][szDiscuzName]);
+	if(FindStringInArray(g_eHandle[Array_VIP], FriendID) == -1)
+		PushArrayString(g_eHandle[Array_VIP], FriendID);
 }
 
 public int Native_HookOnClientVipChecked(Handle plugin, int numParams)
@@ -382,10 +383,6 @@ void OnClientDataLoaded(int client)
 	//重设名字
 	FormatClientName(client);
 
-	//Chcek OP & VIP
-	if(IsClientVIP(client))
-		RunAdminCacheChecks(client);
-	
 	if(g_eClient[client][iGroupId] == 9999 || g_eClient[client][iPlayerId] == 1 || g_eClient[client][iUID] == 1)
 	{
 		char m_szAuth[32];

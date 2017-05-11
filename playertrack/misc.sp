@@ -97,40 +97,6 @@ void SettingAdver()
 	}
 }
 
-void SetAdminFromVIP(const char[] FriendID, const char[] username)
-{
-	char m_szAuth[32];
-	FriendIDtoSteamID(FriendID, m_szAuth, 32);
-
-	AdminId admin = FindAdminByIdentity(AUTHMETHOD_STEAM, m_szAuth);
-
-	if(admin == INVALID_ADMIN_ID)
-	{
-		admin = CreateAdmin(username);
-		
-		BindAdminIdentity(admin, AUTHMETHOD_STEAM, m_szAuth);
-		
-		SetAdminFlag(admin, Admin_Reservation, true);
-		SetAdminFlag(admin, Admin_Generic, true);
-
-		SetAdminImmunityLevel(admin, 10);
-	}
-	else
-	{
-		if(!GetAdminFlag(admin, Admin_Reservation))
-			SetAdminFlag(admin, Admin_Reservation, true);
-		
-		if(!GetAdminFlag(admin, Admin_Generic))
-			SetAdminFlag(admin, Admin_Generic, true);
-
-		if(GetAdminImmunityLevel(admin) < 10)
-			SetAdminImmunityLevel(admin, 10);
-	}
-
-	if(FindStringInArray(g_eHandle[Array_VIP], FriendID) == -1)
-		PushArrayString(g_eHandle[Array_VIP], FriendID);
-}
-
 void UpdateClientFlags(int client)
 {
 	if(StrEqual(g_eClient[client][szAdminFlags], "OP+VIP"))
@@ -474,6 +440,18 @@ public Action Timer_GotoRegister(Handle timer)
 		
 		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "go to forum to register", client);
 	}
+}
+
+public Action Timer_RefreshVIP(Handle timer)
+{
+	if(g_eHandle[DB_Discuz] == INVALID_HANDLE)
+		return Plugin_Continue;
+
+	char m_szQuery[256];
+	Format(m_szQuery, 256, "SELECT a.steamID64,b.username FROM dz_steam_users AS a LEFT JOIN dz_common_member b ON b.uid = a.uid WHERE b.uid = any(SELECT uid FROM dz_dc_vip where exptime > %d);", GetTime());
+	SQL_TQuery(g_eHandle[DB_Discuz], SQLCallback_LoadVIP, m_szQuery, _, DBPrio_High);
+	
+	return Plugin_Continue;
 }
 
 bool IsClientVIP(int client)

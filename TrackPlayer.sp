@@ -4,8 +4,8 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 422
-#define PLUGIN_VERSION " 7.6.5 - 2017/05/12 01:41 "
+#define Build 423
+#define PLUGIN_VERSION " 7.7 - 2017/05/12 01:41 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12695
 
@@ -123,7 +123,7 @@ public void OnPluginStart()
 	CreateTimer(90.0, Timer_GotoRegister, _, TIMER_REPEAT);
 	
 	//VIP Timer
-	CreateTimer(1800.0, Timer_RebuildCache, _, TIMER_REPEAT);
+	CreateTimer(1800.0, Timer_RefreshVIP, _, TIMER_REPEAT);
 }
 
 public void OnPluginEnd()
@@ -154,40 +154,6 @@ public void OnConfigsExecuted()
 	SetConVarString(FindConVar("rcon_password"), g_szRconPwd, false, false);
 }
 
-public Action Timer_RebuildCache(Handle timer)
-{
-	//Rebuild Cache
-	DumpAdminCache(AdminCache_Admins, true);
-	
-	return Plugin_Continue;
-}
-
-public void OnRebuildAdminCache(AdminCachePart part)
-{
-	if(part != AdminCache_Admins)
-		return;
-
-	//Load VIP
-	CreateTimer(3.0, Timer_LoadVIP);
-}
-
-public Action Timer_LoadVIP(Handle timer)
-{
-	if(g_eHandle[DB_Discuz] == INVALID_HANDLE)
-	{
-		CreateTimer(5.0, Timer_LoadVIP, _, TIMER_FLAG_NO_MAPCHANGE);
-		return Plugin_Stop;
-	}
-	
-	ClearArray(g_eHandle[Array_VIP]);
-
-	char m_szQuery[256];
-	Format(m_szQuery, 256, "SELECT a.steamID64,b.username FROM dz_steam_users AS a LEFT JOIN dz_common_member b ON b.uid = a.uid WHERE b.uid = any(SELECT uid FROM dz_dc_vip where exptime > %d);", GetTime());
-	SQL_TQuery(g_eHandle[DB_Discuz], SQLCallback_LoadVIP, m_szQuery, _, DBPrio_High);
-	
-	return Plugin_Stop;
-}
-
 //////////////////////////////
 //		ON CLIENT EVENT		//
 //////////////////////////////
@@ -215,7 +181,7 @@ public Action Timer_AuthorizedClient(Handle timer, int client)
 	
 	if(StrContains(FriendID, "765") != 0)
 		return Plugin_Continue;
-	
+
 	OnClientVipChecked(client);
 
 	return Plugin_Stop;

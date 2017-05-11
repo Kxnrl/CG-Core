@@ -96,6 +96,10 @@ public void SQL_TConnect_Callback_discuz(Handle owner, Handle hndl, const char[]
 	SQL_SetCharset(g_eHandle[DB_Discuz], "utf8");
 	
 	PrintToServer("[Core] Connection to database 'discuz' successful!");
+	
+	char m_szQuery[256];
+	Format(m_szQuery, 256, "SELECT a.steamID64,b.username FROM dz_steam_users AS a LEFT JOIN dz_common_member b ON b.uid = a.uid WHERE b.uid = any(SELECT uid FROM dz_dc_vip where exptime > %d);", GetTime());
+	SQL_TQuery(g_eHandle[DB_Discuz], SQLCallback_LoadVIP, m_szQuery, _, DBPrio_High);
 
 	g_iConnect_discuz = 1;
 }
@@ -304,24 +308,23 @@ public void SQLCallback_LoadVIP(Handle owner, Handle hndl, const char[] error, a
 	if(hndl == INVALID_HANDLE)
 	{
 		LogToFileEx(g_szLogFile, "Load VIP failed. Error happened: %s", error);
-		CreateTimer(5.0, Timer_LoadVIP, _, TIMER_FLAG_NO_MAPCHANGE);
 		return;
 	}
 
 	if(SQL_GetRowCount(hndl) < 1)
 		return;
+	
+	ClearArray(g_eHandle[Array_VIP]);
 
 	while(SQL_FetchRow(hndl))
 	{
 		char steamid[32], username[32];
 		SQL_FetchString(hndl, 0, steamid, 32);
 		SQL_FetchString(hndl, 1, username, 32);
-		SetAdminFromVIP(steamid, username);
-	}
 
-	for(int client = 1; client <= MaxClients; ++client)
-		if(IsClientInGame(client) && IsClientVIP(client))
-			RunAdminCacheChecks(client);
+		if(FindStringInArray(g_eHandle[Array_VIP], steamid) == -1)
+			PushArrayString(g_eHandle[Array_VIP], steamid);
+	}
 }
 
 public void SQLCallback_InsertClientStat(Handle owner, Handle hndl, const char[] error, int userid)
