@@ -160,7 +160,7 @@ public int Native_ShowNormalMotd(Handle plugin, int numParams)
 		return true;
 	}
 	
-	ShowMOTDPanelEx(client, _, "https://csgogamers.com/portal.php", MOTDPANEL_TYPE_URL, _, false);
+	ShowMOTDPanelEx(client, _, "about:blank", MOTDPANEL_TYPE_URL, _, false);
 
 	return false;
 }
@@ -191,7 +191,7 @@ public int Native_RemoveMotd(Handle plugin, int numParams)
 		return false;
 
 	QueryClientConVar(client, "cl_disablehtmlmotd", view_as<ConVarQueryFinished>(OnGetClientCVAR), client);
-	ShowMOTDPanelEx(client, _, "https://csgogamers.com/portal.php", MOTDPANEL_TYPE_URL, _, false);
+	ShowMOTDPanelEx(client, _, "about:blank", MOTDPANEL_TYPE_URL, _, false);
 	return true;
 }
 
@@ -374,9 +374,6 @@ void OnClientDataLoaded(int client)
 	
 	//Check Flags
 	UpdateClientFlags(client);
-	
-	//重设名字
-	FormatClientName(client);
 
 	if(g_eClient[client][iGroupId] == 9999 || g_eClient[client][iPlayerId] == 1 || g_eClient[client][iUID] == 1)
 	{
@@ -399,6 +396,9 @@ void OnClientDataLoaded(int client)
 
 void OnClientVipChecked(int client)
 {
+	//重设名字
+	FormatClientName(client);
+	
 	//Call Forward
 	Call_StartForward(g_Forward[ClientVipChecked]);
 	Call_PushCell(client);

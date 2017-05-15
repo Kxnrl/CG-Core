@@ -1,6 +1,5 @@
 #undef REQUIRE_EXTENSIONS
 #include <sdktools>
-#include <cstrike>
 #define REQUIRE_EXTENSIONS
 
 //////////////////////////////

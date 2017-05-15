@@ -380,9 +380,6 @@ void FormatClientName(int client)
 		}
 		else
 			Format(g_eClient[client][szClientName], 32, "[Visitor] #%6d", g_eClient[client][iPlayerId]);
-
-		if(g_eGame == Engine_CSGO)
-			CS_SetClientClanTag(client, "[未注册]");
 	}
 
 	SetClientName(client, g_eClient[client][szClientName]);
