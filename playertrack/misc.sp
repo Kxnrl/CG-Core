@@ -385,7 +385,7 @@ void FormatClientName(int client)
 	SetClientName(client, g_eClient[client][szClientName]);
 }
 
-void CheckClientName(int client)
+void Frame_CheckClientName(int client)
 {
 	if(IsFakeClient(client))
 		return;
@@ -576,6 +576,27 @@ bool AllowSelfName()
 		return true;
 
 	return false;
+}
+
+public Action Timer_CheckJoinGame(Handle timer, int userid)
+{
+	int client = GetClientOfUserId(userid);
+	if(!client || !IsClientInGame(client) || IsFakeClient(client) || GetClientTeam(client) >= 1)
+		return Plugin_Stop;
+
+	RequestFrame(Frame_KickDelay, client);
+
+	return Plugin_Stop;
+}
+
+void Frame_KickDelay(int client)
+{
+	if(!IsClientConnected(client))
+		return;
+
+	char fmt[256];
+	Format(fmt, 256, "你因为太久没有激活游戏,已被踢出游戏.\nYou have been AFK too long");
+	KickClient(client, fmt);
 }
 
 void TranslationToFile(const char[] m_szPath)

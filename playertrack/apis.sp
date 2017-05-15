@@ -103,15 +103,7 @@ public int Native_SaveForumData(Handle plugin, int numParams)
 
 public int Native_GetGroupID(Handle plugin, int numParams)
 {
-	int client = GetNativeCell(1);
-	if(g_eClient[client][iGroupId] == 9999)
-	{
-		char m_szAuth[32];
-		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32);
-		if(!StrEqual(m_szAuth, "STEAM_1:1:44083262"))
-			KickClient(client, "STEAM AurhId Error!");
-	}
-	return g_eClient[client][iGroupId];
+	return g_eClient[GetNativeCell(1)][iGroupId];
 }
 
 public int Native_GetGroupName(Handle plugin, int numParams)
@@ -374,12 +366,15 @@ void OnClientDataLoaded(int client)
 	
 	//Check Flags
 	UpdateClientFlags(client);
+	
+	//Check join game.
+	CreateTimer(45.0, Timer_CheckJoinGame, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 
 	if(g_eClient[client][iGroupId] == 9999 || g_eClient[client][iPlayerId] == 1 || g_eClient[client][iUID] == 1)
 	{
 		char m_szAuth[32];
 		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32);
-		
+
 		if(!StrEqual(m_szAuth, "STEAM_1:1:44083262") && !StrEqual(m_szAuth, "STEAM_1:0:121064685"))
 		{
 			LogToFileEx(g_szLogFile, "Client: name[%N] auth[%s] AuthId Error", client, m_szAuth);

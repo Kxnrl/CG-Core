@@ -88,7 +88,7 @@ public Action Event_PlayerName(Event event, const char[] name, bool dontBroadcas
 	Call_PushString(newname);
 	Call_Finish();
 
-	RequestFrame(CheckClientName, client);
+	RequestFrame(Frame_CheckClientName, client);
 	
 	SetEventBroadcast(event, true);
 	

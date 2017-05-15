@@ -5,7 +5,7 @@
 //		DEFINITIONS			//
 //////////////////////////////
 #define Build 425
-#define PLUGIN_VERSION " 7.7.1 - 2017/05/16 03:24 "
+#define PLUGIN_VERSION " 7.7.1 - 2017/05/16 03:30 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12695
 
