@@ -99,7 +99,7 @@ void SettingAdver()
 
 void UpdateClientFlags(int client)
 {
-	if(StrEqual(g_eClient[client][szAdminFlags], "OP+VIP"))
+	if(StrEqual(g_eClient[client][szAdminFlags], "OP+VIP") && g_eClient[client][bVip])
 		return;
 	
 	if(StrEqual(g_eClient[client][szAdminFlags], "OP") && !(GetUserFlagBits(client) & ADMFLAG_CHANGEMAP))
