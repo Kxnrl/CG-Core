@@ -8,6 +8,11 @@ public int Native_GetOnlines(Handle plugin, int numParams)
 	return g_eClient[GetNativeCell(1)][iOnline];
 }
 
+public int Native_GetGrowth(Handle plugin, int numParams)
+{
+	return g_eClient[GetNativeCell(1)][iGrowth];
+}
+
 public int Native_GetVitality(Handle plugin, int numParams)
 {
 	return g_eClient[GetNativeCell(1)][iVitality];
@@ -52,6 +57,11 @@ public int Native_GetSingature(Handle plugin, int numParams)
 public int Native_IsClientVIP(Handle plugin, int numParams)
 {
 	return g_eClient[GetNativeCell(1)][bVip];
+}
+
+public int Native_IsRealName(Handle plugin, int numParams)
+{
+	return g_eClient[GetNativeCell(1)][bRealName];
 }
 
 public int Native_SetClientVIP(Handle plugin, int numParams)
@@ -367,6 +377,9 @@ void OnClientDataLoaded(int client)
 	//Check Flags
 	UpdateClientFlags(client);
 	
+	//重设名字
+	FormatClientName(client);
+
 	//Check join game.
 	CreateTimer(45.0, Timer_CheckJoinGame, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 
@@ -391,9 +404,6 @@ void OnClientDataLoaded(int client)
 
 void OnClientVipChecked(int client)
 {
-	//重设名字
-	FormatClientName(client);
-	
 	//Call Forward
 	Call_StartForward(g_Forward[ClientVipChecked]);
 	Call_PushCell(client);

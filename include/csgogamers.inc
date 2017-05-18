@@ -16,6 +16,7 @@ enum Clients
 	iPlayerId,
 	iNumber,
 	iOnline,
+	iGrowth,
 	iVitality,
 	iLastseen,
 	iDataRetry,
@@ -28,6 +29,7 @@ enum Clients
 	bool:bLoaded,
 	bool:bListener,
 	bool:bSignIn,
+	bool:bRealName,
 	String:szIP[32],
 	String:szGroupName[16],
 	String:szSignature[256],
@@ -45,6 +47,8 @@ enum Discuz_Data
 {
 	iUId,
 	iExpTime,
+	iGrowths,
+	bool:bIsRealName,
 	String:szDName[32],
 	String:szSteamId64[32]
 }

@@ -97,7 +97,7 @@ public void SQL_TConnect_Callback_discuz(Handle owner, Handle hndl, const char[]
 	
 	PrintToServer("[Core] Connection to database 'discuz' successful!");
 	
-	MySQL_Query(g_eHandle[DB_Discuz], SQLCallback_LoadDiscuzData, "SELECT b.uid,a.steamID64,b.username,c.exptime FROM dz_steam_users a LEFT JOIN dz_common_member b ON a.uid=b.uid LEFT JOIN dz_dc_vip c ON a.uid=c.uid ORDER by b.uid ASC", _, DBPrio_High);
+	MySQL_Query(g_eHandle[DB_Discuz], SQLCallback_LoadDiscuzData, "SELECT b.uid,a.steamID64,b.username,c.exptime,d.growth,e.issm FROM dz_steam_users a LEFT JOIN dz_common_member b ON a.uid=b.uid LEFT JOIN dz_dc_vip c ON a.uid=c.uid LEFT JOIN dz_pay_growth d ON a.uid=d.uid LEFT JOIN dz_lev_user_sm e ON a.uid=e.uid ORDER by b.uid ASC", _, DBPrio_High);
 
 	g_iConnect_discuz = 1;
 }
@@ -266,6 +266,8 @@ public void SQLCallback_LoadDiscuzData(Handle owner, Handle hndl, const char[] e
 		SQL_FetchString(hndl, 1, data[szSteamId64], 32);
 		SQL_FetchString(hndl, 2, data[szDName], 32);
 		data[iExpTime] = SQL_FetchInt(hndl, 3);
+		data[iGrowths] = SQL_FetchInt(hndl, 4);
+		data[bIsRealName] = (SQL_FetchInt(hndl, 5) == 99);
 		PushArrayArray(g_eHandle[Array_Discuz], data[0], view_as<int>(Discuz_Data));
 	}
 }

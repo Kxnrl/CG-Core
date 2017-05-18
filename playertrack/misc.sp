@@ -444,7 +444,7 @@ public Action Timer_RefreshDiscuzData(Handle timer)
 	if(g_eHandle[DB_Discuz] == INVALID_HANDLE)
 		return Plugin_Continue;
 
-	MySQL_Query(g_eHandle[DB_Discuz], SQLCallback_LoadDiscuzData, "SELECT b.uid,a.steamID64,b.username,c.exptime FROM dz_steam_users a LEFT JOIN dz_common_member b ON a.uid=b.uid LEFT JOIN dz_dc_vip c ON a.uid=c.uid ORDER by b.uid ASC", _, DBPrio_High);
+	MySQL_Query(g_eHandle[DB_Discuz], SQLCallback_LoadDiscuzData, "SELECT b.uid,a.steamID64,b.username,c.exptime,d.growth,e.issm FROM dz_steam_users a LEFT JOIN dz_common_member b ON a.uid=b.uid LEFT JOIN dz_dc_vip c ON a.uid=c.uid LEFT JOIN dz_pay_growth d ON a.uid=d.uid LEFT JOIN dz_lev_user_sm e ON a.uid=e.uid ORDER by b.uid ASC", _, DBPrio_High);
 
 	return Plugin_Continue;
 }
@@ -544,6 +544,8 @@ void LoadClientDiscuzData(int client, const char[] FriendID)
 
 		g_eClient[client][bVip] = (data[iExpTime] > GetTime());
 		g_eClient[client][iUID] = data[iUId];
+		g_eClient[client][iGrowth] = data[iGrowths];
+		g_eClient[client][bRealName] = data[bIsRealName];
 		strcopy(g_eClient[client][szDiscuzName], 32, data[szDName]);
 		break;
 	}

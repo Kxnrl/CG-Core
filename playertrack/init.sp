@@ -78,6 +78,7 @@ void InitNative()
 {
 	CreateNative("CG_GetServerId", Native_GetServerID);
 	CreateNative("CG_GetClientOnlines", Native_GetOnlines);
+	CreateNative("CG_GetClientGrowth", Native_GetGrowth);
 	CreateNative("CG_GetClientVitality", Native_GetVitality);
 	CreateNative("CG_GetClientLastseen", Native_GetLastseen);
 	CreateNative("CG_GetClientDailyTime", Native_GetDailyTime);
@@ -87,6 +88,7 @@ void InitNative()
 	CreateNative("CG_GetClientPartner", Native_GetCPPartner);
 	CreateNative("CG_GetClientLilyDate", Native_GetCPDate);
 	CreateNative("CG_IsClientVIP", Native_IsClientVIP);
+	CreateNative("CG_IsClientRealName", Native_IsRealName);
 	CreateNative("CG_ShowNormalMotd", Native_ShowNormalMotd);
 	CreateNative("CG_ShowHiddenMotd", Native_ShowHiddenMotd);
 	CreateNative("CG_RemoveMotd", Native_RemoveMotd);
@@ -155,6 +157,7 @@ void InitClient(int client)
 	g_eClient[client][bLoaded] = false;
 	g_eClient[client][bListener] = false;
 	g_eClient[client][bSignIn] = false;
+	g_eClient[client][bRealName] = false;
 	g_eClient[client][iUID] = -1;
 	g_eClient[client][iSignNum] = 0;
 	g_eClient[client][iSignTime] = 0;
@@ -162,6 +165,7 @@ void InitClient(int client)
 	g_eClient[client][iPlayerId] = 0;
 	g_eClient[client][iNumber] = 0;
 	g_eClient[client][iOnline] = 0;
+	g_eClient[client][iGrowth] = 0;
 	g_eClient[client][iVitality] = 0
 	g_eClient[client][iLastseen] = 0;
 	g_eClient[client][iDataRetry] = 0;
