@@ -57,6 +57,16 @@ public int Native_Broadcast(Handle plugin, int numParams)
 			CG_SaveForumData(m_szQuery);
 		}
 		
+		if(StrContains(m_szContent, "[\x10Store\x01]") != -1)
+		{
+			char fmt[512];
+			strcopy(fmt, 512, m_szContent);
+			ReplaceString(fmt, 512, "[\x10Store\x01] ", "", false);
+			PrepareString(fmt, 512);
+			Format(fmt, 512, ">>> 全服广播 <<<\n%s", fmt);
+			CG_ShowGameTextAll(fmt, "10.0", "57 197 187", "-1.0", "0.2");
+		}
+		
 		char m_szFinalMsg[1024];
 		Format(m_szFinalMsg, 1024, "[\x10Broadcast\x01]  \x07>\x04>\x0C>  \x05%s", m_szContent);
 		PrintToChatAll(m_szFinalMsg);
@@ -338,6 +348,16 @@ public int OnChildSocketReceive(Handle socket, char[] receiveData, const int dat
 		PrepareString(fmt, 512);
 		Format(fmt, 512, ">>> 小喇叭 <<<\n%s", fmt);
 		CG_ShowGameTextAll(fmt, "20.0", "57 197 187", "-1.0", "0.2");
+	}
+	
+	if(StrContains(receiveData, "[\x10Store\x01]") != -1)
+	{
+		char fmt[512];
+		strcopy(fmt, 512, receiveData);
+		ReplaceString(fmt, 512, "[\x10Store\x01] ", "", false);
+		PrepareString(fmt, 512);
+		Format(fmt, 512, ">>> 全服广播 <<<\n%s", fmt);
+		CG_ShowGameTextAll(fmt, "10.0", "57 197 187", "-1.0", "0.2");
 	}
 
 	PrintToChatAll(receiveData);
