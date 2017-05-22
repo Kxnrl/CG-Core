@@ -1329,11 +1329,12 @@ public bool CreateBan(int client, int target, int time, char[] reason)
 
 void UTIL_InsertBan(int time, const char[] Name, const char[] Authid, const char[] Ip, const char[] Reason, const char[] AdminAuthid, const char[] AdminIp, Handle Pack)
 {
-	char banName[128], banReason[256], m_szQuery[1024], country[4], bantype[32];
+	char banName[128], banReason[256], m_szQuery[1024], country[4], bantype[32], adminAuth[32];
 	SQL_EscapeString(g_hDatabase, Name, banName, 128);
 	SQL_EscapeString(g_hDatabase, Reason, banReason, 256);
 	GeoipCode2(Ip, country);
-	int admin = FindClientBySteamId(AdminAuthid);
+	strcopy(adminAuth, 32, AdminAuthid);
+	int admin = FindClientBySteamId(adminAuth);
 	switch(g_iBanType[admin])
 	{
 		case 0:
@@ -1354,11 +1355,22 @@ void UTIL_InsertBan(int time, const char[] Name, const char[] Authid, const char
 			strcopy(bantype, 32, "全服封禁");
 		}
 	}
+	if(admin == 0)
+	{
+		if(StrContains(banReason, "CAT") == 0)
+			strcopy(bantype, 32, "全服封禁");
+
+		if(StrContains(banReason, "发起的VIP投票封禁") != -1)
+		{
+			strcopy(bantype, 32, "单服封禁");
+			strcopy(adminAuth, 32, "STEAM_ID_VIP");
+		}
+	}
 	
 	FormatEx(m_szQuery, 1024, "INSERT INTO sb_bans (ip, authid, name, created, ends, length, reason, aid, adminIp, sid, btype, country) VALUES \
 						('%s', '%s', '%s', UNIX_TIMESTAMP(), UNIX_TIMESTAMP() + %d, %d, '%s', IFNULL((SELECT aid FROM sb_admins WHERE authid = '%s' OR authid REGEXP '^STEAM_[0-9]:%s$'),'0'), '%s', \
 						%d, '%s', '%s')",
-						Ip, Authid, banName, (time*60), (time*60), banReason, AdminAuthid, AdminAuthid[8], AdminIp, g_iServerId, bantype, country);
+						Ip, Authid, banName, (time*60), (time*60), banReason, adminAuth, adminAuth[8], AdminIp, g_iServerId, bantype, country);
 
 	SQL_TQuery(g_hDatabase, VerifyInsert, m_szQuery, Pack, DBPrio_High);
 }
