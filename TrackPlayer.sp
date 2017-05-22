@@ -4,8 +4,8 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 426
-#define PLUGIN_VERSION " 7.8 - 2017/05/18 22:52 "
+#define Build 427
+#define PLUGIN_VERSION " 7.8.1 - 2017/05/21 06:33 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12695
 
@@ -123,7 +123,7 @@ public void OnPluginStart()
 	CreateTimer(90.0, Timer_GotoRegister, _, TIMER_REPEAT);
 	
 	//VIP Timer
-	CreateTimer(900.0, Timer_RefreshDiscuzData, _, TIMER_REPEAT);
+	CreateTimer(600.0, Timer_RefreshDiscuzData, _, TIMER_REPEAT);
 }
 
 public void OnPluginEnd()

@@ -270,6 +270,21 @@ public void SQLCallback_LoadDiscuzData(Handle owner, Handle hndl, const char[] e
 		data[bIsRealName] = (SQL_FetchInt(hndl, 5) == 99);
 		PushArrayArray(g_eHandle[Array_Discuz], data[0], view_as<int>(Discuz_Data));
 	}
+	
+	for(int client = 1; client <= MaxClients; ++client)
+	{
+		if(!IsClientConnected(client) || !IsClientAuthorized(client) || IsFakeClient(client))
+			continue;
+		
+		char FriendID[32];
+		if(!GetClientAuthId(client, AuthId_SteamID64, FriendID, 32, true))
+			continue;
+		
+		if(StrContains(FriendID, "765") != 0)
+			continue;
+
+		LoadClientDiscuzData(client, FriendID);
+	}
 }
 
 public void SQLCallback_InsertClientStat(Handle owner, Handle hndl, const char[] error, int userid)
