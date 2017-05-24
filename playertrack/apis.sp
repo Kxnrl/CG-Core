@@ -379,6 +379,9 @@ void OnClientDataLoaded(int client)
 	
 	//重设名字
 	FormatClientName(client);
+	
+	//Reset Music
+	CreateTimer(8.0, Timer_ResetMusic, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 
 	//Check join game.
 	CreateTimer(45.0, Timer_CheckJoinGame, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);

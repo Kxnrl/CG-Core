@@ -4,8 +4,8 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 427
-#define PLUGIN_VERSION " 7.8.1 - 2017/05/21 06:33 "
+#define Build 428
+#define PLUGIN_VERSION " 7.8.2 - 2017/05/25 00:09 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12695
 
@@ -150,6 +150,7 @@ public void OnConfigsExecuted()
 {
 	//Lock Cvars
 	SetConVarInt(FindConVar("sv_hibernate_when_empty"), 0);
+	SetConVarInt(FindConVar("sv_disable_motd"), 0);
 	SetConVarString(FindConVar("hostname"), g_szHostName, false, false);
 	SetConVarString(FindConVar("rcon_password"), g_szRconPwd, false, false);
 }

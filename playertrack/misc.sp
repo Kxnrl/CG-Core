@@ -363,12 +363,12 @@ void FormatClientName(int client)
 	{
 		strcopy(g_eClient[client][szClientName], 32, g_eClient[client][szDiscuzName]);
 		RemoveCharFromName(g_eClient[client][szClientName], 32);
-		if(g_eClient[client][iGroupId] >= 9990)
-			Format(g_eClient[client][szClientName], 32, "♚%s", g_eClient[client][szClientName]);
-		else if(GetUserFlagBits(client) & ADMFLAG_BAN)
-			Format(g_eClient[client][szClientName], 32, "♜%s", g_eClient[client][szClientName]);
-		else
-			Format(g_eClient[client][szClientName], 32, "%s%s", g_eClient[client][bVip] ? "✪" : "★", g_eClient[client][szClientName]);
+		//if(g_eClient[client][iGroupId] >= 9990)
+		//	Format(g_eClient[client][szClientName], 32, "♚%s", g_eClient[client][szClientName]);
+		//else if(GetUserFlagBits(client) & ADMFLAG_BAN)
+		//	Format(g_eClient[client][szClientName], 32, "♜%s", g_eClient[client][szClientName]);
+		//else
+		//	Format(g_eClient[client][szClientName], 32, "%s%s", g_eClient[client][bVip] ? "✪" : "★", g_eClient[client][szClientName]);
 	}
 	else
 	{
@@ -578,6 +578,23 @@ bool AllowSelfName()
 		return true;
 
 	return false;
+}
+
+public Action Timer_ResetMusic(Handle timer, int userid)
+{
+	int client = GetClientOfUserId(userid);
+	if(!client || !IsClientInGame(client) || IsFakeClient(client))
+		return Plugin_Stop;
+	
+	if(GetClientTeam(client) < 1)
+	{
+		CreateTimer(8.0, Timer_ResetMusic, userid, TIMER_FLAG_NO_MAPCHANGE);
+		return Plugin_Stop;
+	}
+
+	ShowMOTDPanelEx(client, _, "about:blank", MOTDPANEL_TYPE_URL, _, false);
+
+	return Plugin_Stop;
 }
 
 public Action Timer_CheckJoinGame(Handle timer, int userid)

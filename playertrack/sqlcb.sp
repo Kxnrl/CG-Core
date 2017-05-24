@@ -4,9 +4,7 @@
 void SQL_TConnect_csgo()
 {
 	if(g_eHandle[DB_Game] != INVALID_HANDLE)
-		CloseHandle(g_eHandle[DB_Game]);
-	
-	g_eHandle[DB_Game] = INVALID_HANDLE;
+		return;
 	
 	if(SQL_CheckConfig("csgo"))
 		SQL_TConnect(SQL_TConnect_Callback_csgo, "csgo");
@@ -17,10 +15,8 @@ void SQL_TConnect_csgo()
 void SQL_TConnect_discuz()
 {
 	if(g_eHandle[DB_Discuz] != INVALID_HANDLE)
-		CloseHandle(g_eHandle[DB_Discuz]);
-	
-	g_eHandle[DB_Discuz] = INVALID_HANDLE;
-	
+		return;
+
 	if(SQL_CheckConfig("discuz"))
 		SQL_TConnect(SQL_TConnect_Callback_discuz, "discuz");
 	else
@@ -29,6 +25,14 @@ void SQL_TConnect_discuz()
 
 public void SQL_TConnect_Callback_csgo(Handle owner, Handle hndl, const char[] error, any data)
 {
+	if(g_eHandle[DB_Game] != INVALID_HANDLE)
+	{
+		if(g_eHandle[DB_Game] != hndl)
+			CloseHandle(hndl);
+		
+		return;
+	}
+
 	if(hndl == INVALID_HANDLE)
 	{
 		g_iConnect_csgo++;
@@ -69,6 +73,14 @@ public void SQL_TConnect_Callback_csgo(Handle owner, Handle hndl, const char[] e
 
 public void SQL_TConnect_Callback_discuz(Handle owner, Handle hndl, const char[] error, any data)
 {
+	if(g_eHandle[DB_Discuz] != INVALID_HANDLE)
+	{
+		if(g_eHandle[DB_Discuz] != hndl)
+			CloseHandle(hndl);
+
+		return;
+	}
+
 	if(hndl == INVALID_HANDLE)
 	{
 		g_iConnect_discuz++;
