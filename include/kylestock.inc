@@ -167,6 +167,7 @@ stock void RemoveCharFromName(char[] code, int maxLen)
 	ReplaceString(code, maxLen, "☁", "");
 	ReplaceString(code, maxLen, "☂", "");
 	ReplaceString(code, maxLen, "☃", "");
+	ReplaceString(code, maxLen, "ミク", "");
 }
 
 stock void FriendIDtoSteamID(const char[] szSteam64, char[] szSteam2, int iLen)
