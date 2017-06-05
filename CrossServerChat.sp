@@ -26,7 +26,7 @@ public Plugin myinfo =
     name		= "Broadcast System - Client",
     author		= "Kyle",
     description	= "Send message on all connected server !",
-    version		= "3.0",
+    version		= "3.0.1",
     url			= "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -301,9 +301,10 @@ public Action Timer_Reconnect(Handle timer)
 }
 
 public int OnClientSocketConnected(Handle socket, any arg)
-{	
-	SocketSetOption(socket, SocketSendTimeout, 4000);
-	SocketSetOption(socket, SocketReceiveTimeout, 4000);
+{
+	SocketSetOption(socket, SocketKeepAlive, true);
+	SocketSetOption(socket, SocketSendTimeout, 5000);
+	SocketSetOption(socket, SocketReceiveTimeout, 5000);
 
 	g_bConnected = true;
 }
