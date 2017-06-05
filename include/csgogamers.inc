@@ -75,6 +75,7 @@ enum Forward
 	Handle:APIGetCredits,
 	Handle:APISetCredits,
 	Handle:OnNewDay,
+	Handle:OnNowTime,
 	Handle:GlobalTimer
 }
 

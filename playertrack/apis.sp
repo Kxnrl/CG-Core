@@ -464,6 +464,20 @@ void OnNewDayForward(int iDate)
 	Call_Finish();
 }
 
+void OnNowTimeForward(int point)
+{
+	int oclock = point + 8;
+	if(oclock > 24)
+		oclock -= 24;
+	
+	LogMessage("CG Server: On NowTime %d", oclock);
+	
+	//Call Forward
+	Call_StartForward(g_Forward[OnNowTime]);
+	Call_PushCell(oclock);
+	Call_Finish();
+}
+
 void OnGlobalTimer()
 {
 	//Call Forward

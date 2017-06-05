@@ -28,6 +28,7 @@ void InitCommands()
 	RegConsoleCmd("sm_online", Command_Online);
 	RegConsoleCmd("sm_track", Command_Track);
 	RegConsoleCmd("sm_rz", Command_GetAuth);
+	RegConsoleCmd("sm_auth", Command_GetAuth);
 	RegConsoleCmd("sm_cp", Command_CP);
 	RegConsoleCmd("sm_lily", Command_CP);
 	RegConsoleCmd("sm_cg", Command_Menu);
@@ -57,6 +58,7 @@ void InitForward()
 	g_Forward[ClientMarried] = CreateGlobalForward("CG_OnLilyCouple", ET_Ignore, Param_Cell, Param_Cell);
 	g_Forward[ClientDivorce] = CreateGlobalForward("CG_OnLilyDivorce", ET_Ignore, Param_Cell, Param_Cell);
 	g_Forward[OnNewDay] = CreateGlobalForward("CG_OnNewDay", ET_Ignore, Param_Cell);
+	g_Forward[OnNowTime] = CreateGlobalForward("CG_OnNowTime", ET_Ignore, Param_Cell);
 	g_Forward[GlobalTimer] = CreateGlobalForward("CG_OnGlobalTimer", ET_Ignore);
 	g_Forward[ClientAuthTerm] = CreateGlobalForward("CG_OnCheckAuthTerm", ET_Event, Param_Cell, Param_Cell);
 

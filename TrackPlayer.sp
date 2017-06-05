@@ -4,8 +4,8 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 429
-#define PLUGIN_VERSION " 7.8.3 - 2017/05/29 04:58 "
+#define Build 431
+#define PLUGIN_VERSION " 7.8.5 - 2017/06/06 03:27 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12695
 
@@ -51,7 +51,7 @@ EngineVersion g_eGame;
 //////////////////////////////
 public Plugin myinfo = 
 {
-	name		= "[CG] - Core",
+	name		= "CSGOGAMERS.COM - Core",
 	author		= "Kyle",
 	description = "Player Tracker System",
 	version		= PLUGIN_VERSION,
@@ -93,7 +93,7 @@ public void OnPluginStart()
 	
 	//初始化日期
 	InitDate();
-	
+
 	//读取服务器IP地址
 	InitServerIP();
 
@@ -106,7 +106,7 @@ public void OnPluginStart()
 
 	//监听控制台命令
 	InitCommands();
-	
+
 	//获取所有Event
 	InitEvents();
 	
@@ -123,7 +123,7 @@ public void OnPluginStart()
 	CreateTimer(90.0, Timer_GotoRegister, _, TIMER_REPEAT);
 	
 	//VIP Timer
-	CreateTimer(600.0, Timer_RefreshDiscuzData, _, TIMER_REPEAT);
+	CreateTimer(900.0, Timer_RefreshDiscuzData, _, TIMER_REPEAT);
 }
 
 public void OnPluginEnd()

@@ -4,6 +4,7 @@ forward void CG_OnClientLoaded(int client);
 forward void CG_OnLilyCouple(int Neptune, int Noire);
 forward void CG_OnLilyDivorce(int Neptune, int Noire);
 forward void CG_OnNewDay(int date);
+forward void CG_OnNowTime(int oclock);
 forward bool CG_OnCheckAuthTerm(int client, int authid);
 forward bool CG_APIStoreSetCredits(int client, int credits, const char[] reason, bool immed);
 forward  int CG_APIStoreGetCredits(int client);

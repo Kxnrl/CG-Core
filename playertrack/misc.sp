@@ -1,14 +1,23 @@
-void GetNowDate()
+void GetNowTime()
 {
-	char m_szDate[32];
-	FormatTime(m_szDate, 64, "%Y%m%d", GetTime());
-	int iDate = StringToInt(m_szDate);
-	if(iDate > g_iNowDate)
+	int unix_timestamp = GetTime();
+	bool point = (unix_timestamp % 3600 == 0);
+	if(point)
 	{
-		OnNewDayForward(iDate);
+		char m_szDate[32];
+
+		FormatTime(m_szDate, 32, "%H", unix_timestamp);
+		OnNowTimeForward(StringToInt(m_szDate));
 		
-		for(int client = 1; client <= MaxClients; ++client)
-			g_eClient[client][iDaily] = 0;
+		FormatTime(m_szDate, 32, "%Y%m%d", unix_timestamp);
+		int iDate = StringToInt(m_szDate);
+		if(iDate > g_iNowDate)
+		{
+			OnNewDayForward(iDate);
+			
+			for(int client = 1; client <= MaxClients; ++client)
+				g_eClient[client][iDaily] = 0;
+		}
 	}
 }
 
@@ -415,7 +424,7 @@ public Action Timer_ResetChannel(Handle timer, int channel)
 
 public Action Timer_GlobalTimer(Handle timer)
 {
-	GetNowDate();
+	GetNowTime();
 	TrackClient();
 	OnGlobalTimer();
 
