@@ -29,6 +29,7 @@ enum Clients
 	bool:bLoaded,
 	bool:bListener,
 	bool:bSignIn,
+	bool:bInGroup,
 	bool:bRealName,
 	String:szIP[32],
 	String:szGroupName[16],
@@ -59,6 +60,7 @@ enum Handles
 	Handle:DB_Game,
 	Handle:DB_Discuz,
 	Handle:KV_Local,
+	Handle:Array_Group,
 	Handle:Array_Discuz
 }
 

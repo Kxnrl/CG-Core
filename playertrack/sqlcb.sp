@@ -67,6 +67,9 @@ public void SQL_TConnect_Callback_csgo(Handle owner, Handle hndl, const char[] e
 	
 	Format(m_szQuery, 256, "DELETE FROM `playertrack_analytics` WHERE connect_time < %d and duration = -1", GetTime()-18000);
 	MySQL_Query(g_eHandle[DB_Game], SQLCallback_OnConnect, m_szQuery, _, DBPrio_Low);
+	
+	Format(m_szQuery, 256, "SELECT * FROM playertrack_officalgroup");
+	MySQL_Query(g_eHandle[DB_Game], SQLCallback_OfficalGroup, m_szQuery, false, DBPrio_Low);
 
 	g_iConnect_csgo = 1;
 }
@@ -254,6 +257,47 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 		SQL_EscapeString(g_eHandle[DB_Game], username, EscapeName, 256);
 		Format(m_szQuery, 512, "INSERT INTO playertrack_player (name, steamid, onlines, lastip, firsttime, lasttime, number, flags, signature) VALUES ('%s', '%s', '0', '%s', '%d', '0', '0', 'unknow', DEFAULT)", EscapeName, m_szAuth, g_eClient[client][szIP], g_eClient[client][iConnectTime]);
 		MySQL_Query(g_eHandle[DB_Game], SQLCallback_InsertClientStat, m_szQuery, GetClientUserId(client));
+	}
+}
+
+public void SQLCallback_OfficalGroup(Handle owner, Handle hndl, const char[] error, any unuse)
+{
+	if(hndl == INVALID_HANDLE)
+	{
+		LogToFileEx(g_szLogFile, "Load Offical Group List failed. Error happened: %s", error);
+		return;
+	}
+	
+	if(SQL_GetRowCount(hndl) < 1)
+		return;
+
+	ClearArray(g_eHandle[Array_Group]);
+
+	char FriendID[32];
+
+	while(SQL_FetchRow(hndl))
+	{
+		SQL_FetchString(hndl, 0, FriendID, 32);
+		PushArrayString(g_eHandle[Array_Group], FriendID);
+	}
+	
+	for(int client = 1; client <= MaxClients; ++client)
+	{
+		g_eClient[client][bInGroup] = false;
+
+		if(!IsClientConnected(client) || !IsClientAuthorized(client) || IsFakeClient(client))
+			continue;
+
+		if(!GetClientAuthId(client, AuthId_SteamID64, FriendID, 32, true))
+			continue;
+
+		if(StrContains(FriendID, "765") != 0)
+			continue;
+
+		if(FindStringInArray(g_eHandle[Array_Group], FriendID) == -1)
+			continue;
+		
+		g_eClient[client][bInGroup] = true;
 	}
 }
 

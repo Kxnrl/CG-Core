@@ -32,6 +32,7 @@ native    int CG_GetClientPartner(int client);
 native    int CG_GetClientLilyDate(int client);
 native   bool HookClientVIPChecked(OnClientVIPChecked func);
 native   bool CG_IsClientVIP(int client);
+native   bool CG_InOfficalGroup(int client);
 native   bool CG_IsClientRealName(int client);
 native   bool CG_ShowNormalMotd(int client, int width, int height, char[] url);
 native   bool CG_ShowHiddenMotd(int client, char[] url);

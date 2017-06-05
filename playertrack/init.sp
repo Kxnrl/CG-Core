@@ -90,6 +90,7 @@ void InitNative()
 	CreateNative("CG_GetClientPartner", Native_GetCPPartner);
 	CreateNative("CG_GetClientLilyDate", Native_GetCPDate);
 	CreateNative("CG_IsClientVIP", Native_IsClientVIP);
+	CreateNative("CG_InOfficalGroup", Native_InOfficalGroup);
 	CreateNative("CG_IsClientRealName", Native_IsRealName);
 	CreateNative("CG_ShowNormalMotd", Native_ShowNormalMotd);
 	CreateNative("CG_ShowHiddenMotd", Native_ShowHiddenMotd);
@@ -151,6 +152,11 @@ void InitDiscuz()
 		CloseHandle(g_eHandle[Array_Discuz]);
 
 	g_eHandle[Array_Discuz] = CreateArray(view_as<int>(Discuz_Data));
+	
+	if(g_eHandle[Array_Group] != INVALID_HANDLE)
+		CloseHandle(g_eHandle[Array_Group]);
+
+	g_eHandle[Array_Group] = CreateArray(ByteCountToCells(32));
 }
 
 void InitClient(int client)
@@ -159,6 +165,7 @@ void InitClient(int client)
 	g_eClient[client][bLoaded] = false;
 	g_eClient[client][bListener] = false;
 	g_eClient[client][bSignIn] = false;
+	g_eClient[client][bInGroup] = false;
 	g_eClient[client][bRealName] = false;
 	g_eClient[client][iUID] = -1;
 	g_eClient[client][iSignNum] = 0;

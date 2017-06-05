@@ -18,6 +18,8 @@ void GetNowTime()
 			for(int client = 1; client <= MaxClients; ++client)
 				g_eClient[client][iDaily] = 0;
 		}
+		
+		CreateTimer(120.0, Timer_RefreshData, true);
 	}
 }
 
@@ -354,6 +356,8 @@ public Action Timer_ListenerTimeout(Handle timer, int client)
 {
 	g_eClient[client][hListener] = INVALID_HANDLE;
 	g_eClient[client][bListener] = false;
+	
+	return Plugin_Stop;
 }
 
 public Action Timer_ReLoadClient(Handle timer, int userid)
@@ -361,6 +365,8 @@ public Action Timer_ReLoadClient(Handle timer, int userid)
 	int client = GetClientOfUserId(userid);
 	if(client && IsClientInGame(client))
 		OnClientPostAdminCheck(client);
+	
+	return Plugin_Stop;
 }
 
 void FormatClientName(int client)
@@ -420,6 +426,8 @@ public Action Timer_ResetChannel(Handle timer, int channel)
 	g_TextHud[channel][hTimer] = INVALID_HANDLE;
 	g_TextHud[channel][szPosX][0] = '\0';
 	g_TextHud[channel][szPosY][0] = '\0';
+	
+	return Plugin_Stop;
 }
 
 public Action Timer_GlobalTimer(Handle timer)
@@ -440,16 +448,18 @@ public Action Timer_GotoRegister(Handle timer)
 		
 		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "go to forum to register", client);
 	}
+	
+	return Plugin_Continue;
 }
 
-public Action Timer_RefreshDiscuzData(Handle timer)
+public Action Timer_RefreshData(Handle timer, bool reset)
 {
-	if(g_eHandle[DB_Discuz] == INVALID_HANDLE)
-		return Plugin_Continue;
+	if(reset) CreateTimer(1800.0, Timer_RefreshData, false);
 
-	MySQL_Query(g_eHandle[DB_Discuz], SQLCallback_LoadDiscuzData, "SELECT b.uid,a.steamID64,b.username,c.exptime,d.growth,e.issm FROM dz_steam_users a LEFT JOIN dz_common_member b ON a.uid=b.uid LEFT JOIN dz_dc_vip c ON a.uid=c.uid LEFT JOIN dz_pay_growth d ON a.uid=d.uid LEFT JOIN dz_lev_user_sm e ON a.uid=e.uid ORDER by b.uid ASC", _, DBPrio_High);
+	MySQL_Query(g_eHandle[DB_Discuz], SQLCallback_LoadDiscuzData, "SELECT b.uid,a.steamID64,b.username,c.exptime,d.growth,e.issm FROM dz_steam_users a LEFT JOIN dz_common_member b ON a.uid=b.uid LEFT JOIN dz_dc_vip c ON a.uid=c.uid LEFT JOIN dz_pay_growth d ON a.uid=d.uid LEFT JOIN dz_lev_user_sm e ON a.uid=e.uid ORDER by b.uid ASC", _, DBPrio_Low);
+	MySQL_Query(g_eHandle[DB_Game], SQLCallback_OfficalGroup, "SELECT * FROM playertrack_officalgroup", _, DBPrio_Low);
 
-	return Plugin_Continue;
+	return Plugin_Stop;
 }
 
 bool MySQL_Query(Handle database, SQLTCallback callback, const char[] query, any data = 0, DBPriority prio = DBPrio_Normal)
@@ -552,6 +562,9 @@ void LoadClientDiscuzData(int client, const char[] FriendID)
 		strcopy(g_eClient[client][szDiscuzName], 32, data[szDName]);
 		break;
 	}
+	
+	if(FindStringInArray(g_eHandle[Array_Group], FriendID) != -1)
+		g_eClient[client][bInGroup] = true;
 }
 
 void GetClientAuthName(int client, char[] buffer, int maxLen)

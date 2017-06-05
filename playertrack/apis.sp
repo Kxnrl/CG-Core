@@ -64,6 +64,11 @@ public int Native_IsRealName(Handle plugin, int numParams)
 	return g_eClient[GetNativeCell(1)][bRealName];
 }
 
+public int Native_InOfficalGroup(Handle plugin, int numParams)
+{
+	return g_eClient[GetNativeCell(1)][bInGroup];
+}
+
 public int Native_SetClientVIP(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
@@ -464,12 +469,8 @@ void OnNewDayForward(int iDate)
 	Call_Finish();
 }
 
-void OnNowTimeForward(int point)
+void OnNowTimeForward(int oclock)
 {
-	int oclock = point + 8;
-	if(oclock > 24)
-		oclock -= 24;
-	
 	LogMessage("CG Server: On NowTime %d", oclock);
 	
 	//Call Forward

@@ -4,8 +4,8 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 431
-#define PLUGIN_VERSION " 7.8.5 - 2017/06/06 03:27 "
+#define Build 432
+#define PLUGIN_VERSION " 7.8.6 - 2017/06/06 04:24 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 12695
 
@@ -121,9 +121,6 @@ public void OnPluginStart()
 	
 	//注册Timer
 	CreateTimer(90.0, Timer_GotoRegister, _, TIMER_REPEAT);
-	
-	//VIP Timer
-	CreateTimer(900.0, Timer_RefreshDiscuzData, _, TIMER_REPEAT);
 }
 
 public void OnPluginEnd()
