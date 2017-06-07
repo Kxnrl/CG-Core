@@ -9,19 +9,8 @@
 
 #define Prefix "[\x02SourceBans\x01]  "
 
-enum State
-{
-	ConfigStateNone = 0,
-	ConfigStateConfig,
-	ConfigStateReasons,
-	ConfigStateHacking
-}
-
 int g_BanTarget[MAXPLAYERS+1] = {-1, ...};
 int g_BanTime[MAXPLAYERS+1] = {-1, ...};
-
-State ConfigState;
-Handle ConfigParser;
 
 Handle hTopMenu = INVALID_HANDLE;
 
@@ -37,7 +26,6 @@ AdminFlag g_FlagLetters[26];
 /* Admin KeyValues */
 char groupsLoc[128];
 char adminsLoc[128];
-char overridesLoc[128];
 
 /* Database handle */
 Handle g_hDatabase;
@@ -70,10 +58,10 @@ g_iBanType[MAXPLAYERS+1];
 
 public Plugin myinfo =
 {
-	name		= "SourceBans - [CG] Community Edition",
+	name		= "SourceBans [Redux]",
 	author		= "SourceBans Development Team, Sarabveer(VEER™), Kyle",
 	description	= "Advanced ban management for the Source engine",
-	version		= "2.1+dev-9",
+	version		= "2.1+dev10 [Base on SB-1.5.3F]",
 	url			= "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -83,6 +71,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("SBBanPlayer", Native_SBBanPlayer);
 	CreateNative("SBAddBan", Native_SBAddBan);
 	g_bLateLoaded = late;
+	
+	MarkNativeAsOptional("GeoipCode2");
 
 	return APLRes_Success;
 }
@@ -142,7 +132,6 @@ public void OnPluginStart()
 	BuildPath(Path_SM, logFile, 128, "logs/sourcebans.log");
 	BuildPath(Path_SM , groupsLoc, 128,"configs/admin_groups.cfg");
 	BuildPath(Path_SM, adminsLoc, 128,"configs/admins.cfg");
-	BuildPath(Path_SM, overridesLoc, 128,"configs/sourcebans/overrides_backup.cfg");
 
 	if(g_bLateLoaded)
 	{
@@ -580,6 +569,10 @@ void ResetMenu()
 	if(ReasonMenuHandle != INVALID_HANDLE)
 	{
 		RemoveAllMenuItems(ReasonMenuHandle);
+	}
+	if(HackingMenuHandle != INVALID_HANDLE)
+	{
+		RemoveAllMenuItems(HackingMenuHandle);
 	}
 }
 
@@ -1112,78 +1105,19 @@ public Action ClientRecheck(Handle timer, int client)
 	return Plugin_Stop;
 }
 
-// PARSER //
-static void InitializeConfigParser()
+void PrepareMenu()
 {
-	if(ConfigParser == INVALID_HANDLE)
-	{
-		ConfigParser = SMC_CreateParser();
-		SMC_SetReaders(ConfigParser, ReadConfig_NewSection, ReadConfig_KeyValue, ReadConfig_EndSection);
-	}
-}
+	AddMenuItem(ReasonMenuHandle, "Own Reason",	"手动输入原因");
+	AddMenuItem(ReasonMenuHandle, "Hacking", "作弊");
+	AddMenuItem(ReasonMenuHandle, "Exploit", "卡bug");
+	AddMenuItem(ReasonMenuHandle, "zaoyao",  "造谣");
+	AddMenuItem(ReasonMenuHandle, "badmic",  "卡麦");
+	AddMenuItem(ReasonMenuHandle, "maren",   "喷粪");
 
-static void InternalReadConfig(const char[] path)
-{
-	ConfigState = ConfigStateNone;
-
-	SMCError err = SMC_ParseFile(ConfigParser, path);
-
-	if(err != SMCError_Okay)
-	{
-		char buffer[128];
-		if(SMC_GetErrorString(err, buffer, 128))
-		{
-			PrintToServer(buffer);
-		} else {
-			PrintToServer("Fatal parse error");
-		}
-	}
-}
-
-public SMCResult ReadConfig_NewSection(Handle smc, const char[] name, bool opt_quotes)
-{
-	if(name[0])
-	{
-		if(strcmp("Config", name, false) == 0)
-		{
-			ConfigState = ConfigStateConfig;
-		} else if(strcmp("BanReasons", name, false) == 0) {
-			ConfigState = ConfigStateReasons;
-		} else if(strcmp("HackingReasons", name, false) == 0) {
-			ConfigState = ConfigStateHacking;
-		}
-	}
-	return SMCParse_Continue;
-}
-
-public SMCResult ReadConfig_KeyValue(Handle smc, const char[] key, const char[] value, bool key_quotes, bool value_quotes)
-{
-	if(!key[0])
-		return SMCParse_Continue;
-
-	switch(ConfigState)
-	{
-		case ConfigStateReasons:
-		{
-			if(ReasonMenuHandle != INVALID_HANDLE)
-			{
-				AddMenuItem(ReasonMenuHandle, key, value);
-			}
-		}
-		case ConfigStateHacking:
-		{
-			if(HackingMenuHandle != INVALID_HANDLE)
-			{
-				AddMenuItem(HackingMenuHandle, key, value);
-			}
-		}
-	}
-	return SMCParse_Continue;
-}
-
-public SMCResult ReadConfig_EndSection(Handle smc)
-{
-	return SMCParse_Continue;
+	AddMenuItem(HackingMenuHandle, "Aimbot", "自瞄作弊");
+	AddMenuItem(HackingMenuHandle, "Wallhack", "透视作弊");
+	AddMenuItem(HackingMenuHandle, "aimware", "暴力作弊");
+	AddMenuItem(HackingMenuHandle, "autobhop", "连跳作弊");
 }
 
 public int Native_SBBanPlayer(Handle plugin, int numParams)
@@ -1327,12 +1261,23 @@ public bool CreateBan(int client, int target, int time, char[] reason)
 	return true;
 }
 
+void GetCountryCode2(const char[] ip, char[] country)
+{
+	if(GetFeatureStatus(FeatureType_Native, "GeoipCode2") != FeatureStatus_Available)
+		return;
+
+	char buffer[4];
+	GeoipCode2(ip, buffer);
+	strcopy(country, 4, buffer);
+}
+
 void UTIL_InsertBan(int time, const char[] Name, const char[] Authid, const char[] Ip, const char[] Reason, const char[] AdminAuthid, const char[] AdminIp, Handle Pack)
 {
 	char banName[128], banReason[256], m_szQuery[1024], country[4], bantype[32], adminAuth[32];
 	SQL_EscapeString(g_hDatabase, Name, banName, 128);
 	SQL_EscapeString(g_hDatabase, Reason, banReason, 256);
-	GeoipCode2(Ip, country);
+	GetCountryCode2(Ip, country);
+	
 	strcopy(adminAuth, 32, AdminAuthid);
 	int admin = FindClientBySteamId(adminAuth);
 	switch(g_iBanType[admin])
@@ -1447,42 +1392,22 @@ void PrepareBan(int client, int target, int time, char[] reason)
 	g_BanTime[client] = -1;
 }
 
-void ReadConfig()
-{
-	InitializeConfigParser();
-
-	if(ConfigParser == INVALID_HANDLE)
-	{
-		return;
-	}
-
-	char ConfigFile[PLATFORM_MAX_PATH];
-	BuildPath(Path_SM, ConfigFile, 256, "configs/sourcebans/sourcebans.cfg");
-
-	if(FileExists(ConfigFile))
-	{
-		InternalReadConfig(ConfigFile);
-		PrintToServer("[SourceBans] Loading configs/sourcebans.cfg config file");
-	} else {
-		LogToFileEx(logFile, "FATAL *** ERROR *** can not find %s", ConfigFile);
-		SetFailState("FATAL *** ERROR *** can not find configs/sourcebans/sourcebans.cfg");
-	}
-}
-
 void ResetSettings()
 {
 	ResetMenu();
-	ReadConfig();
+	PrepareMenu();
 }
 
 public Action OnLogAction(Handle source, Identity ident, int client, int target, const char[] message)
 {
 	if(client < 1 || GetUserAdmin(client) == INVALID_ADMIN_ID || g_hDatabase == INVALID_HANDLE || StrContains(message, "console command") >= 0 || StrContains(message, "sm_chat") >= 0)
 		return Plugin_Continue;
+	
+	char emsg[512], m_szQuery[512], m_sMsg[256], m_szClientauth[32], m_szClientid[128];
 
 	if(target >= 1 && client != target)
 	{
-		char m_szClientauth[32], m_szTargetauth[32], m_szQuery[512], m_sMsg[256], m_szClientid[128], m_szTargetid[128], m_szTmp[32], m_szTmp2[128];
+		char m_szTargetauth[32], m_szTargetid[128], m_szTmp[32], m_szTmp2[128];
 		GetClientAuthId(client, AuthId_Steam2, m_szClientauth, 32, true);
 		GetClientAuthId(target, AuthId_Steam2, m_szTargetauth, 32, true);
 		Format(m_szClientid, 128, "\"%N<%d><%s><>\"", client, GetClientUserId(client), m_szClientauth);
@@ -1494,81 +1419,49 @@ public Action OnLogAction(Handle source, Identity ident, int client, int target,
 		Format(m_sMsg, 256, "%s", message);
 		ReplaceString(m_sMsg, 256, m_szClientid, "");
 		ReplaceString(m_sMsg, 256, m_szTmp2, m_szTargetid);
-		ReplaceString(m_sMsg, 256, "slayed", "处死");
-		ReplaceString(m_sMsg, 256, "slapped", "拍打");
-		ReplaceString(m_sMsg, 256, "ignited", "点燃");
-		ReplaceString(m_sMsg, 256, "removed a beacon on", "取消点灯");
-		ReplaceString(m_sMsg, 256, "set a beacon on", "点灯");
-		ReplaceString(m_sMsg, 256, "froze", "冰冻");
-		ReplaceString(m_sMsg, 256, "set a TimeBomb on", "设置时间炸弹");
-		ReplaceString(m_sMsg, 256, "removed a TimeBomb on", "取消时间炸弹");
-		ReplaceString(m_sMsg, 256, "set a FreezeBomb on", "设置火焰炸弹");
-		ReplaceString(m_sMsg, 256, "removed a FireBomb on", "取消火焰炸弹");
-		ReplaceString(m_sMsg, 256, "set a FreezeBomb on", "设置冰冻炸弹");
-		ReplaceString(m_sMsg, 256, "removed a FreezeBomb on", "取消冰冻炸弹");
-		ReplaceString(m_sMsg, 256, "set blind on", "设置致盲");
-		ReplaceString(m_sMsg, 256, "set gravity on", "设置重力");
-		ReplaceString(m_sMsg, 256, "unrenamed", "取消改名");
-		ReplaceString(m_sMsg, 256, "renamed", "改名");
-		ReplaceString(m_sMsg, 256, "undrugged", "取消毒药");
-		ReplaceString(m_sMsg, 256, "drugged", "下毒药");
-		ReplaceString(m_sMsg, 256, "teleported", "传送");
-		ReplaceString(m_sMsg, 256, "triggered sm_say", "管理员频道喊话");
-		ReplaceString(m_sMsg, 256, "triggered sm_msay", "管理员频道喊话");
-		ReplaceString(m_sMsg, 256, "triggered sm_csay", "管理员频道喊话");
-		ReplaceString(m_sMsg, 256, "triggered sm_hsay", "管理员频道喊话");
-		ReplaceString(m_sMsg, 256, "triggered sm_psay", "管理员频道私聊");
-		ReplaceString(m_sMsg, 256, "toggled noclip on", "触发穿墙效果");
-		ReplaceString(m_sMsg, 256, "changed map to", "更换地图");
-		ReplaceString(m_sMsg, 256, "kicked", "踢出");
-		ReplaceString(m_sMsg, 256, "reason", "原因");
-		ReplaceString(m_sMsg, 256, "added ban", "封禁离线玩家");
-		char emsg[512];
-		SQL_EscapeString(g_hDatabase, m_sMsg, emsg, 512);
-		Format(m_szQuery, 512, "INSERT INTO `sb_adminlog` VALUES (DEFAULT, (IF((SELECT aid FROM `sb_admins` WHERE authid = '%s')>0,(SELECT aid FROM `sb_admins` WHERE authid = '%s'),-1)),%d,'%s',DEFAULT);", m_szClientauth, m_szClientauth, g_iServerId, emsg);
-		SQL_TQuery(g_hDatabase, SQLCallback_CheckAdminLog, m_szQuery);
 	}
 	else
 	{
-		char m_szClientauth[32], m_szQuery[512], m_sMsg[256], m_szClientid[128];
 		GetClientAuthId(client, AuthId_Steam2, m_szClientauth, 32, true);
 		Format(m_szClientid, 128, "\"%N<%d><%s><>\"", client, GetClientUserId(client), m_szClientauth);
 		Format(m_sMsg, 256, "%s", message);
 		ReplaceString(m_sMsg, 256, m_szClientid, "自己");
-		ReplaceString(m_sMsg, 256, "slayed", "处死");
-		ReplaceString(m_sMsg, 256, "slapped", "拍打");
-		ReplaceString(m_sMsg, 256, "ignited", "点燃");
-		ReplaceString(m_sMsg, 256, "removed a beacon on", "取消点灯");
-		ReplaceString(m_sMsg, 256, "set a beacon on", "点灯");
-		ReplaceString(m_sMsg, 256, "froze", "冰冻");
-		ReplaceString(m_sMsg, 256, "set a TimeBomb on", "设置时间炸弹");
-		ReplaceString(m_sMsg, 256, "removed a TimeBomb on", "取消时间炸弹");
-		ReplaceString(m_sMsg, 256, "set a FreezeBomb on", "设置火焰炸弹");
-		ReplaceString(m_sMsg, 256, "removed a FireBomb on", "取消火焰炸弹");
-		ReplaceString(m_sMsg, 256, "set a FreezeBomb on", "设置冰冻炸弹");
-		ReplaceString(m_sMsg, 256, "removed a FreezeBomb on", "取消冰冻炸弹");
-		ReplaceString(m_sMsg, 256, "set blind on", "设置致盲");
-		ReplaceString(m_sMsg, 256, "set gravity on", "设置重力");
-		ReplaceString(m_sMsg, 256, "unrenamed", "取消改名");
-		ReplaceString(m_sMsg, 256, "renamed", "改名");
-		ReplaceString(m_sMsg, 256, "undrugged", "取消毒药");
-		ReplaceString(m_sMsg, 256, "drugged", "下毒药");
-		ReplaceString(m_sMsg, 256, "teleported", "传送");
-		ReplaceString(m_sMsg, 256, "triggered sm_say", "管理员频道喊话");
-		ReplaceString(m_sMsg, 256, "triggered sm_msay", "管理员频道喊话");
-		ReplaceString(m_sMsg, 256, "triggered sm_csay", "管理员频道喊话");
-		ReplaceString(m_sMsg, 256, "triggered sm_hsay", "管理员频道喊话");
-		ReplaceString(m_sMsg, 256, "triggered sm_psay", "管理员频道私聊");
-		ReplaceString(m_sMsg, 256, "toggled noclip on", "触发穿墙效果");
-		ReplaceString(m_sMsg, 256, "changed map to", "更换地图");
-		ReplaceString(m_sMsg, 256, "kicked", "踢出");
-		ReplaceString(m_sMsg, 256, "reason", "原因");
-		ReplaceString(m_sMsg, 256, "added ban", "封禁离线玩家");
-		char emsg[512];
-		SQL_EscapeString(g_hDatabase, m_sMsg, emsg, 512);
-		Format(m_szQuery, 512, "INSERT INTO `sb_adminlog` VALUES (DEFAULT, (IF((SELECT aid FROM `sb_admins` WHERE authid = '%s')>0,(SELECT aid FROM `sb_admins` WHERE authid = '%s'),-1)),%d,'%s',DEFAULT);", m_szClientauth, m_szClientauth, g_iServerId, emsg);
-		SQL_TQuery(g_hDatabase, SQLCallback_CheckAdminLog, m_szQuery);
 	}
+
+	ReplaceString(m_sMsg, 256, "slayed", "处死");
+	ReplaceString(m_sMsg, 256, "slapped", "拍打");
+	ReplaceString(m_sMsg, 256, "ignited", "点燃");
+	ReplaceString(m_sMsg, 256, "removed a beacon on", "取消点灯");
+	ReplaceString(m_sMsg, 256, "set a beacon on", "点灯");
+	ReplaceString(m_sMsg, 256, "froze", "冰冻");
+	ReplaceString(m_sMsg, 256, "set a TimeBomb on", "设置时间炸弹");
+	ReplaceString(m_sMsg, 256, "removed a TimeBomb on", "取消时间炸弹");
+	ReplaceString(m_sMsg, 256, "set a FreezeBomb on", "设置火焰炸弹");
+	ReplaceString(m_sMsg, 256, "removed a FireBomb on", "取消火焰炸弹");
+	ReplaceString(m_sMsg, 256, "set a FreezeBomb on", "设置冰冻炸弹");
+	ReplaceString(m_sMsg, 256, "removed a FreezeBomb on", "取消冰冻炸弹");
+	ReplaceString(m_sMsg, 256, "set blind on", "设置致盲");
+	ReplaceString(m_sMsg, 256, "set gravity on", "设置重力");
+	ReplaceString(m_sMsg, 256, "unrenamed", "取消改名");
+	ReplaceString(m_sMsg, 256, "renamed", "改名");
+	ReplaceString(m_sMsg, 256, "undrugged", "取消毒药");
+	ReplaceString(m_sMsg, 256, "drugged", "下毒药");
+	ReplaceString(m_sMsg, 256, "teleported", "传送");
+	ReplaceString(m_sMsg, 256, "triggered sm_say", "管理员频道喊话");
+	ReplaceString(m_sMsg, 256, "triggered sm_msay", "管理员频道喊话");
+	ReplaceString(m_sMsg, 256, "triggered sm_csay", "管理员频道喊话");
+	ReplaceString(m_sMsg, 256, "triggered sm_hsay", "管理员频道喊话");
+	ReplaceString(m_sMsg, 256, "triggered sm_psay", "管理员频道私聊");
+	ReplaceString(m_sMsg, 256, "toggled noclip on", "触发穿墙效果");
+	ReplaceString(m_sMsg, 256, "changed map to", "更换地图");
+	ReplaceString(m_sMsg, 256, "kicked", "踢出");
+	ReplaceString(m_sMsg, 256, "reason", "原因");
+	ReplaceString(m_sMsg, 256, "added ban", "封禁离线玩家"); 
+	ReplaceString(m_sMsg, 256, "respawned", "重生玩家");
+
+	SQL_EscapeString(g_hDatabase, m_sMsg, emsg, 512);
+	Format(m_szQuery, 512, "INSERT INTO `sb_adminlog` VALUES (DEFAULT, (IF((SELECT aid FROM `sb_admins` WHERE authid = '%s')>0,(SELECT aid FROM `sb_admins` WHERE authid = '%s'),-1)),%d,'%s',DEFAULT);", m_szClientauth, m_szClientauth, g_iServerId, emsg);
+	SQL_TQuery(g_hDatabase, SQLCallback_CheckAdminLog, m_szQuery);
 
 	return Plugin_Handled;
 }
