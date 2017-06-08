@@ -381,14 +381,9 @@ void FormatClientName(int client)
 	}
 	else
 	{
-		if(AllowSelfName())
-		{
-			GetClientName(client, g_eClient[client][szClientName], 32);
-			RemoveCharFromName(g_eClient[client][szClientName], 32);
-			Format(g_eClient[client][szClientName], 32, "[Visitor] %s", g_eClient[client][szClientName]);
-		}
-		else
-			Format(g_eClient[client][szClientName], 32, "[Visitor] #%6d", g_eClient[client][iPlayerId]);
+		GetClientName(client, g_eClient[client][szClientName], 32);
+		RemoveCharFromName(g_eClient[client][szClientName], 32);
+		Format(g_eClient[client][szClientName], 32, "[V#%06d] %s", g_eClient[client][szClientName]);
 	}
 
 	SetClientName(client, g_eClient[client][szClientName]);
@@ -586,14 +581,6 @@ void GetClientAuthName(int client, char[] buffer, int maxLen)
 		case  303: strcopy(buffer, maxLen, "爆头狂魔");
 		case  304: strcopy(buffer, maxLen, "助攻之神");
 	}
-}
-
-bool AllowSelfName()
-{
-	if(FindPluginByFile("deathmatch.smx") || FindPluginByFile("warmod.smx"))
-		return true;
-
-	return false;
 }
 
 public Action Timer_ResetMusic(Handle timer, int userid)
