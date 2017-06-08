@@ -17,14 +17,10 @@ Handle hTopMenu = INVALID_HANDLE;
 char ServerIp[24];
 
 /* Admin Stuff*/
-AdminCachePart loadPart;
-bool loadAdmins;
-bool loadGroups;
-int curLoading=0;
+bool g_bAdminLoading;
 AdminFlag g_FlagLetters[26];
 
 /* Admin KeyValues */
-char groupsLoc[128];
 char adminsLoc[128];
 
 /* Database handle */
@@ -61,7 +57,7 @@ public Plugin myinfo =
 	name		= "SourceBans [Redux]",
 	author		= "SourceBans Development Team, Sarabveer(VEER™), Kyle",
 	description	= "Advanced ban management for the Source engine",
-	version		= "2.1+dev10 [Base on SB-1.5.3F]",
+	version		= "2.1+dev11 [Base on SB-1.5.3F]",
 	url			= "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -83,8 +79,6 @@ public void OnPluginStart()
 	LoadTranslations("plugin.basecommands");
 	LoadTranslations("sourcebans.phrases");
 	LoadTranslations("basebans.phrases");
-
-	loadAdmins = loadGroups = false;
 
 	RegServerCmd("Server_Rehash", Server_Rehash, "Reload SQL admins");
 
@@ -130,7 +124,6 @@ public void OnPluginStart()
 	SQL_TConnect(GotDatabase, "csgo");
 
 	BuildPath(Path_SM, logFile, 128, "logs/sourcebans.log");
-	BuildPath(Path_SM , groupsLoc, 128,"configs/admin_groups.cfg");
 	BuildPath(Path_SM, adminsLoc, 128,"configs/admins.cfg");
 
 	if(g_bLateLoaded)
@@ -182,7 +175,7 @@ public Action OnClientPreAdminCheck(int client)
 	if(GetUserAdmin(client) != INVALID_ADMIN_ID)
 		return Plugin_Continue;
 	
-	if(curLoading > 0)
+	if(g_bAdminLoading)
 		return Plugin_Handled;
 
 	return Plugin_Continue;
@@ -230,18 +223,6 @@ public void OnClientAuthorized(int client, const char[] auth)
 
 public void OnRebuildAdminCache(AdminCachePart part)
 {
-	loadPart = part;
-	if(loadPart == AdminCache_Groups)
-	{
-		loadGroups = true;
-		loadAdmins = false;
-	}
-	else if(loadPart == AdminCache_Admins)
-	{
-		loadGroups = false;
-		loadAdmins = true;
-	}
-
 	if(g_hDatabase == INVALID_HANDLE)
 	{
 		if(!g_bConnecting)
@@ -249,11 +230,11 @@ public void OnRebuildAdminCache(AdminCachePart part)
 			g_bConnecting = true;
 			SQL_TConnect(GotDatabase,"sourcebans");
 		}
+		return;
 	}
-	else
-	{
+
+	if(part == AdminCache_Admins)
 		LoadAdminsAndGroups();
-	}
 }
 
 public Action OnClientSayCommand(int client, const char[] command, const char[] sArgs)
@@ -718,22 +699,30 @@ public void SelectAddbanCallback(Handle owner, Handle hndl, const char[] error, 
 		return;
 	}
 
+	char bantype[32];
+	strcopy(bantype, 32, "全服封禁");
+	if(!admin)
+	{
+		if(FindPluginByFile("ct.smx")) strcopy(bantype, 32, "匪镇谍影封禁");
+		if(FindPluginByFile("mg_stats.smx")) strcopy(bantype, 32, "娱乐休闲封禁");
+		if(FindPluginByFile("sm_hosties.smx")) strcopy(bantype, 32, "越狱搞基封禁");
+		if(FindPluginByFile("zombiereloaded.smx")) strcopy(bantype, 32, "僵尸逃跑封禁");
+		if(FindPluginByFile("deathmatch.smx") || FindPluginByFile("public_ext.smx") || FindPluginByFile("warmod.smx")) strcopy(bantype, 32, "竞技模式封禁");
+		if(FindPluginByFile("KZTimerGlobal.smx")) strcopy(bantype, 32, "KZ跳跃封禁");
+		if(StrContains(reason, "CAT", false) != -1) strcopy(bantype, 32, "全服封禁");
+	}else strcopy(bantype, 32, "单服封禁");
+
 	if(SQL_GetRowCount(hndl))
 	{
-		if(admin && IsClientInGame(admin))
-			PrintToChat(admin, "%s %s[%s]已经被封禁.", Prefix, nickName, authid);
+		int sid = SQL_FetchInt(hndl, 1);
+		if(StrEqual(bantype, "单服封禁") && sid == g_iServerId)
+		{
+			if(admin && IsClientInGame(admin))
+				PrintToChat(admin, "%s %s[%s]已经被封禁.", Prefix, nickName, authid);
+		}
 
 		return;
 	}
-
-	char bantype[32];
-	strcopy(bantype, 32, "全服封禁");
-	if(FindPluginByFile("ct.smx")) strcopy(bantype, 32, "匪镇谍影封禁");
-	if(FindPluginByFile("mg_stats.smx")) strcopy(bantype, 32, "娱乐休闲封禁");
-	if(FindPluginByFile("sm_hosties.smx")) strcopy(bantype, 32, "越狱搞基封禁");
-	if(FindPluginByFile("zombiereloaded.smx")) strcopy(bantype, 32, "僵尸逃跑封禁");
-	if(FindPluginByFile("deathmatch.smx") || FindPluginByFile("public_ext.smx") || FindPluginByFile("warmod.smx")) strcopy(bantype, 32, "竞技模式封禁");
-	if(FindPluginByFile("KZTimerGlobal.smx")) strcopy(bantype, 32, "KZ跳跃封禁");
 
 	FormatEx(m_szQuery, 512, "INSERT INTO sb_bans (authid, name, created, ends, length, reason, aid, adminIp, sid, btype, country) VALUES \
 						('%s', '%s', UNIX_TIMESTAMP(), UNIX_TIMESTAMP() + %d, %d, '%s', (SELECT aid FROM sb_admins WHERE authid = '%s' OR authid REGEXP '^STEAM_[0-9]:%s$'), '%s', \
@@ -785,23 +774,11 @@ public void SQLCallback_CheckAdminLog(Handle owner, Handle hndl, const char[] er
 
 void LoadAdminsAndGroups()
 {
-	char query[1024];
+	char query[512];
 
-	if(loadGroups)
-	{
-		FormatEx(query,1024,"SELECT name, flags, immunity, groups_immune FROM sb_srvgroups ORDER BY id");
-		curLoading++;
-		SQL_TQuery(g_hDatabase,GroupsDone,query);
-		loadGroups = false;
-	}
-
-	if(loadAdmins)
-	{
-		FormatEx(query,1024,"SELECT authid, srv_password, (SELECT name FROM sb_srvgroups WHERE name = srv_group AND flags != '') AS srv_group, srv_flags, user, immunity FROM sb_admins_servers_groups AS asg LEFT JOIN sb_admins AS a ON a.aid = asg.admin_id WHERE server_id = %d OR srv_group_id = ANY (SELECT group_id FROM sb_servers_groups WHERE server_id = %d) GROUP BY aid, authid, srv_password, srv_group, srv_flags, user", g_iServerId, g_iServerId);
-		curLoading++;
-		SQL_TQuery(g_hDatabase,AdminsDone,query);
-		loadAdmins = false;
-	}
+	FormatEx(query,1024,"SELECT authid, srv_flags, user, immunity FROM sb_admins_servers_groups AS asg LEFT JOIN sb_admins AS a ON a.aid = asg.admin_id WHERE server_id = %d AND lastvisit > UNIX_TIMESTAMP()-259200 GROUP BY aid, authid, srv_password, srv_group, srv_flags, user", g_iServerId, g_iServerId);
+	SQL_TQuery(g_hDatabase,AdminsDone,query);
+	g_bAdminLoading = true;
 }
 
 public void ServerInfoCallback(Handle owner, Handle hndl, const char[] error, any data)
@@ -888,16 +865,13 @@ public void AdminsDone(Handle owner, Handle hndl, const char[] error, any data)
 {
 	if(hndl == INVALID_HANDLE || strlen(error) > 0)
 	{
-		--curLoading;
+		g_bAdminLoading = false;
 		CheckLoadAdmins();
 		LogToFileEx(logFile, "Failed to retrieve admins from the database, %s", error);
 		return;
 	}
 
-	char authType[] = "steam";
 	char identity[66];
-	char password[66];
-	char groups[256];
 	char flags[32];
 	char name[66];
 	int admCount=0;
@@ -910,42 +884,32 @@ public void AdminsDone(Handle owner, Handle hndl, const char[] error, any data)
 			continue;  // Sometimes some rows return NULL due to some setups
 
 		SQL_FetchString(hndl,0,identity,66);
-		SQL_FetchString(hndl,1,password,66);
-		SQL_FetchString(hndl,2,groups,256);
-		SQL_FetchString(hndl,3,flags,32);
-		SQL_FetchString(hndl,4,name,66);
+		SQL_FetchString(hndl,1,flags,32);
+		SQL_FetchString(hndl,2,name,66);
 
-		Immunity = SQL_FetchInt(hndl,5);
+		Immunity = SQL_FetchInt(hndl,3);
 		
 		TrimString(name);
 		TrimString(identity);
-		TrimString(groups);
 		TrimString(flags);
-
 
 		KvJumpToKey(adminsKV, name, true);
 		
-		KvSetString(adminsKV, "auth", authType);
+		KvSetString(adminsKV, "auth", "steam");
 		KvSetString(adminsKV, "identity", identity);
 		
 		if(strlen(flags) > 0)
 			KvSetString(adminsKV, "flags", flags);
-		
-		if(strlen(groups) > 0)
-			KvSetString(adminsKV, "group", groups);
-	
-		if(strlen(password) > 0)
-			KvSetString(adminsKV, "password", password);
-		
+
 		if(Immunity > 0)
 			KvSetNum(adminsKV, "immunity", Immunity);
 		
 		KvRewind(adminsKV);
 
-		if((curAdm = FindAdminByIdentity(authType, identity)) == INVALID_ADMIN_ID)
+		if((curAdm = FindAdminByIdentity("steam", identity)) == INVALID_ADMIN_ID)
 		{
 			curAdm = CreateAdmin(name);
-			if(!BindAdminIdentity(curAdm, authType, identity))
+			if(!BindAdminIdentity(curAdm, "steam", identity))
 			{
 				LogToFileEx(logFile, "Unable to bind admin %s to identity %s", name, identity);
 				RemoveAdmin(curAdm);
@@ -953,46 +917,6 @@ public void AdminsDone(Handle owner, Handle hndl, const char[] error, any data)
 			}
 		}
 
-		int curPos = 0;
-		GroupId curGrp = INVALID_GROUP_ID;
-		int numGroups;
-		char iterGroupName[128];
-		
-		if(strcmp(groups[curPos], "") != 0)
-		{
-			curGrp = FindAdmGroup(groups[curPos]);
-			if(curGrp == INVALID_GROUP_ID)
-			{
-				LogToFileEx(logFile, "Unknown group \"%s\"",groups[curPos]);
-			}
-			else
-			{
-				numGroups = GetAdminGroupCount(curAdm);
-				for(int i = 0; i < numGroups; i++)
-				{
-					GetAdminGroup(curAdm, i, iterGroupName, 128);
-					if(StrEqual(iterGroupName, groups[curPos]))
-					{
-						numGroups = -2;
-						break;
-					}
-				}
-
-				if(numGroups != -2 && !AdminInheritGroup(curAdm,curGrp))
-				{
-					LogToFileEx(logFile, "Unable to inherit group \"%s\"",groups[curPos]);
-				}
-
-				if(GetAdminImmunityLevel(curAdm) < Immunity)
-				{
-					SetAdminImmunityLevel(curAdm, Immunity);
-				}
-			}
-		}
-
-		if(strlen(password) > 0)
-			SetAdminPassword(curAdm, password);
-        
 		for (int i = 0; i < strlen(flags); ++i)
 		{
 			if(flags[i] < 'a' || flags[i] > 'z')
@@ -1003,11 +927,9 @@ public void AdminsDone(Handle owner, Handle hndl, const char[] error, any data)
 				
 			SetAdminFlag(curAdm, g_FlagLetters[flags[i] - 'a'], true);
 		}
-		
+
 		if(GetAdminImmunityLevel(curAdm) < Immunity)
-		{
 			SetAdminImmunityLevel(curAdm, Immunity);
-		}
 
 		++admCount;
 	}
@@ -1015,81 +937,9 @@ public void AdminsDone(Handle owner, Handle hndl, const char[] error, any data)
 	KeyValuesToFile(adminsKV, adminsLoc);
 	CloseHandle(adminsKV);
 	
-	--curLoading;
+	g_bAdminLoading = false;
+
 	CheckLoadAdmins();
-}
-
-public void GroupsDone(Handle owner, Handle hndl, const char[] error, any data)
-{
-	if(hndl == INVALID_HANDLE)
-	{
-		curLoading--;
-		CheckLoadAdmins();
-		LogToFileEx(logFile, "Failed to retrieve groups from the database, %s",error);
-		return;
-	}
-	
-	char grpName[128], immuneGrpName[128];
-	char grpFlags[32];
-	int Immunity;
-	int grpCount = 0;
-	Handle groupsKV = CreateKeyValues("Groups");
-	
-	GroupId curGrp = INVALID_GROUP_ID;
-	while(SQL_MoreRows(hndl))
-	{
-		SQL_FetchRow(hndl);
-		if(SQL_IsFieldNull(hndl, 0))
-			continue;
-		SQL_FetchString(hndl,0,grpName,128);
-		SQL_FetchString(hndl,1,grpFlags,32);
-		Immunity = SQL_FetchInt(hndl,2);
-		SQL_FetchString(hndl,3,immuneGrpName,128);
-
- 		TrimString(grpName);
-		TrimString(grpFlags);
-		TrimString(immuneGrpName);
-
-		if(!strlen(grpName))
-			continue;
-		
-		curGrp = CreateAdmGroup(grpName);
-
-		KvJumpToKey(groupsKV, grpName, true);
-		if(strlen(grpFlags) > 0)
-			KvSetString(groupsKV, "flags", grpFlags);
-		if(Immunity > 0)
-			KvSetNum(groupsKV, "immunity", Immunity);
-		
-		KvRewind(groupsKV);
-		
-		if(curGrp == INVALID_GROUP_ID)
-		{
-			curGrp = FindAdmGroup(grpName);
-		}
-        
-		for(int i = 0; i < strlen(grpFlags); ++i)
-		{
-			if(grpFlags[i] < 'a' || grpFlags[i] > 'z')
-				continue;
-				
-			if(g_FlagLetters[grpFlags[i] - 'a'] < Admin_Reservation)
-				continue;
-				
-			SetAdmGroupAddFlag(curGrp, g_FlagLetters[grpFlags[i] - 'a'], true);
-		}
-
-		if(Immunity > 0)
-		{
-			SetAdmGroupImmunityLevel(curGrp, Immunity);
-		}
-		
-		grpCount++;
-	}
-	
-	--curLoading;
-	KeyValuesToFile(groupsKV, groupsLoc);
-	CloseHandle(groupsKV);
 }
 
 // TIMER CALL BACKS //
@@ -1181,15 +1031,19 @@ public int Native_SBAddBan(Handle plugin, int numParams)
 	
 	char bantype[32];
 	strcopy(bantype, 32, "全服封禁");
-	if(FindPluginByFile("ct.smx")) strcopy(bantype, 32, "匪镇谍影封禁");
-	if(FindPluginByFile("mg_stats.smx")) strcopy(bantype, 32, "娱乐休闲封禁");
-	if(FindPluginByFile("sm_hosties.smx")) strcopy(bantype, 32, "越狱搞基封禁");
-	if(FindPluginByFile("zombiereloaded.smx")) strcopy(bantype, 32, "僵尸逃跑封禁");
-	if(FindPluginByFile("deathmatch.smx") || FindPluginByFile("public_ext.smx") || FindPluginByFile("warmod.smx")) strcopy(bantype, 32, "竞技模式封禁");
-	if(FindPluginByFile("KZTimerGlobal.smx")) strcopy(bantype, 32, "KZ跳跃封禁");
+	if(!client)
+	{
+		if(FindPluginByFile("ct.smx")) strcopy(bantype, 32, "匪镇谍影封禁");
+		if(FindPluginByFile("mg_stats.smx")) strcopy(bantype, 32, "娱乐休闲封禁");
+		if(FindPluginByFile("sm_hosties.smx")) strcopy(bantype, 32, "越狱搞基封禁");
+		if(FindPluginByFile("zombiereloaded.smx")) strcopy(bantype, 32, "僵尸逃跑封禁");
+		if(FindPluginByFile("deathmatch.smx") || FindPluginByFile("public_ext.smx") || FindPluginByFile("warmod.smx")) strcopy(bantype, 32, "竞技模式封禁");
+		if(FindPluginByFile("KZTimerGlobal.smx")) strcopy(bantype, 32, "KZ跳跃封禁");
+		if(StrContains(reason, "CAT", false) != -1) strcopy(bantype, 32, "全服封禁");
+	}else strcopy(bantype, 32, "单服封禁");
 
 	char Query[256];
-	FormatEx(Query, 256, "SELECT bid FROM sb_bans WHERE type = 0 AND authid = '%s' AND (length = 0 OR ends > UNIX_TIMESTAMP()) AND RemoveType IS NULL AND btype = '%s'", authid, bantype);
+	FormatEx(Query, 256, "SELECT bid, sid FROM sb_bans WHERE type = 0 AND authid = '%s' AND (length = 0 OR ends > UNIX_TIMESTAMP()) AND RemoveType IS NULL AND btype = '%s'", authid, bantype);
 	SQL_TQuery(g_hDatabase, SelectAddbanCallback, Query, dataPack, DBPrio_High);
 }
 
