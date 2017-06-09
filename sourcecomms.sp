@@ -2736,9 +2736,13 @@ stock SavePunishment(admin = 0, target, type, length = -1, const String:reason[]
 		SQL_EscapeString(g_hDatabase, adminAuth[8], sAdminAuthIdYZEscaped, sizeof(sAdminAuthIdYZEscaped));
 
 		// bid	authid	name	created ends lenght reason aid adminip	sid	removedBy removedType removedon type ureason
-		FormatEx(sQueryAdm, sizeof(sQueryAdm),
-			"IFNULL((SELECT aid FROM %s_admins WHERE authid = '%s' OR authid REGEXP '^STEAM_[0-9]:%s$'), 0)",
-			DatabasePrefix, sAdminAuthIdEscaped, sAdminAuthIdYZEscaped);
+		if(StrContains(banReason, "VIP") == -1)
+		{
+			FormatEx(sQueryAdm, sizeof(sQueryAdm),
+				"IFNULL((SELECT aid FROM %s_admins WHERE authid = '%s' OR authid REGEXP '^STEAM_[0-9]:%s$'), 0)",
+				DatabasePrefix, sAdminAuthIdEscaped, sAdminAuthIdYZEscaped);
+		}
+		else strcopy(sQueryAdm, sizeof(sQueryAdm), "'-1'");
 
 		if (length >= 0)
 		{
