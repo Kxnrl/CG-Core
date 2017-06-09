@@ -2448,15 +2448,6 @@ stock ReadConfig()
 			iNumReasons--;
 		if (iNumTimes)
 			iNumTimes--;
-		if (ServerID == 0)
-		{
-			LogError("You must set valid `ServerID` value in sourcebans.cfg!");
-			if (ConfigWhiteListOnly)
-			{
-				LogError("ServersWhiteList feature disabled!");
-				ConfigWhiteListOnly = 0;
-			}
-		}
 	}
 	else
 	{
