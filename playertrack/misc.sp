@@ -381,9 +381,10 @@ void FormatClientName(int client)
 	}
 	else
 	{
-		GetClientName(client, g_eClient[client][szClientName], 32);
-		RemoveCharFromName(g_eClient[client][szClientName], 32);
-		Format(g_eClient[client][szClientName], 32, "[V#%06d] %s", g_eClient[client][szClientName]);
+		char name[32];
+		GetClientName(client, name, 32);
+		RemoveCharFromName(name, 32);
+		Format(g_eClient[client][szClientName], 32, "[V#%06d] %s", g_eClient[client][iPlayerId], name);
 	}
 
 	SetClientName(client, g_eClient[client][szClientName]);
