@@ -461,7 +461,6 @@ bool OnCheckAuthTerm(int client, int AuthId)
 void OnNewDayForward(int iDate)
 {
 	g_iNowDate = iDate;
-	LogMessage("CG Server: On New Date %d", g_iNowDate);
 
 	//Call Forward
 	Call_StartForward(g_Forward[OnNewDay]);
@@ -471,8 +470,6 @@ void OnNewDayForward(int iDate)
 
 void OnNowTimeForward(int oclock)
 {
-	LogMessage("CG Server: On NowTime %d", oclock);
-	
 	//Call Forward
 	Call_StartForward(g_Forward[OnNowTime]);
 	Call_PushCell(oclock);
