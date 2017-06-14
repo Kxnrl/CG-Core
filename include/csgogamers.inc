@@ -32,6 +32,7 @@ enum Clients
 	bool:bInGroup,
 	bool:bRealName,
 	String:szIP[32],
+	String:szCPName[32],
 	String:szGroupName[16],
 	String:szSignature[256],
 	String:szDiscuzName[32],

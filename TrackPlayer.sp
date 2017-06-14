@@ -4,10 +4,10 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 436
-#define PLUGIN_VERSION " 7.8.8 - 2017/06/14 20:11 "
+#define Build 437
+#define PLUGIN_VERSION " 7.9 - 2017/06/14 22:44 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
-#define TRANSDATASIZE 12695
+#define TRANSDATASIZE 13105
 
 //////////////////////////////
 //		GLOBAL VARIABLES	//
@@ -207,9 +207,9 @@ public void OnClientPostAdminCheck(int client)
 
 	GetClientIP(client, g_eClient[client][szIP], 32);
 
-	char m_szAuth[32], m_szQuery[256];
+	char m_szAuth[32], m_szQuery[512];
 	GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-	Format(m_szQuery, 256, "SELECT id, onlines, lasttime, number, signature, signnumber, signtime, groupid, groupname, lilyid, lilydate, active, daytime, flags FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
+	Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.lasttime, a.number, a.signature, a.signnumber, a.signtime, a.groupid, a.groupname, a.lilyid, a.lilydate, a.active, a.daytime, a.flags, b.name FROM playertrack_player a LEFT JOIN playertrack_player b ON a.lilyid = b.id WHERE a.steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
 	MySQL_Query(g_eHandle[DB_Game], SQLCallback_GetClientStat, m_szQuery, GetClientUserId(client), DBPrio_High);
 }
 

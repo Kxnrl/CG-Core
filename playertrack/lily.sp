@@ -1,19 +1,23 @@
-void InitializeCP(int client, int CPId, int CPDate)
+void InitializeCP(int client, int CPId, int CPDate, const char[] CPName)
 {
 	// 在数据库中如果CPId<1那么肯定就是光棍
+	g_eClient[client][iCPDate] = CPDate;
+
 	if(CPId < 1)
 	{
 		g_eClient[client][iCPId] = -2;
-		g_eClient[client][iCPDate] = 0;
+		strcopy(g_eClient[client][szCPName], 32, "你是单身狗");
 	}
 	else
 	{
+		//读取CP的名字
+		strcopy(g_eClient[client][szCPName], 32, CPName);
+		
 		//通过PlayerId来查询Client Slot    -1就是离线,-2就是光棍,0因为是Console比较特殊所以排除
 		int m_iPartner = FindClientByPlayerId(CPId);
 		
 		//建立CP关联
 		g_eClient[client][iCPId] = m_iPartner;
-		g_eClient[client][iCPDate] = CPDate;
 		
 		//如果返回的Slot是有效的，那么那个Client就是你的CP的Id
 		if(1 <= m_iPartner <= MaxClients)
@@ -39,7 +43,7 @@ void BuildCPMenu(int client)
 {
 	//CP主菜单
 	Handle menu = CreateMenu(MenuHandler_CPMain);
-	SetMenuTitleEx(menu, "[CP]  %T ", "global menu title", client);
+	SetMenuTitleEx(menu, "[CP]  %T \n \n%T: %s", "global menu title", client, "your cp name", client, g_eClient[client][szCPName]);
 
 	AddMenuItemEx(menu, g_eClient[client][iCPId] == -2 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "propose", "%T", "cp find", client);
 	AddMenuItemEx(menu, g_eClient[client][iCPId] > -2 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "divorce", "%T", "cp out", client);
@@ -71,22 +75,28 @@ public int MenuHandler_CPMain(Handle menu, MenuAction action, int client, int it
 
 void BuildSelectCPMenu(int client)
 {
+	int num = g_eClient[client][iCPDate] - GetTime();
+	if(num > 0)
+	{
+		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "cp again time limit", client, num);
+		return;
+	}
+
 	//选择CP对象的菜单
 	Handle menu = CreateMenu(MenuHandler_CPSelect)
 
-	SetMenuTitleEx(menu, "[CP]  选择CP对象");
+	SetMenuTitleEx(menu, "[CP]  %T", "select cp target", client);
 	
 	int counts;
-	char m_szItem[128], m_szId[8];
+	char m_szId[8];
 	for(int target = 1; target <= MaxClients; ++target)
 	{
 		if(IsClientInGame(target) && target != client)
 		{
-			if(g_eClient[target][bLoaded] && g_eClient[target][iUID] >= 1 && g_eClient[target][iCPId] == -2)
+			if(g_eClient[target][bLoaded] && g_eClient[target][iCPId] == -2)
 			{
 				Format(m_szId, 8, "%d", GetClientUserId(target));
-				GetClientName(target, m_szItem, 128);
-				AddMenuItemEx(menu, ITEMDRAW_DEFAULT, m_szId, m_szItem);
+				AddMenuItemEx(menu, ITEMDRAW_DEFAULT, m_szId, g_eClient[target][szClientName]);
 				counts++;
 			}
 		}
@@ -96,7 +106,7 @@ void BuildSelectCPMenu(int client)
 	{
 		AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "", "%T", "cp no target", client);
 	}
-	
+
 	SetMenuExitBackButton(menu, true);
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 0);
@@ -113,7 +123,7 @@ public int MenuHandler_CPSelect(Handle menu, MenuAction action, int client, int 
 			
 			int target = GetClientOfUserId(StringToInt(info));
 
-			if(!IsValidClient(target) || g_eClient[target][iUID] < 1 || g_eClient[target][iCPId] != -2)
+			if(!IsValidClient(target) || g_eClient[target][iCPId] != -2)
 			{
 				tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "cp invalid target", client);
 				BuildCPMenu(client);
@@ -124,15 +134,8 @@ public int MenuHandler_CPSelect(Handle menu, MenuAction action, int client, int 
 			
 			tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "cp send", client, target);
 		}
-		case MenuAction_End:
-		{
-			CloseHandle(menu);
-		}
-		case MenuAction_Cancel:
-		{
-			if(itemNum == MenuCancel_ExitBack)
-				BuildCPMenu(client);
-		}
+		case MenuAction_End: CloseHandle(menu);
+		case MenuAction_Cancel: if(itemNum == MenuCancel_ExitBack) BuildCPMenu(client);
 	}
 }
 
@@ -144,7 +147,7 @@ void ConfirmCPRequest(int client, int target)
 
 	//CP请求说明
 	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%T", "cp request item target", target, client);
-	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%T", "cp 7days", target);
+	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%T", "cp 14days", target);
 	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%T", "cp buff", target);
 	AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "%T", "cp confirm", target);
 
@@ -203,7 +206,7 @@ public int MenuHandler_CPConfirm(Handle menu, MenuAction action, int target, int
 	}
 }
 
-public void CP_AddNewCouple(int client, int target)
+void CP_AddNewCouple(int client, int target)
 {
 	//对象无效?
 	if(!IsValidClient(client))
@@ -233,7 +236,7 @@ public void CP_AddNewCouple(int client, int target)
 void CheckingDivorce(int client)
 {
 	//防止某些人刷CP
-	if((GetTime() - g_eClient[client][iCPDate]) < 604800)
+	if((GetTime() - g_eClient[client][iCPDate]) < 1209600)
 	{
 		tPrintToChat(client, "%s  %T", PLUGIN_PREFIX, "cp can divorce", client);
 		BuildCPMenu(client);
@@ -313,21 +316,11 @@ public int MenuHandler_CPConfirmDivorce(Handle menu, MenuAction action, int clie
 
 			//确认离婚之后更新数据库
 			char m_szQuery[256];
-			Format(m_szQuery, 256, "UPDATE `playertrack_player` SET lilyid = '-2', lilydate = 0 where id = %d or lilyid = %d", g_eClient[client][iPlayerId], g_eClient[client][iPlayerId]);
+			Format(m_szQuery, 256, "UPDATE `playertrack_player` SET lilyid = '-2', lilydate = %d where id = %d or lilyid = %d", GetTime()+2592000, g_eClient[client][iPlayerId], g_eClient[client][iPlayerId]);
 			MySQL_Query(g_eHandle[DB_Game], SQLCallback_UpdateDivorce, m_szQuery, m_hPack);
 		}
-		case MenuAction_End:
-		{
-			CloseHandle(menu);
-		}
-		case MenuAction_Cancel:
-        {
-            if(itemNum == MenuCancel_ExitBack)
-            {
-				//返回之后就重铸菜单
-                BuildCPMenu(client);
-            }
-        }
+		case MenuAction_End: CloseHandle(menu);
+		case MenuAction_Cancel: if(itemNum == MenuCancel_ExitBack) BuildCPMenu(client); //返回之后就重铸菜单
 	}
 }
 
@@ -348,7 +341,5 @@ void BuildCPHelpPanel(int client)
 public int CPHelpPanelHandler(Handle menu, MenuAction action, int client, int param2)
 {
 	if(action == MenuAction_End)
-	{
 		CloseHandle(menu);
-	}
 }

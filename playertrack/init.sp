@@ -185,6 +185,7 @@ void InitClient(int client)
 	g_eClient[client][iDaily] = 0;
 
 	strcopy(g_eClient[client][szIP], 32, "127.0.0.1");
+	strcopy(g_eClient[client][szCPName], 32, "单身狗");
 	strcopy(g_eClient[client][szSignature], 256, "数据读取中...");
 	strcopy(g_eClient[client][szDiscuzName], 32, "未注册");
 	strcopy(g_eClient[client][szAdminFlags], 16, "Unknown");

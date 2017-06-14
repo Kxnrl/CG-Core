@@ -215,9 +215,9 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 			return;
 		}
 
-		char m_szAuth[32], m_szQuery[256];
+		char m_szAuth[32], m_szQuery[512];
 		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-		Format(m_szQuery, 256, "SELECT id, onlines, lasttime, number, signature, signnumber, signtime, groupid, groupname, lilyid, lilydate, active, daytime, flags FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
+		Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.lasttime, a.number, a.signature, a.signnumber, a.signtime, a.groupid, a.groupname, a.lilyid, a.lilydate, a.active, a.daytime, a.flags, b.name FROM playertrack_player a LEFT JOIN playertrack_player b ON a.lilyid = b.id WHERE a.steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
 		MySQL_Query(g_eHandle[DB_Game], SQLCallback_GetClientStat, m_szQuery, GetClientUserId(client), DBPrio_High);
 		return;
 	}
@@ -235,11 +235,13 @@ public void SQLCallback_GetClientStat(Handle owner, Handle hndl, const char[] er
 		g_eClient[client][iSignTime] = SQL_FetchInt(hndl, 6);
 		g_eClient[client][iGroupId] = SQL_FetchInt(hndl, 7);
 		SQL_FetchString(hndl, 8, g_eClient[client][szGroupName], 16);
-		InitializeCP(client, SQL_FetchInt(hndl, 9), SQL_FetchInt(hndl, 10));
 		g_eClient[client][iVitality] = SQL_FetchInt(hndl, 11);
 		g_eClient[client][iDaily] = SQL_FetchInt(hndl, 12);
 		g_eClient[client][bSignIn] = (g_eClient[client][iSignTime]>0) ? true : false;
 		SQL_FetchString(hndl, 13, g_eClient[client][szAdminFlags], 16);
+		char cpname[32];
+		SQL_FetchString(hndl, 14, cpname, 32);
+		InitializeCP(client, SQL_FetchInt(hndl, 9), SQL_FetchInt(hndl, 10), cpname);
 
 		g_eClient[client][bLoaded] = true;
 		
@@ -359,7 +361,7 @@ public void SQLCallback_InsertClientStat(Handle owner, Handle hndl, const char[]
 		//重试检查  辣鸡阿里云RDS
 		char m_szAuth[32], m_szQuery[512];
 		GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-		Format(m_szQuery, 256, "SELECT id, onlines, lasttime, number, signature, signnumber, signtime, groupid, groupname, lilyid, lilydate, active, daytime, flags FROM playertrack_player WHERE steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
+		Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.lasttime, a.number, a.signature, a.signnumber, a.signtime, a.groupid, a.groupname, a.lilyid, a.lilydate, a.active, a.daytime, a.flags, b.name FROM playertrack_player a LEFT JOIN playertrack_player b ON a.lilyid = b.id WHERE a.steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
 		MySQL_Query(g_eHandle[DB_Game], SQLCallback_GetClientStat, m_szQuery, GetClientUserId(client), DBPrio_High);
 	}
 	else
