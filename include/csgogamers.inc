@@ -50,7 +50,7 @@ enum Discuz_Data
 	iExpTime,
 	iGrowths,
 	bool:bIsRealName,
-	String:szDName[32],
+	String:szDName[18],
 	String:szSteamId64[32]
 }
 

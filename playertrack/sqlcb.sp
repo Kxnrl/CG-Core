@@ -320,7 +320,7 @@ public void SQLCallback_LoadDiscuzData(Handle owner, Handle hndl, const char[] e
 	{
 		data[iUId] = SQL_FetchInt(hndl, 0);
 		SQL_FetchString(hndl, 1, data[szSteamId64], 32);
-		SQL_FetchString(hndl, 2, data[szDName], 32);
+		SQL_FetchString(hndl, 2, data[szDName], 18);
 		data[iExpTime] = SQL_FetchInt(hndl, 3);
 		data[iGrowths] = SQL_FetchInt(hndl, 4);
 		data[bIsRealName] = (SQL_FetchInt(hndl, 5) == 99);
@@ -336,7 +336,7 @@ public void SQLCallback_LoadDiscuzData(Handle owner, Handle hndl, const char[] e
 		if(!GetClientAuthId(client, AuthId_SteamID64, FriendID, 32, true))
 			continue;
 		
-		if(StrContains(FriendID, "765") != 0)
+		if(StrContains(FriendID, "765611") != 0)
 			continue;
 
 		LoadClientDiscuzData(client, FriendID);
