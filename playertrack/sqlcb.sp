@@ -322,7 +322,7 @@ public void SQLCallback_LoadDiscuzData(Handle owner, Handle hndl, const char[] e
 	{
 		data[iUId] = SQL_FetchInt(hndl, 0);
 		SQL_FetchString(hndl, 1, data[szSteamId64], 32);
-		SQL_FetchString(hndl, 2, data[szDName], 18);
+		SQL_FetchString(hndl, 2, data[szDName], 24);
 		data[iExpTime] = SQL_FetchInt(hndl, 3);
 		data[iGrowths] = SQL_FetchInt(hndl, 4);
 		data[bIsRealName] = (SQL_FetchInt(hndl, 5) == 99);

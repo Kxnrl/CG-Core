@@ -555,7 +555,7 @@ void LoadClientDiscuzData(int client, const char[] FriendID)
 		g_eClient[client][iUID] = data[iUId];
 		g_eClient[client][iGrowth] = data[iGrowths];
 		g_eClient[client][bRealName] = data[bIsRealName];
-		strcopy(g_eClient[client][szDiscuzName], 18, data[szDName]);
+		strcopy(g_eClient[client][szDiscuzName], 24, data[szDName]);
 		break;
 	}
 	
