@@ -377,7 +377,7 @@ void FormatClientName(int client)
 	if(g_eClient[client][iUID] > 0)
 	{
 		strcopy(g_eClient[client][szClientName], 32, g_eClient[client][szDiscuzName]);
-		RemoveCharFromName(g_eClient[client][szClientName], 32);
+		if(g_eClient[client][iUID] != 1) RemoveCharFromName(g_eClient[client][szClientName], 32);
 	}
 	else
 	{
@@ -523,18 +523,27 @@ int FindClientByPlayerId(int playerid)
 	return -1;
 }
 
-void PrepareUrl(int width, int height, char[] m_szUrl)
+bool PrepareUrlToWebInterface(int client, int width, int height, const char[] url, bool show)
 {
-	Format(m_szUrl, 192, "https://csgogamers.com/webplugin.php?width=%d&height=%d&url=%s", width, height, m_szUrl);
+	if(!g_eClient[client][bLoaded])
+		return false;
+
+	char m_szQuery[512], m_szEscape[256];
+	SQL_EscapeString(g_eHandle[DB_Game], url, m_szEscape, 256);
+	Format(m_szQuery, 512, "INSERT INTO `playertrack_webinterface` (`playerid`, `show`, `width`, `height`, `url`) VALUES (%d, %b, %d, %d, '%s') ON DUPLICATE KEY UPDATE `url` = VALUES(`url`), `show`=%b, `width`=%d, `height`=%d", g_eClient[client][iPlayerId], show, width, height, m_szEscape, show, width, height);
+	return MySQL_Query(g_eHandle[DB_Game], SQLCallback_WebInterface, m_szQuery, GetClientUserId(client) | (view_as<int>(show) << 7), DBPrio_High);
 }
 
-void ShowMOTDPanelEx(int client, const char[] title = "CSGOGAMERS.COM", const char[] url, int type = MOTDPANEL_TYPE_INDEX, int cmd = MOTDPANEL_CMD_NONE, bool show = true)
+void ShowMOTDPanelEx(int client, bool show = true)
 {
+	char url[192];
+	Format(url, 192, "https://csgogamers.com/webplugin.php?id=%d", g_eClient[client][iPlayerId]);
+	
 	Handle m_hKv = CreateKeyValues("data");
-	KvSetString(m_hKv, "title", title);
-	KvSetNum(m_hKv, "type", type);
+	KvSetString(m_hKv, "title", "CSGOGAMERS.COM");
+	KvSetNum(m_hKv, "type", MOTDPANEL_TYPE_URL);
 	KvSetString(m_hKv, "msg", url);
-	KvSetNum(m_hKv, "cmd", cmd);
+	KvSetNum(m_hKv, "cmd", 0);
 	ShowVGUIPanel(client, "info", m_hKv, show);
 	CloseHandle(m_hKv);
 }
@@ -582,23 +591,6 @@ void GetClientAuthName(int client, char[] buffer, int maxLen)
 		case  303: strcopy(buffer, maxLen, "爆头狂魔");
 		case  304: strcopy(buffer, maxLen, "助攻之神");
 	}
-}
-
-public Action Timer_ResetMusic(Handle timer, int userid)
-{
-	int client = GetClientOfUserId(userid);
-	if(!client || !IsClientInGame(client) || IsFakeClient(client))
-		return Plugin_Stop;
-	
-	if(GetClientTeam(client) < 1)
-	{
-		CreateTimer(8.0, Timer_ResetMusic, userid, TIMER_FLAG_NO_MAPCHANGE);
-		return Plugin_Stop;
-	}
-
-	ShowMOTDPanelEx(client, _, "about:blank", MOTDPANEL_TYPE_URL, _, false);
-
-	return Plugin_Stop;
 }
 
 public Action Timer_CheckJoinGame(Handle timer, int userid)

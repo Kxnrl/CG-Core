@@ -750,3 +750,20 @@ public void SQLCallback_GiveAuth(Handle owner, Handle hndl, const char[] error, 
 		if(IsClientInGame(i) && !IsFakeClient(i))
 			tPrintToChat(i, "%s  {blue}%N{green}%T", PLUGIN_PREFIX, client, "auth get new auth", i);
 }
+
+public void SQLCallback_WebInterface(Handle owner, Handle hndl, const char[] error, int data)
+{
+	int client = GetClientOfUserId(data & 0x7f);
+	bool show = view_as<bool>(data >> 7);
+
+	if(!client)
+		return;
+	
+	if(hndl == INVALID_HANDLE)
+	{
+		LogToFileEx(g_szLogFile, "PrepareUrlToWebInterface: client:%N ERROR:%s", client, error);
+		return;
+	}
+	
+	ShowMOTDPanelEx(client, show);
+}
