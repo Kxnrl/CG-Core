@@ -4,8 +4,8 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 442
-#define PLUGIN_VERSION " 7.91 - 2017/06/19 01:56 "
+#define Build 443
+#define PLUGIN_VERSION " 7.92 - 2017/06/22 04:29 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 13105
 
@@ -121,6 +121,9 @@ public void OnPluginStart()
 	
 	//注册Timer
 	CreateTimer(90.0, Timer_GotoRegister, _, TIMER_REPEAT);
+	
+	//缓存Timer
+	CreateTimer(900.0, Timer_RefreshData, _, TIMER_REPEAT);
 }
 
 public void OnPluginEnd()

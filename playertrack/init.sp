@@ -23,19 +23,20 @@ void InitGame()
 
 void InitCommands()
 {
-	RegConsoleCmd("sm_sign", Command_Login);
-	RegConsoleCmd("sm_qiandao", Command_Login);
-	RegConsoleCmd("sm_online", Command_Online);
-	RegConsoleCmd("sm_track", Command_Track);
-	RegConsoleCmd("sm_rz", Command_GetAuth);
-	RegConsoleCmd("sm_auth", Command_GetAuth);
-	RegConsoleCmd("sm_cp", Command_CP);
-	RegConsoleCmd("sm_lily", Command_CP);
-	RegConsoleCmd("sm_cg", Command_Menu);
-	RegConsoleCmd("sm_qm", Command_Signature);
-	RegConsoleCmd("sm_language", Command_Language);
+	RegConsoleCmd("sm_sign",		Command_Login);
+	RegConsoleCmd("sm_qiandao", 	Command_Login);
+	RegConsoleCmd("sm_online",		Command_Online);
+	RegConsoleCmd("sm_track",		Command_Track);
+	RegConsoleCmd("sm_rz",			Command_GetAuth);
+	RegConsoleCmd("sm_auth",		Command_GetAuth);
+	RegConsoleCmd("sm_cp",			Command_CP);
+	RegConsoleCmd("sm_lily",		Command_CP);
+	RegConsoleCmd("sm_cg",			Command_Menu);
+	RegConsoleCmd("sm_qm",			Command_Signature);
+	RegConsoleCmd("sm_language", 	Command_Language);
 
-	RegAdminCmd("sm_reloadadv", Command_ReloadAdv, ADMFLAG_BAN);
+	RegAdminCmd("sm_reloadadv",		Command_ReloadAdv,		ADMFLAG_ROOT);
+	RegAdminCmd("sm_reloadcache",	Command_ReloadCache,	ADMFLAG_ROOT)
 }
 
 void MarkNative()

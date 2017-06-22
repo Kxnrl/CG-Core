@@ -18,8 +18,6 @@ void GetNowTime()
 			for(int client = 1; client <= MaxClients; ++client)
 				g_eClient[client][iDaily] = 0;
 		}
-		
-		CreateTimer(120.0, Timer_RefreshData, true);
 	}
 }
 
@@ -448,14 +446,12 @@ public Action Timer_GotoRegister(Handle timer)
 	return Plugin_Continue;
 }
 
-public Action Timer_RefreshData(Handle timer, bool reset)
+public Action Timer_RefreshData(Handle timer)
 {
-	if(reset) CreateTimer(1800.0, Timer_RefreshData, false);
-
 	MySQL_Query(g_eHandle[DB_Discuz], SQLCallback_LoadDiscuzData, "SELECT b.uid,a.steamID64,b.username,c.exptime,d.growth,e.issm FROM dz_steam_users a LEFT JOIN dz_common_member b ON a.uid=b.uid LEFT JOIN dz_dc_vip c ON a.uid=c.uid LEFT JOIN dz_pay_growth d ON a.uid=d.uid LEFT JOIN dz_lev_user_sm e ON a.uid=e.uid ORDER by b.uid ASC", _, DBPrio_Low);
 	MySQL_Query(g_eHandle[DB_Game], SQLCallback_OfficalGroup, "SELECT * FROM playertrack_officalgroup", _, DBPrio_Low);
 
-	return Plugin_Stop;
+	return Plugin_Continue;
 }
 
 bool MySQL_Query(Handle database, SQLTCallback callback, const char[] query, any data = 0, DBPriority prio = DBPrio_Normal)

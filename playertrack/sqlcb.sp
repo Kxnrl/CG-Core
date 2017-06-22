@@ -69,7 +69,7 @@ public void SQL_TConnect_Callback_csgo(Handle owner, Handle hndl, const char[] e
 	MySQL_Query(g_eHandle[DB_Game], SQLCallback_OnConnect, m_szQuery, _, DBPrio_Low);
 	
 	Format(m_szQuery, 256, "SELECT * FROM playertrack_officalgroup");
-	MySQL_Query(g_eHandle[DB_Game], SQLCallback_OfficalGroup, m_szQuery, false, DBPrio_Low);
+	MySQL_Query(g_eHandle[DB_Game], SQLCallback_OfficalGroup, m_szQuery, _, DBPrio_High);
 
 	g_iConnect_csgo = 1;
 }
@@ -107,7 +107,6 @@ public void SQL_TConnect_Callback_discuz(Handle owner, Handle hndl, const char[]
 
 	g_eHandle[DB_Discuz] = CloneHandle(hndl);
 
-	//SQL_FastQuery(g_eHandle[DB_Discuz], "SET NAMES 'UTF8'");
 	SQL_SetCharset(g_eHandle[DB_Discuz], "utf8");
 	
 	PrintToServer("[Core] Connection to database 'discuz' successful!");

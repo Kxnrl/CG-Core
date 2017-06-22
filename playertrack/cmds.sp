@@ -8,6 +8,13 @@ public Action Command_ReloadAdv(int client, int args)
 	return Plugin_Handled;
 }
 
+public Action Command_ReloadCache(int client, int args)
+{
+	//重载缓存
+	CreateTimer(2.0, Timer_RefreshData);
+	return Plugin_Handled;
+}
+
 public Action Command_Online(int client, int args)
 {
 	if(!IsValidClient(client) || !g_eClient[client][bLoaded])
