@@ -245,7 +245,7 @@ public int MenuHandler_GetAuth(Handle menu, MenuAction action, int client, int i
 	else if(action == MenuAction_Cancel)
 	{
 		if(itemNum == MenuCancel_ExitBack)
-			FakeClientCommand(client, "sm_cg");
+			Command_Menu(client, 0);
 	}
 }
 
@@ -376,6 +376,7 @@ void FormatClientName(int client)
 	{
 		strcopy(g_eClient[client][szClientName], 32, g_eClient[client][szDiscuzName]);
 		if(g_eClient[client][iUID] != 1) RemoveCharFromName(g_eClient[client][szClientName], 32);
+		if(strlen(g_eClient[client][szClientName]) < 3) Format(g_eClient[client][szClientName], 32, "[E#%06d] unnamed", g_eClient[client][iPlayerId]);
 	}
 	else
 	{
