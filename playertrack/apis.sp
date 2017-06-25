@@ -131,12 +131,14 @@ public int Native_GetGroupName(Handle plugin, int numParams)
 
 public int Native_GetCPPartner(Handle plugin, int numParams)
 {
-	return g_eClient[GetNativeCell(1)][iCPId];
+	return -2;
+	//return g_eClient[GetNativeCell(1)][iCPId];
 }
 
 public int Native_GetCPDate(Handle plugin, int numParams)
 {
-	return g_eClient[GetNativeCell(1)][iCPDate];
+	return 0;
+	//return g_eClient[GetNativeCell(1)][iCPDate];
 }
 
 public int Native_GetGameDatabase(Handle plugin, int numParams)

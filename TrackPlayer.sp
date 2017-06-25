@@ -4,8 +4,8 @@
 //////////////////////////////
 //		DEFINITIONS			//
 //////////////////////////////
-#define Build 444
-#define PLUGIN_VERSION " 7.93 - 2017/06/24 22:23 "
+#define Build 445
+#define PLUGIN_VERSION " 7.94 - 2017/06/25 17:31 "
 #define PLUGIN_PREFIX "[\x0CCG\x01]  "
 #define TRANSDATASIZE 13105
 
@@ -124,14 +124,6 @@ public void OnPluginStart()
 	
 	//缓存Timer
 	CreateTimer(900.0, Timer_RefreshData, _, TIMER_REPEAT);
-}
-
-public void OnPluginEnd()
-{
-	//保存所有玩家数据
-	for(int i = 1; i <= MaxClients; ++i)
-		if(IsClientInGame(i))
-			OnClientDisconnect(i);
 }
 
 public void OnMapStart()

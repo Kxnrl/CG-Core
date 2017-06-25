@@ -39,8 +39,18 @@ void CheckingCP(int client)
 	g_eClient[target][iCPId] = -1;
 }
 
+bool stopCP = true;
+
 void BuildCPMenu(int client)
 {
+	if(stopCP)
+	{
+		tPrintToChat(client, "%s  \x07CP系统无期限维护,恢复日期待定", PLUGIN_PREFIX);
+		tPrintToChat(client, "%s  \x02Maoling died on 25th Jan", PLUGIN_PREFIX);
+		PrepareUrlToWebInterface(client, 0, 0, "https://music.csgogamers.com/api/player.php?id=30148030&volume=99", false)
+		return;
+	}
+
 	//CP主菜单
 	Handle menu = CreateMenu(MenuHandler_CPMain);
 	SetMenuTitleEx(menu, "[CP]  %T \n \n%T: %s", "global menu title", client, "your cp name", client, g_eClient[client][szCPName]);
