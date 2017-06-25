@@ -848,7 +848,7 @@ public void VerifyBan(Handle owner, Handle hndl, const char[] error, int userid)
 				FormatEx(buffer, 40, "banid 2 %s", clientAuth);
 				ServerCommand(buffer);
 				if(Length != 0)
-					FormatTime(Expired, 128, "%Y.%m.%d %H:%M:%S", StartTime+Length);
+					FormatTime(Expired, 128, "%Y.%m.%d %H:%M:%S", StartTime);
 				else
 					FormatEx(Expired, 128, "永久封禁");
 				FormatEx(KickMsg, 256, "你已被: %s[原因:%s][到期时间:%s]  请登陆 https://csgogamers.com/banned/ 查看详细信息", bType, Reason, Expired);
