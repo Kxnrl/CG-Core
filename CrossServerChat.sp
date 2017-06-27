@@ -48,13 +48,13 @@ public int Native_Broadcast(Handle plugin, int numParams)
 	{
 		if(GetNativeCell(1))
 		{
-			Handle db = CG_GetDiscuzDatabase();
+			Handle db = CG_DatabaseGetForum();
 			char m_szSQL[512], m_szEsc[512], m_szQuery[1024];
 			strcopy(m_szSQL, 512, m_szContent);
 			PrepareString(m_szSQL, 512);
 			SQL_EscapeString(db, m_szSQL, m_szEsc, 512);
 			Format(m_szQuery, 1024, "INSERT INTO `dz_plugin_ahome_laba` (`username`, `tousername`, `level`, `lid`, `dateline`, `content`, `color`, `url`) VALUES ('Broadcast System', '', 'system', 0, '%d', '%s', '', '')", GetTime(), m_szEsc);
-			CG_SaveForumData(m_szQuery);
+			CG_DatabaseSaveForum(m_szQuery);
 		}
 		
 		if(StrContains(m_szContent, "[\x10Store\x01]") != -1)
@@ -176,7 +176,7 @@ public void CP_OnChatMessagePost(int client, ArrayList recipients, const char[] 
 
 void UpdateChatToDiscuz(int client, const char[] message)
 {
-	Handle database = CG_GetGameDatabase();
+	Handle database = CG_DatabaseGetGames();
 
 	if(database == INVALID_HANDLE)
 		return;
@@ -194,19 +194,19 @@ void UpdateChatToDiscuz(int client, const char[] message)
 	GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
 
 	char m_szQuery[512];
-	Format(m_szQuery, 512, "INSERT INTO `playertrack_csclog` VALUES (DEFAULT, '%d', '%d', '%s', '%s', '%d', '%s')", CG_GetServerId(), CG_GetClientUId(client), auth, ename, GetTime(), esc);
-	CG_SaveDatabase(m_szQuery);
+	Format(m_szQuery, 512, "INSERT INTO `playertrack_csclog` VALUES (DEFAULT, '%d', '%d', '%s', '%s', '%d', '%s')", CG_GetServerId(), CG_ClientGetUId(client), auth, ename, GetTime(), esc);
+	CG_DatabaseSaveGames(m_szQuery);
 }
 
-public void CG_OnLilyCouple(int Neptune, int Noire)
+public void CG_OnCouplesWedding(int source, int target)
 {
 	if(g_hSocket == INVALID_HANDLE)
 		return;
 
 	char m_szFinalMsg[1024];
-	Format(m_szFinalMsg, 1024, " \x07恭喜\x0C%N\x07和\x0C%N\x07组成了\x0E一对咖喱给给\x07!", Neptune, Noire);
+	Format(m_szFinalMsg, 1024, " \x07恭喜\x0C%N\x07和\x0C%N\x07组成了\x0E一对咖喱给给\x07!", source, target);
 
-	Handle database = CG_GetDiscuzDatabase();
+	Handle database = CG_DatabaseGetForum();
 
 	if(!database)
 		return;
@@ -216,7 +216,7 @@ public void CG_OnLilyCouple(int Neptune, int Noire)
 
 	char m_szQuery[1024];
 	Format(m_szQuery, 1024, "INSERT INTO `dz_plugin_ahome_laba` (`username`, `tousername`, `level`, `lid`, `dateline`, `content`, `color`, `url`) VALUES ('Lily System', '', 'system', 0, '%d', '%s', '', '')", GetTime(), EscapeString);
-	CG_SaveForumData(m_szQuery);
+	CG_DatabaseSaveForum(m_szQuery);
 	
 	Format(m_szFinalMsg, 1024, " \x04[\x0ELily\x04]  \x07>\x05>\x0C> %s", m_szFinalMsg);
 	PrintToChatAll(m_szFinalMsg);
@@ -384,7 +384,7 @@ stock void ConnecToMasterServer()
 
 public bool UpdateMessageToDiscuz(int client, const char[] message)
 {
-	Handle database = CG_GetDiscuzDatabase();
+	Handle database = CG_DatabaseGetForum();
 	
 	if(database == INVALID_HANDLE)
 	{
@@ -395,18 +395,18 @@ public bool UpdateMessageToDiscuz(int client, const char[] message)
 	char EscapeString[512];
 	SQL_EscapeString(database, message, EscapeString, 512);
 	
-	if(CG_GetClientUId(client) < 1)
+	if(CG_ClientGetUId(client) < 1)
 	{
 		PrintToChat(client, "[\x0CCG\x01]  未注册论坛不能发送喇叭");
 		return false;
 	}
 
 	char m_szName[64];
-	CG_GetClientDName(client, m_szName, 64);
+	CG_ClientGetForumName(client, m_szName, 64);
 	
 	char m_szQuery[1024];
 	Format(m_szQuery, 1024, "INSERT INTO `dz_plugin_ahome_laba` (`username`, `tousername`, `level`, `lid`, `dateline`, `content`, `color`, `url`) VALUES ('%s', '', 'game', 0, '%d', '%s', '', '')", m_szName, GetTime(), EscapeString);
-	CG_SaveForumData(m_szQuery);
+	CG_DatabaseSaveForum(m_szQuery);
 	
 	return true;
 }
