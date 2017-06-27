@@ -1,226 +1,228 @@
+#include <sdktools>
+
 stock void RemoveCharFromName(char[] code, int maxLen)
 {
-	ReplaceString(code, maxLen, "◇", "");
-	ReplaceString(code, maxLen, "◆", "");
-	ReplaceString(code, maxLen, "☆", "");
-	ReplaceString(code, maxLen, "★", "");
-	ReplaceString(code, maxLen, "✪", "");
-	ReplaceString(code, maxLen, "♜", "");
-	ReplaceString(code, maxLen, "♚", "");
-	ReplaceString(code, maxLen, "♪", "");
-	ReplaceString(code, maxLen, "♬", "");
-	ReplaceString(code, maxLen, "'", "");
-	ReplaceString(code, maxLen, "\"", "");
-	ReplaceString(code, maxLen, "\\", "");
-	ReplaceString(code, maxLen, "^", "");
-	ReplaceString(code, maxLen, "(", "");
-	ReplaceString(code, maxLen, ")", "");
-	ReplaceString(code, maxLen, "`", "");
-	ReplaceString(code, maxLen, ";", "");
-	ReplaceString(code, maxLen, "☀", "");
-	ReplaceString(code, maxLen, "▪", "");
-	ReplaceString(code, maxLen, "♩", "");
-	ReplaceString(code, maxLen, "♭", "");
-	ReplaceString(code, maxLen, "♈", "");
-	ReplaceString(code, maxLen, "*", "");
-	ReplaceString(code, maxLen, "✄", "");
-	ReplaceString(code, maxLen, "☎", "");
-	ReplaceString(code, maxLen, "✈", "");
-	ReplaceString(code, maxLen, "☬", "");
-	ReplaceString(code, maxLen, "▽", "");
-	ReplaceString(code, maxLen, "▼", "");
-	ReplaceString(code, maxLen, "☽", "");
-	ReplaceString(code, maxLen, "☾", "");
-	ReplaceString(code, maxLen, "•", "");
-	ReplaceString(code, maxLen, "♪", "");
-	ReplaceString(code, maxLen, "♯", "");
-	ReplaceString(code, maxLen, "♉", "");
-	ReplaceString(code, maxLen, "＊", "");
-	ReplaceString(code, maxLen, "✁", "");
-	ReplaceString(code, maxLen, "ஐ", "");
-	ReplaceString(code, maxLen, "〠", "");
-	ReplaceString(code, maxLen, "♔", "");
-	ReplaceString(code, maxLen, "○", "");
-	ReplaceString(code, maxLen, "●", "");
-	ReplaceString(code, maxLen, "♀", "");
-	ReplaceString(code, maxLen, "♂", "");
-	ReplaceString(code, maxLen, "‥", "");
-	ReplaceString(code, maxLen, "♫", "");
-	ReplaceString(code, maxLen, "♮", "");
-	ReplaceString(code, maxLen, "♊", "");
-	ReplaceString(code, maxLen, "✲", "");
-	ReplaceString(code, maxLen, "✌", "");
-	ReplaceString(code, maxLen, "☩", "");
-	ReplaceString(code, maxLen, "۩", "");
-	ReplaceString(code, maxLen, "☺", "");
-	ReplaceString(code, maxLen, "☹", "");
-	ReplaceString(code, maxLen, "…", "");
-	ReplaceString(code, maxLen, "♬", "");
-	ReplaceString(code, maxLen, "‖", "");
-	ReplaceString(code, maxLen, "♋", "");
-	ReplaceString(code, maxLen, "❈", "");
-	ReplaceString(code, maxLen, "✍", "");
-	ReplaceString(code, maxLen, "➹", "");
-	ReplaceString(code, maxLen, "✙", "");
-	ReplaceString(code, maxLen, "♕", "");
-	ReplaceString(code, maxLen, "□", "");
-	ReplaceString(code, maxLen, "■", "");
-	ReplaceString(code, maxLen, "◐", "");
-	ReplaceString(code, maxLen, "◑", "");
-	ReplaceString(code, maxLen, "▁", "");
-	ReplaceString(code, maxLen, "§", "");
-	ReplaceString(code, maxLen, "¶", "");
-	ReplaceString(code, maxLen, "♌", "");
-	ReplaceString(code, maxLen, "❉", "");
-	ReplaceString(code, maxLen, "✎", "");
-	ReplaceString(code, maxLen, "〄", "");
-	ReplaceString(code, maxLen, "✟", "");
-	ReplaceString(code, maxLen, "♛", "");
-	ReplaceString(code, maxLen, "☑", "");
-	ReplaceString(code, maxLen, "☒", "");
-	ReplaceString(code, maxLen, "▂", "");
-	ReplaceString(code, maxLen, "〼", "");
-	ReplaceString(code, maxLen, "卍", "");
-	ReplaceString(code, maxLen, "♎", "");
-	ReplaceString(code, maxLen, "✿", "");
-	ReplaceString(code, maxLen, "₪", "");
-	ReplaceString(code, maxLen, "☮", "");
-	ReplaceString(code, maxLen, "☤", "");
-	ReplaceString(code, maxLen, "♗", "");
-	ReplaceString(code, maxLen, "◁", "");
-	ReplaceString(code, maxLen, "▶", "");
-	ReplaceString(code, maxLen, "√", "");
-	ReplaceString(code, maxLen, "×", "");
-	ReplaceString(code, maxLen, "▃", "");
-	ReplaceString(code, maxLen, "◎", "");
-	ReplaceString(code, maxLen, "卐", "");
-	ReplaceString(code, maxLen, "♏", "");
-	ReplaceString(code, maxLen, "❀", "");
-	ReplaceString(code, maxLen, "ி", "");
-	ReplaceString(code, maxLen, "☪", "");
-	ReplaceString(code, maxLen, "☥", "");
-	ReplaceString(code, maxLen, "♝", "");
-	ReplaceString(code, maxLen, "▷", "");
-	ReplaceString(code, maxLen, "◀", "");
-	ReplaceString(code, maxLen, "✔", "");
-	ReplaceString(code, maxLen, "✘", "");
-	ReplaceString(code, maxLen, "▄", "");
-	ReplaceString(code, maxLen, "¤", "");
-	ReplaceString(code, maxLen, "▬", "");
-	ReplaceString(code, maxLen, "♐", "");
-	ReplaceString(code, maxLen, "❃", "");
-	ReplaceString(code, maxLen, "❧", "");
-	ReplaceString(code, maxLen, "❂", "");
-	ReplaceString(code, maxLen, "☦", "");
-	ReplaceString(code, maxLen, "♘", "");
-	ReplaceString(code, maxLen, "♤", "");
-	ReplaceString(code, maxLen, "♠", "");
-	ReplaceString(code, maxLen, "☜", "");
-	ReplaceString(code, maxLen, "☚", "");
-	ReplaceString(code, maxLen, "▅", "");
-	ReplaceString(code, maxLen, "۞", "");
-	ReplaceString(code, maxLen, "〓", "");
-	ReplaceString(code, maxLen, "♑", "");
-	ReplaceString(code, maxLen, "❁", "");
-	ReplaceString(code, maxLen, "❦", "");
-	ReplaceString(code, maxLen, "☭", "");
-	ReplaceString(code, maxLen, "☧", "");
-	ReplaceString(code, maxLen, "♞", "");
-	ReplaceString(code, maxLen, "♡", "");
-	ReplaceString(code, maxLen, "♥", "");
-	ReplaceString(code, maxLen, "☝", "");
-	ReplaceString(code, maxLen, "☟", "");
-	ReplaceString(code, maxLen, "▆", "");
-	ReplaceString(code, maxLen, "℗", "");
-	ReplaceString(code, maxLen, "℡", "");
-	ReplaceString(code, maxLen, "♓", "");
-	ReplaceString(code, maxLen, "☸", "");
-	ReplaceString(code, maxLen, "ღ", "");
-	ReplaceString(code, maxLen, "☠", "");
-	ReplaceString(code, maxLen, "☨", "");
-	ReplaceString(code, maxLen, "♖", "");
-	ReplaceString(code, maxLen, "♢", "");
-	ReplaceString(code, maxLen, "♦", "");
-	ReplaceString(code, maxLen, "☞", "");
-	ReplaceString(code, maxLen, "☛", "");
-	ReplaceString(code, maxLen, "█", "");
-	ReplaceString(code, maxLen, "®", "");
-	ReplaceString(code, maxLen, "™", "");
-	ReplaceString(code, maxLen, "♒", "");
-	ReplaceString(code, maxLen, "❁", "");
-	ReplaceString(code, maxLen, "❤", "");
-	ReplaceString(code, maxLen, "☣", "");
-	ReplaceString(code, maxLen, "☫", "");
-	ReplaceString(code, maxLen, "♧", "");
-	ReplaceString(code, maxLen, "♣", "");
-	ReplaceString(code, maxLen, "㏂", "");
-	ReplaceString(code, maxLen, "㏘", "");
-	ReplaceString(code, maxLen, "█", "");
-	ReplaceString(code, maxLen, "©", "");
-	ReplaceString(code, maxLen, "㏇", "");
-	ReplaceString(code, maxLen, "♍", "");
-	ReplaceString(code, maxLen, "✖", "");
-	ReplaceString(code, maxLen, "☢", "");
-	ReplaceString(code, maxLen, "✚", "");
-	ReplaceString(code, maxLen, "♙", "");
-	ReplaceString(code, maxLen, "♟", "");
-	ReplaceString(code, maxLen, "☁", "");
-	ReplaceString(code, maxLen, "☂", "");
-	ReplaceString(code, maxLen, "☃", "");
-	ReplaceString(code, maxLen, "初音", ".");
-	ReplaceString(code, maxLen, "ミク", ".");
+    ReplaceString(code, maxLen, "◇", "");
+    ReplaceString(code, maxLen, "◆", "");
+    ReplaceString(code, maxLen, "☆", "");
+    ReplaceString(code, maxLen, "★", "");
+    ReplaceString(code, maxLen, "✪", "");
+    ReplaceString(code, maxLen, "♜", "");
+    ReplaceString(code, maxLen, "♚", "");
+    ReplaceString(code, maxLen, "♪", "");
+    ReplaceString(code, maxLen, "♬", "");
+    ReplaceString(code, maxLen, "'", "");
+    ReplaceString(code, maxLen, "\"", "");
+    ReplaceString(code, maxLen, "\\", "");
+    ReplaceString(code, maxLen, "^", "");
+    ReplaceString(code, maxLen, "(", "");
+    ReplaceString(code, maxLen, ")", "");
+    ReplaceString(code, maxLen, "`", "");
+    ReplaceString(code, maxLen, ";", "");
+    ReplaceString(code, maxLen, "☀", "");
+    ReplaceString(code, maxLen, "▪", "");
+    ReplaceString(code, maxLen, "♩", "");
+    ReplaceString(code, maxLen, "♭", "");
+    ReplaceString(code, maxLen, "♈", "");
+    ReplaceString(code, maxLen, "*", "");
+    ReplaceString(code, maxLen, "✄", "");
+    ReplaceString(code, maxLen, "☎", "");
+    ReplaceString(code, maxLen, "✈", "");
+    ReplaceString(code, maxLen, "☬", "");
+    ReplaceString(code, maxLen, "▽", "");
+    ReplaceString(code, maxLen, "▼", "");
+    ReplaceString(code, maxLen, "☽", "");
+    ReplaceString(code, maxLen, "☾", "");
+    ReplaceString(code, maxLen, "•", "");
+    ReplaceString(code, maxLen, "♪", "");
+    ReplaceString(code, maxLen, "♯", "");
+    ReplaceString(code, maxLen, "♉", "");
+    ReplaceString(code, maxLen, "＊", "");
+    ReplaceString(code, maxLen, "✁", "");
+    ReplaceString(code, maxLen, "ஐ", "");
+    ReplaceString(code, maxLen, "〠", "");
+    ReplaceString(code, maxLen, "♔", "");
+    ReplaceString(code, maxLen, "○", "");
+    ReplaceString(code, maxLen, "●", "");
+    ReplaceString(code, maxLen, "♀", "");
+    ReplaceString(code, maxLen, "♂", "");
+    ReplaceString(code, maxLen, "‥", "");
+    ReplaceString(code, maxLen, "♫", "");
+    ReplaceString(code, maxLen, "♮", "");
+    ReplaceString(code, maxLen, "♊", "");
+    ReplaceString(code, maxLen, "✲", "");
+    ReplaceString(code, maxLen, "✌", "");
+    ReplaceString(code, maxLen, "☩", "");
+    ReplaceString(code, maxLen, "۩", "");
+    ReplaceString(code, maxLen, "☺", "");
+    ReplaceString(code, maxLen, "☹", "");
+    ReplaceString(code, maxLen, "…", "");
+    ReplaceString(code, maxLen, "♬", "");
+    ReplaceString(code, maxLen, "‖", "");
+    ReplaceString(code, maxLen, "♋", "");
+    ReplaceString(code, maxLen, "❈", "");
+    ReplaceString(code, maxLen, "✍", "");
+    ReplaceString(code, maxLen, "➹", "");
+    ReplaceString(code, maxLen, "✙", "");
+    ReplaceString(code, maxLen, "♕", "");
+    ReplaceString(code, maxLen, "□", "");
+    ReplaceString(code, maxLen, "■", "");
+    ReplaceString(code, maxLen, "◐", "");
+    ReplaceString(code, maxLen, "◑", "");
+    ReplaceString(code, maxLen, "▁", "");
+    ReplaceString(code, maxLen, "§", "");
+    ReplaceString(code, maxLen, "¶", "");
+    ReplaceString(code, maxLen, "♌", "");
+    ReplaceString(code, maxLen, "❉", "");
+    ReplaceString(code, maxLen, "✎", "");
+    ReplaceString(code, maxLen, "〄", "");
+    ReplaceString(code, maxLen, "✟", "");
+    ReplaceString(code, maxLen, "♛", "");
+    ReplaceString(code, maxLen, "☑", "");
+    ReplaceString(code, maxLen, "☒", "");
+    ReplaceString(code, maxLen, "▂", "");
+    ReplaceString(code, maxLen, "〼", "");
+    ReplaceString(code, maxLen, "卍", "");
+    ReplaceString(code, maxLen, "♎", "");
+    ReplaceString(code, maxLen, "✿", "");
+    ReplaceString(code, maxLen, "₪", "");
+    ReplaceString(code, maxLen, "☮", "");
+    ReplaceString(code, maxLen, "☤", "");
+    ReplaceString(code, maxLen, "♗", "");
+    ReplaceString(code, maxLen, "◁", "");
+    ReplaceString(code, maxLen, "▶", "");
+    ReplaceString(code, maxLen, "√", "");
+    ReplaceString(code, maxLen, "×", "");
+    ReplaceString(code, maxLen, "▃", "");
+    ReplaceString(code, maxLen, "◎", "");
+    ReplaceString(code, maxLen, "卐", "");
+    ReplaceString(code, maxLen, "♏", "");
+    ReplaceString(code, maxLen, "❀", "");
+    ReplaceString(code, maxLen, "ி", "");
+    ReplaceString(code, maxLen, "☪", "");
+    ReplaceString(code, maxLen, "☥", "");
+    ReplaceString(code, maxLen, "♝", "");
+    ReplaceString(code, maxLen, "▷", "");
+    ReplaceString(code, maxLen, "◀", "");
+    ReplaceString(code, maxLen, "✔", "");
+    ReplaceString(code, maxLen, "✘", "");
+    ReplaceString(code, maxLen, "▄", "");
+    ReplaceString(code, maxLen, "¤", "");
+    ReplaceString(code, maxLen, "▬", "");
+    ReplaceString(code, maxLen, "♐", "");
+    ReplaceString(code, maxLen, "❃", "");
+    ReplaceString(code, maxLen, "❧", "");
+    ReplaceString(code, maxLen, "❂", "");
+    ReplaceString(code, maxLen, "☦", "");
+    ReplaceString(code, maxLen, "♘", "");
+    ReplaceString(code, maxLen, "♤", "");
+    ReplaceString(code, maxLen, "♠", "");
+    ReplaceString(code, maxLen, "☜", "");
+    ReplaceString(code, maxLen, "☚", "");
+    ReplaceString(code, maxLen, "▅", "");
+    ReplaceString(code, maxLen, "۞", "");
+    ReplaceString(code, maxLen, "〓", "");
+    ReplaceString(code, maxLen, "♑", "");
+    ReplaceString(code, maxLen, "❁", "");
+    ReplaceString(code, maxLen, "❦", "");
+    ReplaceString(code, maxLen, "☭", "");
+    ReplaceString(code, maxLen, "☧", "");
+    ReplaceString(code, maxLen, "♞", "");
+    ReplaceString(code, maxLen, "♡", "");
+    ReplaceString(code, maxLen, "♥", "");
+    ReplaceString(code, maxLen, "☝", "");
+    ReplaceString(code, maxLen, "☟", "");
+    ReplaceString(code, maxLen, "▆", "");
+    ReplaceString(code, maxLen, "℗", "");
+    ReplaceString(code, maxLen, "℡", "");
+    ReplaceString(code, maxLen, "♓", "");
+    ReplaceString(code, maxLen, "☸", "");
+    ReplaceString(code, maxLen, "ღ", "");
+    ReplaceString(code, maxLen, "☠", "");
+    ReplaceString(code, maxLen, "☨", "");
+    ReplaceString(code, maxLen, "♖", "");
+    ReplaceString(code, maxLen, "♢", "");
+    ReplaceString(code, maxLen, "♦", "");
+    ReplaceString(code, maxLen, "☞", "");
+    ReplaceString(code, maxLen, "☛", "");
+    ReplaceString(code, maxLen, "█", "");
+    ReplaceString(code, maxLen, "®", "");
+    ReplaceString(code, maxLen, "™", "");
+    ReplaceString(code, maxLen, "♒", "");
+    ReplaceString(code, maxLen, "❁", "");
+    ReplaceString(code, maxLen, "❤", "");
+    ReplaceString(code, maxLen, "☣", "");
+    ReplaceString(code, maxLen, "☫", "");
+    ReplaceString(code, maxLen, "♧", "");
+    ReplaceString(code, maxLen, "♣", "");
+    ReplaceString(code, maxLen, "㏂", "");
+    ReplaceString(code, maxLen, "㏘", "");
+    ReplaceString(code, maxLen, "█", "");
+    ReplaceString(code, maxLen, "©", "");
+    ReplaceString(code, maxLen, "㏇", "");
+    ReplaceString(code, maxLen, "♍", "");
+    ReplaceString(code, maxLen, "✖", "");
+    ReplaceString(code, maxLen, "☢", "");
+    ReplaceString(code, maxLen, "✚", "");
+    ReplaceString(code, maxLen, "♙", "");
+    ReplaceString(code, maxLen, "♟", "");
+    ReplaceString(code, maxLen, "☁", "");
+    ReplaceString(code, maxLen, "☂", "");
+    ReplaceString(code, maxLen, "☃", "");
+    ReplaceString(code, maxLen, "初音", ".");
+    ReplaceString(code, maxLen, "ミク", ".");
 }
 
 stock void FriendIDtoSteamID(const char[] szSteam64, char[] szSteam2, int iLen)
 {
-	char[] szBase = "76561197960265728";
-	char szSteam[18], szAccount[18];
-	int iBorrow, iY, iZ, iTemp;
+    char[] szBase = "76561197960265728";
+    char szSteam[18], szAccount[18];
+    int iBorrow, iY, iZ, iTemp;
 
-	strcopy(szSteam, 18, szSteam64);
+    strcopy(szSteam, 18, szSteam64);
 
-	if(CharToNumber(szSteam[16]) % 2 == 1)
-	{
-		iY = 1;
-		szSteam[16] = NumberToChar(CharToNumber(szSteam[16]) - 1);
-	}
-	
-	for(int k = 16; k >= 0; k--)
-	{
-		if (iBorrow > 0)
-		{
-			iTemp = CharToNumber(szSteam[k]) - 1;
-			
-			if (iTemp >= CharToNumber(szBase[k]))
-			{
-				iBorrow = 0;
-				szAccount[k] = NumberToChar(iTemp - CharToNumber(szBase[k]));
-			}
-			else
-			{
-				iBorrow = 1;
-				szAccount[k] = NumberToChar((iTemp + 10) - CharToNumber(szBase[k]));
-			}
-		}
-		else
-		{
-			if (CharToNumber(szSteam[k]) >= CharToNumber(szBase[k]))
-			{
-				iBorrow = 0;
-				szAccount[k] = NumberToChar(CharToNumber(szSteam[k]) - CharToNumber(szBase[k]));
-			}
-			else
-			{
-				iBorrow = 1;
-				szAccount[k] = NumberToChar((CharToNumber(szSteam[k]) + 10) - CharToNumber(szBase[k]));
-			}
-		}
-	}
-	
-	iZ = StringToInt(szAccount);
-	iZ /= 2;
-	
-	FormatEx(szSteam2, iLen, "STEAM_1:%d:%d", iY, iZ);
+    if(CharToNumber(szSteam[16]) % 2 == 1)
+    {
+        iY = 1;
+        szSteam[16] = NumberToChar(CharToNumber(szSteam[16]) - 1);
+    }
+    
+    for(int k = 16; k >= 0; k--)
+    {
+        if (iBorrow > 0)
+        {
+            iTemp = CharToNumber(szSteam[k]) - 1;
+            
+            if (iTemp >= CharToNumber(szBase[k]))
+            {
+                iBorrow = 0;
+                szAccount[k] = NumberToChar(iTemp - CharToNumber(szBase[k]));
+            }
+            else
+            {
+                iBorrow = 1;
+                szAccount[k] = NumberToChar((iTemp + 10) - CharToNumber(szBase[k]));
+            }
+        }
+        else
+        {
+            if (CharToNumber(szSteam[k]) >= CharToNumber(szBase[k]))
+            {
+                iBorrow = 0;
+                szAccount[k] = NumberToChar(CharToNumber(szSteam[k]) - CharToNumber(szBase[k]));
+            }
+            else
+            {
+                iBorrow = 1;
+                szAccount[k] = NumberToChar((CharToNumber(szSteam[k]) + 10) - CharToNumber(szBase[k]));
+            }
+        }
+    }
+    
+    iZ = StringToInt(szAccount);
+    iZ /= 2;
+    
+    FormatEx(szSteam2, iLen, "STEAM_1:%d:%d", iY, iZ);
 }
 
 stock int NumberToChar(const int iNum)
@@ -233,50 +235,65 @@ stock int CharToNumber(const int cNum)
     return (cNum >= '0' && cNum <= '9') ? (cNum - '0') : 0;
 }
 
-stock void ReplaceColorsCode(char[] code, int maxLen)
+void Chat(int client, const char[] message, any ...)
 {
-	ReplaceString(code, maxLen, "{normal}", "\x01", false);
-	ReplaceString(code, maxLen, "{default}", "\x01", false);
-	ReplaceString(code, maxLen, "{white}", "\x01", false);
-	ReplaceString(code, maxLen, "{darkred}", "\x02", false);
-	ReplaceString(code, maxLen, "{teamcolor}", "\x03", false);
-	ReplaceString(code, maxLen, "{pink}", "\x03", false);
-	ReplaceString(code, maxLen, "{green}", "\x04", false);
-	ReplaceString(code, maxLen, "{highlight}", "\x04", false);
-	ReplaceString(code, maxLen, "{yellow}", "\x05", false);
-	ReplaceString(code, maxLen, "{lightgreen}", "\x05", false);
-	ReplaceString(code, maxLen, "{lime}", "\x06", false);
-	ReplaceString(code, maxLen, "{lightred}", "\x07", false);
-	ReplaceString(code, maxLen, "{red}", "\x07", false);
-	ReplaceString(code, maxLen, "{gray}", "\x08", false);
-	ReplaceString(code, maxLen, "{grey}", "\x08", false);
-	ReplaceString(code, maxLen, "{olive}", "\x09", false);
-	ReplaceString(code, maxLen, "{orange}", "\x10", false);
-	ReplaceString(code, maxLen, "{silver}", "\x0A", false);
-	ReplaceString(code, maxLen, "{lightblue}", "\x0B", false);
-	ReplaceString(code, maxLen, "{blue}", "\x0C", false);
-	ReplaceString(code, maxLen, "{purple}", "\x0E", false);
-	ReplaceString(code, maxLen, "{darkorange}", "\x0F", false);
+    char m_szBuffer[512];
+    VFormat(m_szBuffer, 512, message, 3);
+    Format(m_szBuffer, 512, "[\x0CCG\x01]  %s", m_szBuffer);
+
+    Handle pb = StartMessageOne("SayText2", client);
+    PbSetInt(pb, "ent_idx", 0);
+    PbSetBool(pb, "chat", false);
+    PbSetString(pb, "msg_name", m_szBuffer);
+    PbAddString(pb, "params", "");
+    PbAddString(pb, "params", "");
+    PbAddString(pb, "params", "");
+    PbAddString(pb, "params", "");
+    EndMessage();
 }
 
-stock void tPrintToChat(int client, const char[] szMessage, any ...)
+void ChatAll(const char[] message, any ...)
 {
-	char szBuffer[256];
-	VFormat(szBuffer, 256, szMessage, 3);
-	ReplaceColorsCode(szBuffer, 256);
-	PrintToChat(client, szBuffer);
+    char m_szBuffer[512];
+    VFormat(m_szBuffer, 512, message, 2);
+    Format(m_szBuffer, 512, "[\x0CCG\x01]  %s", m_szBuffer);
+
+    Handle pb = StartMessageAll("SayText2");
+    PbSetInt(pb, "ent_idx", 0);
+    PbSetBool(pb, "chat", false);
+    PbSetString(pb, "msg_name", m_szBuffer);
+    PbAddString(pb, "params", "");
+    PbAddString(pb, "params", "");
+    PbAddString(pb, "params", "");
+    PbAddString(pb, "params", "");
+    EndMessage();
 }
 
 stock bool IsValidClient(int client)
 {
-	if(!(1 <= client <= MaxClients))
-		return false;
+    if(!(1 <= client <= MaxClients))
+        return false;
 
-	if(!IsClientInGame(client))
-		return false;
+    if(!IsClientInGame(client))
+        return false;
 
-	if(IsFakeClient(client))
-		return false;
+    if(IsFakeClient(client))
+        return false;
 
-	return true;
+    return true;
+}
+
+stock void SetMenuTitleEx(Handle menu, const char[] fmt, any ...)
+{
+    char m_szBuffer[256];
+    VFormat(m_szBuffer, 256, fmt, 3);
+    Format(m_szBuffer, 256, "%s\n　", m_szBuffer);
+    SetMenuTitle(menu, m_szBuffer);
+}
+
+stock bool AddMenuItemEx(Handle menu, int style, const char[] info, const char[] display, any ...)
+{
+    char m_szBuffer[256];
+    VFormat(m_szBuffer, 256, display, 5);
+    return AddMenuItem(menu, info, m_szBuffer, style);
 }

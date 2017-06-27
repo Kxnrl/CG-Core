@@ -1,2 +1,2 @@
-spcomp TrackPlayer.sp -o./compiled/core.smx
+spcomp core.sp -o./compiled/core.smx
 pause
