@@ -12,33 +12,27 @@ void Database_OnAskPluginLoad2()
 
 public int Native_Database_SaveGames(Handle plugin, int numParams)
 {
-    if(Database_DBHandle_Games != INVALID_HANDLE)
+    char m_szQuery[512];
+    if(GetNativeString(1, m_szQuery, 512) == SP_ERROR_NONE)
     {
-        char m_szQuery[512];
-        if(GetNativeString(1, m_szQuery, 512) == SP_ERROR_NONE)
-        {
-            Handle data = CreateDataPack();
-            WritePackString(data, m_szQuery);
-            WritePackCell(data, 0);
-            ResetPack(data);
-            MySQL_Query(false, Database_SQLCallback_SaveDatabase, m_szQuery, data);
-        }
+        Handle data = CreateDataPack();
+        WritePackString(data, m_szQuery);
+        WritePackCell(data, 0);
+        ResetPack(data);
+        MySQL_Query(false, Database_SQLCallback_SaveDatabase, m_szQuery, data);
     }
 }
 
 public int Native_Database_SaveForum(Handle plugin, int numParams)
 {
-    if(Database_DBHandle_Forum != INVALID_HANDLE)
+    char m_szQuery[512];
+    if(GetNativeString(1, m_szQuery, 512) == SP_ERROR_NONE)
     {
-        char m_szQuery[512];
-        if(GetNativeString(1, m_szQuery, 512) == SP_ERROR_NONE)
-        {
-            Handle data = CreateDataPack();
-            WritePackString(data, m_szQuery);
-            WritePackCell(data, 1);
-            ResetPack(data);
-            MySQL_Query(true, Database_SQLCallback_SaveDatabase, m_szQuery, data);
-        }
+        Handle data = CreateDataPack();
+        WritePackString(data, m_szQuery);
+        WritePackCell(data, 1);
+        ResetPack(data);
+        MySQL_Query(true, Database_SQLCallback_SaveDatabase, m_szQuery, data);
     }
 }
 
@@ -77,7 +71,7 @@ void Database_OnPluginStart()
 
     Database_SQLCallback_ConnectToGames();
     Database_SQLCallback_ConnectToForum();
-    
+
     CreateTimer(600.0, Timer_RefreshData, _, TIMER_REPEAT);
 }
 
@@ -92,7 +86,7 @@ void Database_SQLCallback_ConnectToGames()
 {
     if(Database_DBHandle_Games != INVALID_HANDLE)
         return;
-    
+  
     if(SQL_CheckConfig("csgo"))
         SQL_TConnect(SQL_TConnect_Callback_csgo, "csgo");
     else
@@ -116,18 +110,18 @@ public void SQL_TConnect_Callback_csgo(Handle owner, Handle hndl, const char[] e
     {
         if(Database_DBHandle_Games != hndl)
             CloseHandle(hndl);
-        
+
         return;
     }
-    
+
     static int m_iConnect;
 
     if(hndl == INVALID_HANDLE)
     {
         m_iConnect++;
-        
+
         UTIL_LogError("SQL_TConnect_Callback_csgo", "Connection to SQL database 'csgo' has failed, Try %d, Reason: %s", m_iConnect, error);
-        
+
         if(m_iConnect >= 100) 
         {
             UTIL_LogError("SQL_TConnect_Callback_csgo", " Too much errors. Restart your server for a new try. ");
@@ -146,14 +140,14 @@ public void SQL_TConnect_Callback_csgo(Handle owner, Handle hndl, const char[] e
     Database_DBHandle_Games = CloneHandle(hndl);
 
     SQL_SetCharset(Database_DBHandle_Games, "utf8");
-    
+
     PrintToServer("[Core] Connection to database 'csgo' successful!");
 
     char m_szQuery[256];
-    
+
     Format(m_szQuery, 256, "SELECT `id`,`servername` FROM playertrack_server WHERE serverip = '%s'", g_szIP);
     MySQL_Query(false, Database_SQLCallback_GetServerIP, m_szQuery, _, DBPrio_High);
-    
+
     Format(m_szQuery, 256, "DELETE FROM `playertrack_analytics` WHERE connect_time < %d and duration = -1", GetTime()-18000);
     MySQL_Query(false, Database_SQLCallback_NoResults, m_szQuery, 2, DBPrio_Low);
 
@@ -178,9 +172,9 @@ public void SQL_TConnect_Callback_discuz(Handle owner, Handle hndl, const char[]
     if(hndl == INVALID_HANDLE)
     {
         m_iConnect++;
-        
+
         UTIL_LogError("SQL_TConnect_Callback_discuz", "Connection to SQL database 'discuz' has failed, Try %d, Reason: %s", m_iConnect, error);
-        
+
         if(m_iConnect >= 100) 
         {
             UTIL_LogError("SQL_TConnect_Callback_discuz", " Too much errors. Restart your server for a new try. ");
@@ -199,9 +193,9 @@ public void SQL_TConnect_Callback_discuz(Handle owner, Handle hndl, const char[]
     Database_DBHandle_Forum = CloneHandle(hndl);
 
     SQL_SetCharset(Database_DBHandle_Forum, "utf8");
-    
+
     PrintToServer("[Core] Connection to database 'discuz' successful!");
-    
+
     MySQL_Query(true, SQLCallback_LoadDiscuzData, "SELECT b.uid,a.steamID64,b.username,c.exptime,d.growth,e.issm FROM dz_steam_users a LEFT JOIN dz_common_member b ON a.uid=b.uid LEFT JOIN dz_dc_vip c ON a.uid=c.uid LEFT JOIN dz_pay_growth d ON a.uid=d.uid LEFT JOIN dz_lev_user_sm e ON a.uid=e.uid ORDER by b.uid ASC", _, DBPrio_High);
 
     m_iConnect = 1;
@@ -250,10 +244,8 @@ public void Database_SQLCallback_NoResults(Handle owner, Handle hndl, const char
 
 public void Database_SQLCallback_GetServerIP(Handle owner, Handle hndl, const char[] error, any unuse)
 {
-    //如果操作失败
     if(hndl == INVALID_HANDLE) 
     {
-        //输出错误日志
         UTIL_LogError("Database_SQLCallback_GetServerIP", "Query server ID Failed! Reason: %s", error);
 
         if(StrContains(error, "lost connection", false) != -1)
@@ -265,11 +257,9 @@ public void Database_SQLCallback_GetServerIP(Handle owner, Handle hndl, const ch
 
         return;
     }
-    
-    //执行SQL_FetchRow
+
     if(SQL_FetchRow(hndl))
     {
-        //ServerID获取
         g_iServerId = SQL_FetchInt(hndl, 0);
         SQL_FetchString(hndl, 1, g_szHostName, 256);
         SetConVarString(FindConVar("hostname"), g_szHostName, false, false);
@@ -286,7 +276,6 @@ public void Database_SQLCallback_GetServerIP(Handle owner, Handle hndl, const ch
     }
     else
     {
-        //开始查询数据库 并输出到文件 查询进程高优先级
         char m_szQuery[256];
         Format(m_szQuery, 256, "INSERT INTO playertrack_server (servername, serverip) VALUES ('NewServer', '%s')", g_szIP);
         Format(g_szHostName, 128, "【CG社区】NewServer!");
@@ -298,15 +287,12 @@ public void Database_SQLCallback_GetServerIP(Handle owner, Handle hndl, const ch
 
 public void Database_SQLCallback_InsertServerIP(Handle owner, Handle hndl, const char[] error, any unuse)
 {
-    //如果操作失败
     if(hndl == INVALID_HANDLE)
     {
-        //输出错误日志
         UTIL_LogError("Database_SQLCallback_InsertServerIP", "INSERT server ID Failed! Reason: %s", error);
         return;
     }
 
-    //从INSERT ID获得ServerID 变量g_ServerID
     g_iServerId = SQL_GetInsertId(hndl);
 
     UTIL_OnServerLoaded();
@@ -318,7 +304,7 @@ public void SQLCallback_GetAdvData(Handle owner, Handle hndl, const char[] error
 {
     if(hndl == INVALID_HANDLE)
         return;
-    
+
     if(SQL_GetRowCount(hndl))
     {
         Handle kv = CreateKeyValues("ServerAdvertisement", "", "");
@@ -377,7 +363,7 @@ public void SQLCallback_OfficalGroup(Handle owner, Handle hndl, const char[] err
         UTIL_LogError("SQLCallback_OfficalGroup", "Load Offical Group List failed. Error happened: %s", error);
         return;
     }
-    
+
     if(SQL_GetRowCount(hndl) < 1)
         return;
 
@@ -390,7 +376,7 @@ public void SQLCallback_OfficalGroup(Handle owner, Handle hndl, const char[] err
         SQL_FetchString(hndl, 0, FriendID, 32);
         PushArrayString(g_eHandle[Array_Groups], FriendID);
     }
-    
+
     for(int client = 1; client <= MaxClients; ++client)
     {
         g_ClientGlobal[client][bInGroup] = false;
@@ -406,7 +392,7 @@ public void SQLCallback_OfficalGroup(Handle owner, Handle hndl, const char[] err
 
         if(FindStringInArray(g_eHandle[Array_Groups], FriendID) == -1)
             continue;
-        
+
         g_ClientGlobal[client][bInGroup] = true;
     }
 }
@@ -421,7 +407,7 @@ public void SQLCallback_LoadDiscuzData(Handle owner, Handle hndl, const char[] e
 
     if(SQL_GetRowCount(hndl) < 1)
         return;
-    
+
     ClearArray(g_eHandle[Array_Discuz]);
 
     Discuz_Data data[Discuz_Data];
@@ -436,16 +422,16 @@ public void SQLCallback_LoadDiscuzData(Handle owner, Handle hndl, const char[] e
         data[bIsRealName] = (SQL_FetchInt(hndl, 5) == 99);
         PushArrayArray(g_eHandle[Array_Discuz], data[0], view_as<int>(Discuz_Data));
     }
-    
+
     for(int client = 1; client <= MaxClients; ++client)
     {
         if(!IsClientConnected(client) || !IsClientAuthorized(client) || IsFakeClient(client))
             continue;
-        
+
         char FriendID[32];
         if(!GetClientAuthId(client, AuthId_SteamID64, FriendID, 32, true))
             continue;
-        
+
         if(StrContains(FriendID, "765611") != 0)
             continue;
 
@@ -460,10 +446,8 @@ public void Database_SQLCallback_GetClientBaseData(Handle owner, Handle hndl, co
     if(!IsValidClient(client))
         return;
 
-    //如果操作失败
     if(hndl == INVALID_HANDLE)
     {
-        //输出错误日志
         if(StrContains(error, "lost connection", false) == -1)
         {
             UTIL_LogError("Database_SQLCallback_GetClientBaseData", "Query Client Stats Failed! Client:\"%L\" Error Happened: %s", client, error);
@@ -478,10 +462,8 @@ public void Database_SQLCallback_GetClientBaseData(Handle owner, Handle hndl, co
         return;
     }
 
-    //执行SQL_FetchRow
     if(SQL_HasResultSet(hndl) && SQL_FetchRow(hndl))
     {
-        //客户端数据读取 ID|在线时长|连线次数|签名
         g_ClientGlobal[client][iPId]      = SQL_FetchInt(hndl, 0);
         g_ClientGlobal[client][iOnline]   = SQL_FetchInt(hndl, 1);
         g_ClientGlobal[client][iLastseen] = SQL_FetchInt(hndl, 2);
@@ -502,7 +484,7 @@ public void Database_SQLCallback_GetClientBaseData(Handle owner, Handle hndl, co
         g_ClientGlobal[client][bLoaded] = true;
 
         GlobalApi_OnClientLoaded(client);
-        
+
         char date[64], map[128], m_szQuery[512];
         FormatTime(date, 64, "%Y/%m/%d %H:%M:%S", GetTime());
         GetCurrentMap(map, 128);
@@ -522,7 +504,6 @@ public void Database_SQLCallback_GetClientBaseData(Handle owner, Handle hndl, co
 
 public void Database_SQLCallback_InsertClientBaseData(Handle owner, Handle hndl, const char[] error, int userid)
 {
-    //定义客户
     int client = GetClientOfUserId(userid);
 
     if(!IsValidClient(client))
@@ -530,7 +511,6 @@ public void Database_SQLCallback_InsertClientBaseData(Handle owner, Handle hndl,
 
     if(hndl == INVALID_HANDLE)
     {
-        //输出错误日志
         if(StrContains(error, "lost connection", false) == -1)
         {
             UTIL_LogError("Database_SQLCallback_InsertClientBaseData", "INSERT playertrack_player Failed! Client:\"%L\" Error Happened: %s", client, error);
@@ -538,16 +518,14 @@ public void Database_SQLCallback_InsertClientBaseData(Handle owner, Handle hndl,
             return;
         }
 
-        //重试检查  辣鸡阿里云RDS
         char m_szAuth[32], m_szQuery[512];
         GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
         Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.lasttime, a.number, a.signature, a.signnumber, a.signtime, a.groupid, a.groupname, a.lilyid, a.lilydate, a.active, a.daytime, a.flags, b.name FROM playertrack_player a LEFT JOIN playertrack_player b ON a.lilyid = b.id WHERE a.steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
         MySQL_Query(false, Database_SQLCallback_GetClientBaseData, m_szQuery, GetClientUserId(client), DBPrio_High);
-        
+
         return;
     }
-    
-    //客户获得ID从INSERT ID
+
     g_ClientGlobal[client][iPId] = SQL_GetInsertId(hndl);
     g_ClientGlobal[client][bLoaded] = true;
     GlobalApi_OnClientLoaded(client);
@@ -561,16 +539,13 @@ public void Database_SQLCallback_InsertClientBaseData(Handle owner, Handle hndl,
 
 public void Database_SQLCallback_InsertClientStats(Handle owner, Handle hndl, const char[] error, int userid)
 {
-    //定义客户
     int client = GetClientOfUserId(userid);
 
     if(!IsValidClient(client))
         return;
 
-    //SQL如果操作失败
     if(hndl == INVALID_HANDLE)
     {
-        //记录客户信息 写入到错误日志
         UTIL_LogError("Database_SQLCallback_InsertClientStats", "INSERT playertrack_analytics Failed!   Player:\"%L\" Error Happened:%s", client, error);
         return;
     }

@@ -3,7 +3,7 @@ Handle AuthGroup_Forward_AuthTerm;
 void AuthGroup_OnPluginStart()
 {
     AuthGroup_Forward_AuthTerm = CreateGlobalForward("CG_OnCheckAuthTerm", ET_Event, Param_Cell, Param_Cell);
-    
+
     RegConsoleCmd("sm_rz",   Command_GetAuth);
     RegConsoleCmd("sm_auth", Command_GetAuth);
 }
@@ -21,7 +21,7 @@ public Action Command_GetAuth(int client, int args)
 
     //创建CG玩家主菜单
     Handle menu = CreateMenu(MenuHandler_GetAuth);
-    SetMenuTitleEx(menu, "[CG]  %T [Auth name Only SChinese]", "auth menu title", client);
+    SetMenuTitleEx(menu, "[CG]  认证菜单");
 
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT,    "1", "[僵尸逃跑] 断后达人");
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT,    "2", "[僵尸逃跑] 指挥大佬");
@@ -32,9 +32,9 @@ public Action Command_GetAuth(int client, int args)
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "103", "[匪镇谍影]  TTT影帝");
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "104", "[匪镇谍影] 赌命狂魔");
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "105", "[匪镇谍影] 杰出公民");
-    
+
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "201", "[娱乐休闲] 娱乐挂壁");
-    
+
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "301", "[混战休闲] 首杀无敌");
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "302", "[混战休闲] 混战指挥");
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "303", "[混战休闲] 爆头狂魔");
@@ -69,7 +69,7 @@ public int MenuHandler_GetAuth(Handle menu, MenuAction action, int client, int i
 bool OnCheckAuthTerm(int client, int AuthId) 
 {
     bool result;
-    
+
     //Call Forward
     Call_StartForward(AuthGroup_Forward_AuthTerm);
     Call_PushCell(client);
@@ -86,28 +86,28 @@ void AuthGroup_CheckClientAuthTerm(int client, int AuthId)
         Chat(client, "请到[僵尸逃跑]服务器中申请此认证");
         return;
     }
-    
+
     if(100 < AuthId < 200 && !FindPluginByFile("ct.smx"))
     {
-        Chat(client, "%s  请到[匪镇谍影]服务器中申请此认证");
+        Chat(client, "请到[匪镇谍影]服务器中申请此认证");
         return;
     }
-    
+
     if(200 < AuthId < 300 && !FindPluginByFile("mg_stats.smx"))
     {
-        Chat(client, "%s  请到[娱乐休闲]服务器中申请此认证");
+        Chat(client, "请到[娱乐休闲]服务器中申请此认证");
         return;
     }
-    
+
     if(300 < AuthId < 400 && !FindPluginByFile("public_ext.smx"))
     {
-        Chat(client, "%s  请到[混战休闲]服务器中申请此认证");
+        Chat(client, "请到[混战休闲]服务器中申请此认证");
         return;
     }
-    
+
     if(1000 < AuthId)
     {
-        Chat(client, "%s  此认证需要猫灵手动发放");
+        Chat(client, "此认证需要猫灵手动发放");
         return;
     }
 

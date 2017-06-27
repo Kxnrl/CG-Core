@@ -13,7 +13,7 @@ Handle DailySign_Forward_OnDailySigned;
 void DailySign_OnPluginStart()
 {
     DailySign_Forward_OnDailySigned = CreateGlobalForward("CG_OnDailySigned", ET_Ignore, Param_Cell, Param_Cell);
-    
+
     RegConsoleCmd("sm_sign",    Command_Login);
     RegConsoleCmd("sm_qiandao", Command_Login);
 }
@@ -40,7 +40,6 @@ public Action Timer_NotifySign(Handle timer, int client)
     DailySign_Data_Client[client][hSignTimer] = INVALID_HANDLE;
     if(IsValidClient(client) && g_ClientGlobal[client][bLoaded] && !DailySign_Data_Client[client][bSigned] && g_ClientGlobal[client][iDaily] >= 900)
         Chat(client, "\x04你现在可以签到了,按Y输入\x07!sign\x04来签到!");
-    
     return Plugin_Stop;
 }
 
@@ -70,14 +69,14 @@ public Action Command_Login(int client, int args)
     char m_szQuery[256];
     Format(m_szQuery, 256, "UPDATE playertrack_player SET signnumber = signnumber+1, signtime = '%d' WHERE id = '%d' ", GetTime(), g_ClientGlobal[client][iPId]);
     MySQL_Query(false, DailySign_SQLCallback_ProcessingSign, m_szQuery, GetClientUserId(client));
-    
+
     return Plugin_Handled;
 }
 
 public void DailySign_SQLCallback_ProcessingSign(Handle owner, Handle hndl, const char[] error, int userid)
 {
     int client = GetClientOfUserId(userid);
-    
+
     if(!IsValidClient(client))
         return;
 

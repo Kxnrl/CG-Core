@@ -58,9 +58,9 @@ public Action Command_Couples(int client, int args)
 {
     if(!IsValidClient(client) || !g_ClientGlobal[client][bLoaded])
         return Plugin_Handled;
-    
+
     Couples_DisplayMainMenu(client);
-    
+
     return Plugin_Handled;
 }
 
@@ -68,7 +68,7 @@ public Action Command_Propose(int client, int args)
 {
     if(!IsValidClient(client) || !g_ClientGlobal[client][bLoaded])
         return Plugin_Handled;
-    
+
     Couples_DisplayProposeMenu(client);
 
     return Plugin_Handled;
@@ -86,7 +86,7 @@ void Couples_OnClientDisconnect(int client)
 {
     Couples_Data_Client_ProposeTargetUserId[client] = 0;
     Couples_Data_Client_ProposeSelectedTime[client] = 0;
-    
+
     int target = Couples_Data_Client[client][iPartnerIndex];
 
     if(target < 1)
@@ -117,17 +117,18 @@ void Couples_InitializeCouplesData(int client, int CP_PlayerId, int CP_WeddingDa
     if(IsValidClient(m_iPartner))
     {
         Couples_Data_Client[m_iPartner][iPartnerIndex] = client;
-        Chat(m_iPartner, "你的CP已经登陆游戏...");
+        Chat(m_iPartner, "\x0E你的CP已经登陆游戏...");
+        Chat(client, "\x0E你的CP当前在线哦...");
     }
 }
 
 void Couples_DisplayMainMenu(int client)
 {
     Handle menu = CreateMenu(MenuHandler_CouplesMainMenu);
-    
+
     SetMenuExitButton(menu, true);
     SetMenuExitBackButton(menu, true);
-    
+
     char date[64];
     FormatTime(date, 64, "%Y.%m.%d", Couples_Data_Client[client][iWeddingDate]);
 
@@ -135,7 +136,7 @@ void Couples_DisplayMainMenu(int client)
         SetMenuTitleEx(menu, "[CP]  主菜单 \n \n对象: %s\n日期: %s\n持久: %d天", Couples_Data_Client[client][szPartnerName], date, (GetTime()-Couples_Data_Client[client][iWeddingDate])/86400);
     else
         SetMenuTitleEx(menu, "[CP]  主菜单 \n \n对象: %s", Couples_Data_Client[client][szPartnerName]);
-    
+
     AddMenuItemEx(menu, Couples_Data_Client[client][iPartnerPlayerId] == 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "receive", "求婚列表");
     AddMenuItemEx(menu, Couples_Data_Client[client][iPartnerPlayerId] == 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "propose", "发起求婚");
     AddMenuItemEx(menu, Couples_Data_Client[client][iPartnerPlayerId] != 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "divorce", "发起离婚");
@@ -186,14 +187,6 @@ void Couples_DisplaySeleteMenu(int client)
         // Current in game              self?               not loading?                    forum member?                       has partner?
         if(!IsClientInGame(target) || target == client || !g_ClientGlobal[target][bLoaded] || g_ClientGlobal[target][iUId] <= 0 || Couples_Data_Client[target][iPartnerPlayerId] != 0)
             continue;
-        
-        //my RBQ -> target
-        if(g_ClientGlobal[target][iPId] == 167606 && g_ClientGlobal[client][iPId] != 1)
-            continue;
-        
-        //my RBQ -> source
-        if(g_ClientGlobal[client][iPId] == 167606 && g_ClientGlobal[target][iPId] != 1)
-            continue;
 
         FormatEx(m_szId, 8, "%d", GetClientUserId(target));
         AddMenuItemEx(menu, ITEMDRAW_DEFAULT, m_szId, g_ClientGlobal[target][szGamesName]);
@@ -231,22 +224,6 @@ public int MenuHandler_CouplesSelectMenu(Handle menu, MenuAction action, int sou
                 Couples_DisplayMainMenu(source);
                 return;
             }
-            
-            //my RBQ -> target
-            if(g_ClientGlobal[target][iPId] == 167606 && g_ClientGlobal[source][iPId] != 1)
-            {
-                Chat(source, "你选择的对象目前不可用#04");
-                Couples_DisplayMainMenu(source);
-                return;
-            }
-            
-            //my RBQ -> source
-            if(g_ClientGlobal[source][iPId] == 167606 && g_ClientGlobal[target][iPId] != 1)
-            {
-                Chat(source, "你选择的对象目前不可用#04");
-                Couples_DisplayMainMenu(source);
-                return;
-            }
 
             Couples_Data_Client_ProposeTargetUserId[source] = userid;
             Couples_Data_Client_ProposeSelectedTime[source] = GetTime();
@@ -275,7 +252,7 @@ void Couples_DisplayProposeMenu(int target)
         FormatEx(m_szId, 8, "%d", GetClientUserId(source));
         AddMenuItemEx(menu, ITEMDRAW_DEFAULT, m_szId, g_ClientGlobal[source][szGamesName]);
     }
-    
+
     if(GetMenuItemCount(menu) < 1)
     {
         Chat(target, "别自恋了,没人跟你求婚...");
@@ -319,11 +296,9 @@ public int MenuHandler_CouplesProposeMenu(Handle menu, MenuAction action, int ta
 
 void Couples_DisplayConfrimMenu(int target, int source)
 {
-    //接受lily请求菜单
     Handle menu = CreateMenu(MenuHandler_CouplesConfirmMenu);
     SetMenuTitleEx(menu, "[CP]  结婚登记");
 
-    //CP请求说明
     AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "你收到了一个来自 %N 的CP邀请", source);
     AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "组成CP后30天内不能申请解除");
     AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "组成CP后可以享受多种福利");
@@ -332,7 +307,6 @@ void Couples_DisplayConfrimMenu(int target, int source)
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "accept", "接受请求");
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "refuse", "拒绝请求");
 
-    //返回菜单就绪 => 输出
     SetMenuExitButton(menu, false);
     DisplayMenu(menu, target, 0);
 }
@@ -351,7 +325,7 @@ public int MenuHandler_CouplesConfirmMenu(Handle menu, MenuAction action, int ta
         Couples_Data_Client_ProposeTargetUserId[source] = 0;
         Couples_Data_Client_ProposeTargetUserId[target] = 0;
 
-        //接受?
+        //accept?
         if(StrEqual(info, "accept"))
         {
             if(!IsValidClient(source) || Couples_Data_Client[source][iPartnerPlayerId] > 0)
@@ -363,7 +337,7 @@ public int MenuHandler_CouplesConfirmMenu(Handle menu, MenuAction action, int ta
 
             Couples_GetMarried(source, target);
         }
-        //拒绝?
+        //refuse?
         else
         {
             if(!IsValidClient(source))
@@ -379,29 +353,16 @@ public int MenuHandler_CouplesConfirmMenu(Handle menu, MenuAction action, int ta
 
 void Couples_GetMarried(int source, int target)
 {
-    //对象无效?
-    if(!IsValidClient(source) && IsValidClient(target))
+    //her -> target
+    if(g_ClientGlobal[target][iPId] == 167606 && g_ClientGlobal[source][iPId] != 1)
     {
-        Chat(target, "系统错误 \x02CP#01");
+        char cmd_callbacl[128];
+        ServerCommandEx(cmd_callbacl, 128 , "sm_ban #%d 0 \"CAT: 你想干嘛?\"", GetClientUserId(source));
+        UTIL_LogError("Couples_GetMarried", "Auto ban %s permanent: %s", g_ClientGlobal[source][szGamesName], cmd_callbacl);
         return;
     }
 
-    if(!IsValidClient(target) && IsValidClient(source))
-    {
-        Chat(source, "系统错误 \x02CP#01");
-        return;
-    }
-    
-    //my RBQ -> target
-    if(g_ClientGlobal[target][iPId] == 167606 && g_ClientGlobal[source][iPId] != 1)
-    {
-        Chat(source, "系统错误 \x02CP#33");
-        Chat(target, "系统错误 \x02CP#33");
-        Couples_DisplayMainMenu(source);
-        return;
-    }
-    
-    //my RBQ -> source
+    //her -> source
     if(g_ClientGlobal[source][iPId] == 167606 && g_ClientGlobal[target][iPId] != 1)
     {
         Chat(source, "系统错误 \x02CP#33");
@@ -410,13 +371,14 @@ void Couples_GetMarried(int source, int target)
         return;
     }
 
-    //创建DataPack
     Handle m_hPack = CreateDataPack();
     WritePackCell(m_hPack, GetClientUserId(source));
     WritePackCell(m_hPack, GetClientUserId(target));
+    WritePackCell(m_hPack, g_ClientGlobal[source][iPId]);
+    WritePackCell(m_hPack, g_ClientGlobal[target][iPId]);
     ResetPack(m_hPack);
 
-    //使用SQL函数 CALL
+    //SQL CALL
     char m_szQuery[128];
     Format(m_szQuery, 128, "CALL lily_addcouple(%d, %d)", g_ClientGlobal[source][iPId], g_ClientGlobal[target][iPId]);
     MySQL_Query(false, Couples_SQLCallback_UpdateCP, m_szQuery, m_hPack);
@@ -426,44 +388,40 @@ public void Couples_SQLCallback_UpdateCP(Handle owner, Handle hndl, const char[]
 {
     int source = GetClientOfUserId(ReadPackCell(pack));
     int target = GetClientOfUserId(ReadPackCell(pack));
+    int srcpid = ReadPackCell(pack);
+    int tgrpid = ReadPackCell(pack);
     CloseHandle(pack);
+    
+    bool SourceValid = IsValidClient(source);
+    bool TargetValid = IsValidClient(target);
 
     if(hndl == INVALID_HANDLE)
     {
-        if(!IsValidClient(source) && IsValidClient(target))
-        {
+        if(TargetValid)
             Chat(target, "系统错误 \x02CP#02");
-            UTIL_LogError("Couples_SQLCallback_UpdateCP", "UpdateCP %L error: %s", target, error);
-        }
-        
-        if(!IsValidClient(target) && IsValidClient(source))
-        {
+
+        if(SourceValid)
             Chat(source, "系统错误 \x02CP#02");
-            UTIL_LogError("Couples_SQLCallback_UpdateCP", "UpdateCP %L error: %s", source, error);
-        }
+
+        UTIL_LogError("Couples_SQLCallback_UpdateCP", "UpdateCP->hndl [%d] <-> [%d] error: %s", srcpid, tgrpid, error);
 
         return;
     }
 
-    // need testing?
     if(!SQL_GetAffectedRows(hndl))
     {
-        if(!IsValidClient(source) && IsValidClient(target))
-        {
-            Chat(target, "系统错误 \x02CP#02");
-            UTIL_LogError("Couples_SQLCallback_UpdateCP", "UpdateCP %L error: %s", target, error);
-        }
-        
-        if(!IsValidClient(target) && IsValidClient(source))
-        {
-            Chat(source, "系统错误 \x02CP#02");
-            UTIL_LogError("Couples_SQLCallback_UpdateCP", "UpdateCP %L error: %s", source, error);
-        }
+        if(TargetValid)
+            Chat(target, "系统错误 \x02CP#03");
+
+        if(SourceValid)
+            Chat(source, "系统错误 \x02CP#03");
+
+        UTIL_LogError("Couples_SQLCallback_UpdateCP", "UpdateCP->Affected [%d] <-> [%d]", srcpid, tgrpid);
 
         return;
     }
 
-    if(IsValidClient(source) && IsValidClient(target))
+    if(SourceValid && TargetValid)
     {
         Couples_Data_Client[source][iPartnerIndex] = target;
         Couples_Data_Client[source][iPartnerPlayerId] = g_ClientGlobal[target][iPId];
@@ -473,7 +431,7 @@ public void Couples_SQLCallback_UpdateCP(Handle owner, Handle hndl, const char[]
         Couples_Data_Client[target][iWeddingDate] = GetTime();
         strcopy(Couples_Data_Client[source][szPartnerName], 32, g_ClientGlobal[target][szGamesName]);
         strcopy(Couples_Data_Client[target][szPartnerName], 32, g_ClientGlobal[source][szGamesName]);
-        
+
         Call_StartForward(Couples_Forward_OnWedding);
         Call_PushCell(source);
         Call_PushCell(target);
@@ -483,24 +441,24 @@ public void Couples_SQLCallback_UpdateCP(Handle owner, Handle hndl, const char[]
         Couples_DisplayMainMenu(source);
         Couples_DisplayMainMenu(target);
     }
-    else if(IsValidClient(source) && !IsValidClient(target))
+    else if(SourceValid && !TargetValid)
     {
         Couples_Data_Client[source][iPartnerIndex] = -1;
-        Couples_Data_Client[source][iPartnerPlayerId] = -1;
+        Couples_Data_Client[source][iPartnerPlayerId] = tgrpid;
         Couples_Data_Client[source][iWeddingDate] = GetTime();
         strcopy(Couples_Data_Client[source][szPartnerName], 32, "未知");
-        
-        Chat(source, "系统已保存你们的数据,但是你老婆当前离线,你不能享受新婚祝福");
+
+        Chat(source, "系统已保存你们的数据,但是你CP当前离线,你不能享受新婚祝福");
         Couples_DisplayMainMenu(source);
     }
-    else if(!IsValidClient(source) && IsValidClient(target))
+    else if(!SourceValid && TargetValid)
     {
         Couples_Data_Client[target][iPartnerIndex] = -1;
-        Couples_Data_Client[target][iPartnerPlayerId] = -1;
+        Couples_Data_Client[target][iPartnerPlayerId] = srcpid;
         Couples_Data_Client[target][iWeddingDate] = GetTime();
         strcopy(Couples_Data_Client[target][szPartnerName], 32, "未知");
 
-        Chat(target, "系统已保存你们的数据,但是你老婆当前离线,你不能享受新婚祝福");
+        Chat(target, "系统已保存你们的数据,但是你CP当前离线,你不能享受新婚祝福");
         Couples_DisplayMainMenu(target);
     }
 }
@@ -516,7 +474,7 @@ void Couples_DisplayDivorceMenu(int client)
 
     Handle menu = CreateMenu(MenuHandler_CouplesDivorceMenu);
     SetMenuTitleEx(menu, "[CP]  离婚登记台");
-    
+
     char date[64];
     FormatTime(date, 64, "%Y.%m.%d %H:%M:%S", Couples_Data_Client[client][iWeddingDate]);
 
@@ -571,12 +529,10 @@ public void SQLCallback_UpdateDivorce(Handle owner, Handle hndl, const char[] er
     }
 
     ChatAll("\x10%N\x05解除了和\x10%s\x05的CP,他们的关系维持了\x02%d\x05天", client, Couples_Data_Client[client][szPartnerName], (GetTime()-Couples_Data_Client[client][iWeddingDate])/86400);
-    
+
     Call_StartForward(Couples_Forward_OnDivorce);
     Call_PushCell(client);
     Call_Finish();
-    
-    //Reset All
 
     int target = Couples_Data_Client[client][iPartnerIndex];
     if(target > 0)
@@ -592,7 +548,6 @@ public void SQLCallback_UpdateDivorce(Handle owner, Handle hndl, const char[] er
 
 void Couples_DisplayAboutCPMenu(int client)
 {
-    //lily的帮助菜单
     Handle menu = CreateMenu(MenuHandler_CouplesAboutCPMenu);
     SetMenuTitleEx(menu, "[CP]  系统说明");
 
@@ -620,6 +575,6 @@ int FindClientByPlayerId(int playerid)
         if(IsClientInGame(client) && g_ClientGlobal[client][bLoaded])
             if(g_ClientGlobal[client][iPId] == playerid)
                 return client;
-            
+
     return -1;
 }

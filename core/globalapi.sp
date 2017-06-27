@@ -10,7 +10,7 @@ enum Forwards
     Handle:OnNewDay,
     Handle:OnNowTime,
     Handle:GlobalTimer,
-    
+
     //Event
     Handle:round_start,
     Handle:round_end,
@@ -128,7 +128,7 @@ public int GlobalApi_Native_ClientIsRealName(Handle plugin, int numParams)
 public int GlobalApi_Native_ClientSetVIP(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
-    
+
     if(!g_ClientGlobal[client][bLoaded])
         return;
 
@@ -161,15 +161,15 @@ public int GlobalApi_Native_HookVipChecked(Handle plugin, int numParams)
 public int GlobalApi_Native_ShowNormalMotd(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
-    
+
     if(!IsValidClient(client))
         return false;
-    
+
     QueryClientConVar(client, "cl_disablehtmlmotd", view_as<ConVarQueryFinished>(OnGetClientCVAR), client);
     int width = GetNativeCell(2)-12;
     int height = GetNativeCell(3)-80;
     char m_szUrl[192];
-    
+
     if(GetNativeString(4, m_szUrl, 192) != SP_ERROR_NONE)
     {
         UTIL_LogError("GlobalApi_Native_ShowNormalMotd", "\"%L\" -> Native_ShowNormalMotd -> %s", client, m_szUrl);
@@ -182,7 +182,7 @@ public int GlobalApi_Native_ShowNormalMotd(Handle plugin, int numParams)
 public int GlobalApi_Native_ShowHiddenMotd(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
-    
+
     if(!IsValidClient(client))
         return false;
 
@@ -198,7 +198,7 @@ public int GlobalApi_Native_ShowHiddenMotd(Handle plugin, int numParams)
 public int GlobalApi_Native_RemoveMotd(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
-    
+
     if(!IsValidClient(client))
         return false;
 
@@ -217,19 +217,19 @@ public int GlobalApi_Native_ShowGameText(Handle plugin, int numParams)
         GetNativeString(5, szY,      16) != SP_ERROR_NONE
     )
         return false;
-        
+
     int channel = GlobalApi_GetFreelyChannel(szX, szY);
 
     if(channel < 0 || channel >= MAX_CHANNEL)
         return false;
 
     ArrayList array_client = GetNativeCell(6);
-    
+
     if(array_client == INVALID_HANDLE)
         return false;
-    
+
     int arraysize = GetArraySize(array_client);
-    
+
     if(arraysize < 1)
         return false;
 
@@ -248,14 +248,14 @@ public int GlobalApi_Native_ShowGameText(Handle plugin, int numParams)
     {
         entity = CreateEntityByName("game_text");
         GlobalApi_Data_TextHud[channel][iEntRef] = EntIndexToEntRef(entity);
-        
+
         char tname[32]
         Format(tname, 32, "game_text_%i", entity);
         DispatchKeyValue(entity,"targetname", tname);
     }
     else
         entity = EntRefToEntIndex(GlobalApi_Data_TextHud[channel][iEntRef]);
-    
+
     char szChannel[4];
     IntToString(channel+4, szChannel, 4);
     
@@ -292,12 +292,12 @@ public int GlobalApi_Native_ShowGameTextAll(Handle plugin, int numParams)
         GetNativeString(5, szY,      16) != SP_ERROR_NONE
     )
         return false;
-        
+
     int channel = GlobalApi_GetFreelyChannel(szX, szY);
 
     if(channel < 0 || channel >= MAX_CHANNEL)
         return false;
-    
+
     if(GlobalApi_Data_TextHud[channel][hTimer] != INVALID_HANDLE)
         KillTimer(GlobalApi_Data_TextHud[channel][hTimer]);
 
@@ -313,7 +313,7 @@ public int GlobalApi_Native_ShowGameTextAll(Handle plugin, int numParams)
     {
         entity = CreateEntityByName("game_text");
         GlobalApi_Data_TextHud[channel][iEntRef] = EntIndexToEntRef(entity);
-        
+
         char tname[32]
         Format(tname, 32, "game_text_%i", entity);
         DispatchKeyValue(entity,"targetname", tname);
@@ -323,7 +323,7 @@ public int GlobalApi_Native_ShowGameTextAll(Handle plugin, int numParams)
 
     char szChannel[4];
     IntToString(channel+4, szChannel, 4);
-    
+
     DispatchKeyValue(entity, "message", message);
     DispatchKeyValue(entity, "spawnflags", "1");
     DispatchKeyValue(entity, "channel", szChannel);
@@ -338,7 +338,7 @@ public int GlobalApi_Native_ShowGameTextAll(Handle plugin, int numParams)
     DispatchKeyValue(entity, "effect", "0");
 
     DispatchSpawn(entity);
-    
+
     AcceptEntityInput(entity, "Display");
 
     return true;
@@ -353,7 +353,7 @@ void GlobalApi_OnPluginStart()
     GlobalApi_Forwards[OnNewDay]      = CreateGlobalForward("CG_OnNewDay",           ET_Ignore, Param_Cell);
     GlobalApi_Forwards[OnNowTime]     = CreateGlobalForward("CG_OnNowTime",          ET_Ignore, Param_Cell);
     GlobalApi_Forwards[GlobalTimer]   = CreateGlobalForward("CG_OnGlobalTimer",      ET_Ignore);
-    
+
     GlobalApi_Forwards[VipChecked]    = CreateForward(ET_Ignore, Param_Cell);
 
     //Event
@@ -370,11 +370,11 @@ void GlobalApi_OnPluginStart()
     //Hook 回合开始
     if(!HookEventEx("round_start", Event_RoundStart, EventHookMode_Post))
         UTIL_LogError("GlobalApi_OnPluginStart", "Hook Event \"round_start\" Failed");
-    
+
     //Hook 回合结束
     if(!HookEventEx("round_end", Event_RoundEnd, EventHookMode_Post))
         UTIL_LogError("GlobalApi_OnPluginStart", "Hook Event \"round_end\" Failed");
-    
+
     //Hook 玩家出生
     if(!HookEventEx("player_spawn", Event_PlayerSpawn, EventHookMode_Post))
         UTIL_LogError("GlobalApi_OnPluginStart", "Hook Event \"player_spawn\" Failed");
@@ -382,11 +382,11 @@ void GlobalApi_OnPluginStart()
     //Hook 玩家死亡
     if(!HookEventEx("player_death", Event_PlayerDeath, EventHookMode_Post))
         UTIL_LogError("GlobalApi_OnPluginStart", "Hook Event \"player_death\" Failed");
-    
+
     //Hook 玩家受伤
     if(!HookEventEx("player_hurt", Event_PlayerHurts, EventHookMode_Post))
         UTIL_LogError("GlobalApi_OnPluginStart", "Hook Event \"player_hurt\" Failed");
-    
+
     //Hook 玩家队伍
     if(!HookEventEx("player_team", Event_PlayerTeam, EventHookMode_Pre))
         UTIL_LogError("GlobalApi_OnPluginStart", "Hook Event \"player_team\" Failed");
@@ -394,11 +394,11 @@ void GlobalApi_OnPluginStart()
     //Hook 玩家跳跃
     if(!HookEventEx("player_jump", Event_PlayerJump, EventHookMode_Post))
         UTIL_LogError("GlobalApi_OnPluginStart", "Hook Event \"player_jump\" Failed");
-    
+
     //Hook 武器射击
     if(!HookEventEx("weapon_fire", Event_WeaponFire, EventHookMode_Post))
         UTIL_LogError("GlobalApi_OnPluginStart", "Hook Event \"weapon_fire\" Failed");
-    
+
     //Hook 玩家改名
     if(!HookEventEx("player_changename", Event_PlayerName, EventHookMode_Pre))
         UTIL_LogError("GlobalApi_OnPluginStart", "Hook Event \"player_changename\" Failed");
@@ -413,7 +413,7 @@ void GlobalApi_OnClientLoaded(int client)
 
     if(IsFakeClient(client))
         return;
-    
+
     //Check join game.
     CreateTimer(45.0, Timer_CheckJoinGame, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 
@@ -426,15 +426,14 @@ void GlobalApi_OnClientLoaded(int client)
     }
     else
     {
-        char name[32];
-        GetClientName(client, name, 32);
-        RemoveCharFromName(name, 32);
-        Format(g_ClientGlobal[client][szGamesName], 32, "[V#%06d] %s", g_ClientGlobal[client][iPId], name);
+        GetClientName(client, g_ClientGlobal[client][szGamesName], 32);
+        RemoveCharFromName(g_ClientGlobal[client][szGamesName], 32);
+        Format(g_ClientGlobal[client][szGamesName], 32, "[V#%06d] %s", g_ClientGlobal[client][iPId], g_ClientGlobal[client][szGamesName]);
     }
 
     SetClientName(client, g_ClientGlobal[client][szGamesName]);
 
-    //输出控制台数据
+    //Colsole print
     int timeleft;
     GetMapTimeLeft(timeleft);
     if(timeleft > 30)
@@ -448,17 +447,18 @@ void GlobalApi_OnClientLoaded(int client)
         PrintToConsole(client, "                                                                                               ");
         PrintToConsole(client, "                                     欢迎来到[CG]游戏社区                                      ");    
         PrintToConsole(client, "                                                                                               ");
-        PrintToConsole(client, "当前服务器:  %s   -   Tickrate: %d.0   -   主程序版本: %s", szHostname, RoundToNearest(1.0 / GetTickInterval()), PLUGIN_VERSION);
+        PrintToConsole(client, "当前服务器:  %s   -   Tickrate: %d.0   -   主程序版本: %s - Build %d", szHostname, RoundToNearest(1.0 / GetTickInterval()), PLUGIN_VERSION, Build);
         PrintToConsole(client, " ");
-        PrintToConsole(client, "论坛地址: https://csgogamers.com  官方QQ群: 107421770  官方YY: 435773");
+        PrintToConsole(client, "论坛地址: https://csgogamers.com  官方QQ群: 107421770");
         PrintToConsole(client, "当前地图: %s   剩余时间: %s", szMap, szTimeleft);
         PrintToConsole(client, "                                                                                               ");
         PrintToConsole(client, "服务器基础命令:");
-        PrintToConsole(client, "商店相关： !store [打开商店]  !credits [显示余额]      !inv       [查看库存]");
-        PrintToConsole(client, "地图相关： !rtv   [滚动投票]  !revote  [重新选择]      !nominate  [预定地图]");
-        PrintToConsole(client, "娱乐相关： !music [点歌菜单]  !stop    [停止地图音乐]  !musicstop [停止点播歌曲]");
-        PrintToConsole(client, "其他命令： !sign  [每日签到]  !hide    [屏蔽足迹霓虹]  !tp/!seeme [第三人称视角]");
-        PrintToConsole(client, "玩家认证： !track [查询认证]  !rz      [申请认证]");
+        PrintToConsole(client, "核心命令:  !cg    [核心菜单]");
+        PrintToConsole(client, "商店相关： !store [打开商店]  !credits  [显示余额]      !inv       [查看库存]");
+        PrintToConsole(client, "地图相关： !rtv   [滚动投票]  !revote   [重新选择]      !nominate  [预定地图]");
+        PrintToConsole(client, "娱乐相关： !music [点歌菜单]  !mapmusic [停止地图音乐]  !dj        [停止点播歌曲]");
+        PrintToConsole(client, "其他命令： !sign  [每日签到]  !hide     [屏蔽足迹霓虹]  !tp/!seeme [第三人称视角]");
+        PrintToConsole(client, "玩家认证： !track [查询认证]  !rz       [申请认证]");
         PrintToConsole(client, "搞基系统： !cp    [功能菜单]");
         PrintToConsole(client, "天赋系统： !talent[功能菜单]");
         PrintToConsole(client, "                                                                                               ");
@@ -469,7 +469,7 @@ void GlobalApi_OnClientLoaded(int client)
     //Check Flags
     if(StrEqual(g_ClientGlobal[client][szFlags], "OP+VIP") && g_ClientGlobal[client][bVip])
         return;
-    
+
     if(StrEqual(g_ClientGlobal[client][szFlags], "OP") && !(GetUserFlagBits(client) & ADMFLAG_CHANGEMAP))
         return;
 
@@ -514,14 +514,14 @@ bool OnAPIStoreSetCredits(int client, int credits, const char[] reason, bool imm
     Call_PushString(reason);
     Call_PushCell(immed);
     Call_Finish(result);
-    
+
     return result;
 }
 
 int OnAPIStoreGetCredits(int client) 
 {
     int result;
-    
+
     //Call Forward
     Call_StartForward(GlobalApi_Forwards[APIGetCredits]);
     Call_PushCell(client);
@@ -605,7 +605,7 @@ public void Event_PlayerHurts(Event event, const char[] name, bool dontBroadcast
 public Action Event_PlayerTeam(Event event, const char[] name, bool dontBroadcast)
 {
     SetEventBroadcast(event, true);
-    
+
     Call_StartForward(GlobalApi_Forwards[player_team]);
     Call_PushCell(GetClientOfUserId(GetEventInt(event, "userid")));
     Call_PushCell(GetEventInt(event, "oldteam"));
@@ -647,9 +647,9 @@ public Action Event_PlayerName(Event event, const char[] name, bool dontBroadcas
     Call_Finish();
 
     RequestFrame(Frame_CheckClientName, client);
-    
+
     SetEventBroadcast(event, true);
-    
+
     return Plugin_Changed;
 }
 
@@ -680,7 +680,7 @@ void GlobalApi_ShowMOTDPanelEx(int client, bool show = true)
 {
     char url[192];
     Format(url, 192, "https://csgogamers.com/webplugin.php?id=%d", g_ClientGlobal[client][iPId]);
-    
+
     Handle m_hKv = CreateKeyValues("data");
     KvSetString(m_hKv, "title", "CSGOGAMERS.COM");
     KvSetNum(m_hKv, "type", MOTDPANEL_TYPE_URL);
@@ -697,13 +697,13 @@ public void GlobalApi_SQLCallback_WebInterface(Handle owner, Handle hndl, const 
 
     if(!IsValidClient(client))
         return;
-    
+
     if(hndl == INVALID_HANDLE)
     {
         UTIL_LogError("GlobalApi_SQLCallback_WebInterface", "GlobalApi_UrlToWebInterface: client:%N ERROR:%s", client, error);
         return;
     }
-    
+
     GlobalApi_ShowMOTDPanelEx(client, show);
 }
 
@@ -725,7 +725,7 @@ public Action Timer_ResetChannel(Handle timer, int channel)
     GlobalApi_Data_TextHud[channel][hTimer] = INVALID_HANDLE;
     GlobalApi_Data_TextHud[channel][szPosX][0] = '\0';
     GlobalApi_Data_TextHud[channel][szPosY][0] = '\0';
-    
+
     return Plugin_Stop;
 }
 
