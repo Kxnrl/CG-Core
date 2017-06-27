@@ -26,7 +26,7 @@ public Plugin myinfo =
     name		= "Broadcast System - Client",
     author		= "Kyle",
     description	= "Send message on all connected server !",
-    version		= "3.0.1",
+    version		= "3.0.2",
     url			= "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -204,7 +204,7 @@ public void CG_OnCouplesWedding(int source, int target)
 		return;
 
 	char m_szFinalMsg[1024];
-	Format(m_szFinalMsg, 1024, " \x07恭喜\x0C%N\x07和\x0C%N\x07组成了\x0E一对咖喱给给\x07!", source, target);
+	Format(m_szFinalMsg, 1024, "恭喜[%N]和[%N]组成了一对CP!", source, target);
 
 	Handle database = CG_DatabaseGetForum();
 
@@ -217,8 +217,8 @@ public void CG_OnCouplesWedding(int source, int target)
 	char m_szQuery[1024];
 	Format(m_szQuery, 1024, "INSERT INTO `dz_plugin_ahome_laba` (`username`, `tousername`, `level`, `lid`, `dateline`, `content`, `color`, `url`) VALUES ('Lily System', '', 'system', 0, '%d', '%s', '', '')", GetTime(), EscapeString);
 	CG_DatabaseSaveForum(m_szQuery);
-	
-	Format(m_szFinalMsg, 1024, " \x04[\x0ELily\x04]  \x07>\x05>\x0C> %s", m_szFinalMsg);
+
+	Format(m_szFinalMsg, 1024, " \x04[\x0ECouples\x04]  \x07>\x05>\x0C> \x0E恭喜\x0C%N\x0E和\x0C%N\x0E组成了CP!");
 	PrintToChatAll(m_szFinalMsg);
 
 	Format(m_szFinalMsg, 1024, "%s%s", key, m_szFinalMsg);
@@ -350,15 +350,15 @@ public int OnChildSocketReceive(Handle socket, char[] receiveData, const int dat
 		Format(fmt, 512, ">>> 小喇叭 <<<\n%s", fmt);
 		CG_ShowGameTextAll(fmt, "20.0", "57 197 187", "-1.0", "0.2");
 	}
-	
-	if(StrContains(receiveData, "[\x10Store\x01]") != -1)
+
+	if(StrContains(receiveData, "[\x0ECouples\x04]") != -1)
 	{
 		char fmt[512];
 		strcopy(fmt, 512, receiveData);
-		ReplaceString(fmt, 512, "[\x10Store\x01] ", "", false);
+		ReplaceString(fmt, 512, " \x04[\x0ECouples\x04]  \x07>\x05>\x0C> ", "", false);
 		PrepareString(fmt, 512);
-		Format(fmt, 512, ">>> 全服广播 <<<\n%s", fmt);
-		CG_ShowGameTextAll(fmt, "10.0", "57 197 187", "-1.0", "0.2");
+		Format(fmt, 512, ">>> 新婚大吉 <<<\n%s", fmt);
+		CG_ShowGameTextAll(fmt, "10.0", "255 255 255", "-1.0", "0.2");
 	}
 
 	PrintToChatAll(receiveData);
@@ -372,7 +372,7 @@ public int OnChildSocketDisconnected(Handle socket, any hFile)
 	CloseHandle(socket);
 }
 
-stock void ConnecToMasterServer()
+void ConnecToMasterServer()
 {
 	if(g_bConnected)
 		return;
