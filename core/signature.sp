@@ -50,10 +50,10 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 
     Signature_Data_Client[client][bListener] = false;
 
-    if(g_ClientGlobal[client][hListener] != INVALID_HANDLE)
+    if(Signature_Data_Client[client][hListener] != INVALID_HANDLE)
     {
-        KillTimer(g_ClientGlobal[client][hListener]);
-        g_ClientGlobal[client][hListener] = INVALID_HANDLE;
+        KillTimer(Signature_Data_Client[client][hListener]);
+        Signature_Data_Client[client][hListener] = INVALID_HANDLE;
     }
 
     BuildListenerMenu(client);
@@ -77,14 +77,14 @@ void BuildListenerMenu(int client)
     SetMenuExitButton(menu, true);
     DisplayMenu(menu, client, 60);
 
-    if(g_ClientGlobal[client][hListener] != INVALID_HANDLE)
+    if(Signature_Data_Client[client][hListener] != INVALID_HANDLE)
     {
-        KillTimer(g_ClientGlobal[client][hListener]);
-        g_ClientGlobal[client][hListener] = INVALID_HANDLE;
+        KillTimer(Signature_Data_Client[client][hListener]);
+        Signature_Data_Client[client][hListener] = INVALID_HANDLE;
     }
 
     Signature_Data_Client[client][bListener] = true;
-    g_ClientGlobal[client][hListener] = CreateTimer(60.0, Timer_ListenerTimeout, client);
+    Signature_Data_Client[client][hListener] = CreateTimer(60.0, Timer_ListenerTimeout, client);
 }
 
 public int MenuHandler_Listener(Handle menu, MenuAction action, int client, int itemNum)
@@ -95,10 +95,10 @@ public int MenuHandler_Listener(Handle menu, MenuAction action, int client, int 
         GetMenuItem(menu, itemNum, info, 32);
 
         Signature_Data_Client[client][bListener] = false;
-        if(g_ClientGlobal[client][hListener] != INVALID_HANDLE)
+        if(Signature_Data_Client[client][hListener] != INVALID_HANDLE)
         {
-            KillTimer(g_ClientGlobal[client][hListener]);
-            g_ClientGlobal[client][hListener] = INVALID_HANDLE;
+            KillTimer(Signature_Data_Client[client][hListener]);
+            Signature_Data_Client[client][hListener] = INVALID_HANDLE;
         }
 
         if(StrEqual(info, "preview"))
@@ -162,7 +162,7 @@ public int MenuHandler_Listener(Handle menu, MenuAction action, int client, int 
 
 public Action Timer_ListenerTimeout(Handle timer, int client)
 {
-    g_ClientGlobal[client][hListener] = INVALID_HANDLE;
+    Signature_Data_Client[client][hListener] = INVALID_HANDLE;
     Signature_Data_Client[client][bListener] = false;
     return Plugin_Stop;
 }
