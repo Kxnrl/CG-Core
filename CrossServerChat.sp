@@ -26,7 +26,7 @@ public Plugin myinfo =
     name		= "Broadcast System - Client",
     author		= "Kyle",
     description	= "Send message on all connected server !",
-    version		= "3.0.2",
+    version		= "3.0.3",
     url			= "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -218,7 +218,7 @@ public void CG_OnCouplesWedding(int source, int target)
 	Format(m_szQuery, 1024, "INSERT INTO `dz_plugin_ahome_laba` (`username`, `tousername`, `level`, `lid`, `dateline`, `content`, `color`, `url`) VALUES ('Lily System', '', 'system', 0, '%d', '%s', '', '')", GetTime(), EscapeString);
 	CG_DatabaseSaveForum(m_szQuery);
 
-	Format(m_szFinalMsg, 1024, " \x04[\x0ECouples\x04]  \x07>\x05>\x0C> \x0E恭喜\x0C%N\x0E和\x0C%N\x0E组成了CP!");
+	Format(m_szFinalMsg, 1024, " \x04[\x0ECouples\x04]  \x07>\x05>\x0C> \x0E恭喜\x0C%N\x0E和\x0C%N\x0E组成了CP!", source, target);
 	PrintToChatAll(m_szFinalMsg);
 
 	Format(m_szFinalMsg, 1024, "%s%s", key, m_szFinalMsg);
