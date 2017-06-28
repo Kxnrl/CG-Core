@@ -2,8 +2,8 @@
 
 #pragma newdecls required //let`s go! new syntax!!!
 
-#define Build 450
-#define PLUGIN_VERSION " 8.01 - 2017/06/28 07:06 "
+#define Build 451
+#define PLUGIN_VERSION " 8.02 - 2017/06/29 03:45 "
 
 enum Clients
 {

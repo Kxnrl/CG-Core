@@ -673,7 +673,7 @@ bool GlobalApi_UrlToWebInterface(int client, int width, int height, const char[]
     char m_szQuery[512], m_szEscape[256];
     SQL_EscapeString(Database_DBHandle_Games, url, m_szEscape, 256);
     Format(m_szQuery, 512, "INSERT INTO `playertrack_webinterface` (`playerid`, `show`, `width`, `height`, `url`) VALUES (%d, %b, %d, %d, '%s') ON DUPLICATE KEY UPDATE `url` = VALUES(`url`), `show`=%b, `width`=%d, `height`=%d", g_ClientGlobal[client][iPId], show, width, height, m_szEscape, show, width, height);
-    return MySQL_Query(false, GlobalApi_SQLCallback_WebInterface, m_szQuery, GetClientUserId(client) | (view_as<int>(show) << 7), DBPrio_High);
+    return MySQL_Query(false, GlobalApi_SQLCallback_WebInterface, m_szQuery, client | (view_as<int>(show) << 7), DBPrio_High);
 }
 
 void GlobalApi_ShowMOTDPanelEx(int client, bool show = true)
@@ -692,8 +692,8 @@ void GlobalApi_ShowMOTDPanelEx(int client, bool show = true)
 
 public void GlobalApi_SQLCallback_WebInterface(Handle owner, Handle hndl, const char[] error, int data)
 {
-    int client = GetClientOfUserId(data & 0x7f);
-    bool show = view_as<bool>(data >> 7);
+    int client = data & 0x7f;
+    bool show = (data >> 7) == 1;
 
     if(!IsValidClient(client))
         return;
