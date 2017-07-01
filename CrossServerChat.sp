@@ -26,7 +26,7 @@ public Plugin myinfo =
     name		= "Broadcast System - Client",
     author		= "Kyle",
     description	= "Send message on all connected server !",
-    version		= "3.0.3",
+    version		= "3.0.4",
     url			= "http://steamcommunity.com/id/_xQy_/"
 };
 
