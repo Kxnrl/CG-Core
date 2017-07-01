@@ -732,7 +732,7 @@ public Action Timer_ResetChannel(Handle timer, int channel)
 public void OnGetClientCVAR(QueryCookie cookie, int client, ConVarQueryResult result, char [] cvarName, char [] cvarValue)
 {
     if(StringToInt(cvarValue) > 0)
-        Chat(client, " 请在控制台中输入:   \x04cl_disablehtmlmotd 0");
+        PrintToChat(client, " 请在控制台中输入:   \x04cl_disablehtmlmotd 0");
 }
 
 void Frame_CheckClientName(int client)

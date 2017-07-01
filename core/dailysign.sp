@@ -30,7 +30,7 @@ void DailySign_OnGlobalTimer(int client)
 {
     if(!DailySign_Data_Client[client][bSigned] && g_ClientGlobal[client][iDaily] >= 900 && DailySign_Data_Client[client][hSignTimer] == INVALID_HANDLE)
     {
-        Chat(client, "\x04你现在可以签到了,按Y输入\x07!sign\x04来签到!");
+        PrintToChat(client, "\x04你现在可以签到了,按Y输入\x07!sign\x04来签到!");
         DailySign_Data_Client[client][hSignTimer] = CreateTimer(30.0, Timer_NotifySign, client, TIMER_REPEAT);
     }
 }
@@ -39,7 +39,7 @@ public Action Timer_NotifySign(Handle timer, int client)
 {
     DailySign_Data_Client[client][hSignTimer] = INVALID_HANDLE;
     if(IsValidClient(client) && g_ClientGlobal[client][bLoaded] && !DailySign_Data_Client[client][bSigned] && g_ClientGlobal[client][iDaily] >= 900)
-        Chat(client, "\x04你现在可以签到了,按Y输入\x07!sign\x04来签到!");
+        PrintToChat(client, "\x04你现在可以签到了,按Y输入\x07!sign\x04来签到!");
     return Plugin_Stop;
 }
 
@@ -54,13 +54,13 @@ public Action Command_Login(int client, int args)
 {
     if(DailySign_Data_Client[client][bSigned])
     {
-        Chat(client, "每天只能签到1次!");
+        PrintToChat(client, "每天只能签到1次!");
         return Plugin_Handled;
     }
 
     if(g_ClientGlobal[client][iDaily] < 900) 
     {
-        Chat(client, "你还需要在线\x04%d\x01秒才能签到!", 900 - g_ClientGlobal[client][iDaily]);
+        PrintToChat(client, "你还需要在线\x04%d\x01秒才能签到!", 900 - g_ClientGlobal[client][iDaily]);
         return Plugin_Handled;
     }
 
@@ -82,7 +82,7 @@ public void DailySign_SQLCallback_ProcessingSign(Handle owner, Handle hndl, cons
 
     if(hndl == INVALID_HANDLE)
     {
-        Chat(client, "\x02未知错误,请重试!");
+        PrintToChat(client, "\x02未知错误,请重试!");
         DailySign_Data_Client[client][bSigned] = false;
         UTIL_LogError("DailySign_SQLCallback_ProcessingSign", "UPDATE Client Sign Failed! Client:%L Query:%s", client, error);
         return;
@@ -92,7 +92,7 @@ public void DailySign_SQLCallback_ProcessingSign(Handle owner, Handle hndl, cons
     DailySign_Data_Client[client][iLastSign] = GetTime();
     DailySign_Data_Client[client][bSigned] = true;
 
-    Chat(client, "签到成功,你已累计签到\x0C%d\x01天!", DailySign_Data_Client[client][iNumbers]);
+    PrintToChat(client, "签到成功,你已累计签到\x0C%d\x01天!", DailySign_Data_Client[client][iNumbers]);
 
     Call_StartForward(DailySign_Forward_OnDailySigned);
     Call_PushCell(client);

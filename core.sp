@@ -2,8 +2,8 @@
 
 #pragma newdecls required //let`s go! new syntax!!!
 
-#define Build 451
-#define PLUGIN_VERSION " 8.02 - 2017/06/29 03:45 "
+#define Build 452
+#define PLUGIN_VERSION " 8.03 - 2017/07/01 18:55 "
 
 enum Clients
 {
@@ -428,7 +428,7 @@ public Action Command_Online(int client, int args)
 
     int m_iHours = g_ClientGlobal[client][iOnline] / 3600;
     int m_iMins = g_ClientGlobal[client][iOnline] % 3600;
-    Chat(client, "尊贵的CG玩家\x04%N\x01,你已经在CG社区进行了\x0C%d\x01小时\x0C%d\x01分钟的游戏(\x02%d\x01次连线)", client, m_iHours, m_iMins/60, g_ClientGlobal[client][iNumber]);
+    PrintToChat(client, "尊贵的CG玩家\x04%N\x01,你已经在CG社区进行了\x0C%d\x01小时\x0C%d\x01分钟的游戏(\x02%d\x01次连线)", client, m_iHours, m_iMins/60, g_ClientGlobal[client][iNumber]);
 
     return Plugin_Handled;
 }
@@ -462,8 +462,8 @@ public Action Command_Track(int client, int args)
         }
     }
     
-    Chat(client, "请查看控制台输出");
-    Chat(client, "当前已在服务器内\x04%d\x01人,已建立连接的玩家\x02%d\x01人", ingame, connected);
+    PrintToChat(client, "请查看控制台输出");
+    PrintToChat(client, "当前已在服务器内\x04%d\x01人,已建立连接的玩家\x02%d\x01人", ingame, connected);
 
     return Plugin_Handled;
 }
@@ -531,17 +531,17 @@ public int MenuHandler_CGMainMenu(Handle menu, MenuAction action, int client, in
                 case 0:
                 {
                     SetClientLanguage(client, 23);
-                    Chat(client, "你的语言已切换为\x04简体中文");
+                    PrintToChat(client, "你的语言已切换为\x04简体中文");
                 }
                 case 23:
                 {
                     SetClientLanguage(client, 27);
-                    Chat(client, "你的語言已經切換到\x04繁體中文");
+                    PrintToChat(client, "你的語言已經切換到\x04繁體中文");
                 }
                 case 27:
                 {
                     SetClientLanguage(client, 0);
-                    Chat(client, "you language has been changed to \x04English");
+                    PrintToChat(client, "you language has been changed to \x04English");
                 }
             }
         }

@@ -234,7 +234,7 @@ stock int CharToNumber(const int cNum)
 {
     return (cNum >= '0' && cNum <= '9') ? (cNum - '0') : 0;
 }
-
+/*
 void Chat(int client, const char[] message, any ...)
 {
     char m_szBuffer[512];
@@ -268,7 +268,7 @@ void ChatAll(const char[] message, any ...)
     PbAddString(pb, "params", "");
     EndMessage();
 }
-
+*/
 stock bool IsValidClient(int client)
 {
     if(!(1 <= client <= MaxClients))
