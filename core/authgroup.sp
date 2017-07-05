@@ -26,6 +26,8 @@ public Action Command_GetAuth(int client, int args)
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT,    "1", "[僵尸逃跑] 断后达人");
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT,    "2", "[僵尸逃跑] 指挥大佬");
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT,    "3", "[僵尸逃跑] 僵尸克星");
+    AddMenuItemEx(menu, ITEMDRAW_DEFAULT,    "4", "[僵尸逃跑] 丢雷楼谋");
+    AddMenuItemEx(menu, ITEMDRAW_DEFAULT,    "5", "[僵尸逃跑] 破点大神");
 
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "101", "[匪镇谍影] 职业侦探");
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "102", "[匪镇谍影]   心机婊");
@@ -39,6 +41,12 @@ public Action Command_GetAuth(int client, int args)
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "302", "[混战休闲] 混战指挥");
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "303", "[混战休闲] 爆头狂魔");
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "304", "[混战休闲] 助攻之神");
+
+    AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "501", "[越狱搞基] 暴动狂魔");
+    AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "502", "[越狱搞基] 暴乱领袖");
+    AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "503", "[越狱搞基] 模范狱长");
+    AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "504", "[越狱搞基] 防暴警察");
+    AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "505", "[越狱搞基] 单挑达人");
 
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "9901", "[全服认证] CG地图组");
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "9902", "[全服认证] CG测试组");
@@ -83,39 +91,45 @@ void AuthGroup_CheckClientAuthTerm(int client, int AuthId)
 {
     if(1 < AuthId < 100 && !FindPluginByFile("zombiereloaded.smx"))
     {
-        PrintToChat(client, "请到[僵尸逃跑]服务器中申请此认证");
+        PrintToChat(client, "请到[\x0C僵尸逃跑\x01]服务器中申请此认证");
         return;
     }
 
     if(100 < AuthId < 200 && !FindPluginByFile("ct.smx"))
     {
-        PrintToChat(client, "请到[匪镇谍影]服务器中申请此认证");
+        PrintToChat(client, "请到[\x0C匪镇谍影\x01]服务器中申请此认证");
         return;
     }
 
     if(200 < AuthId < 300 && !FindPluginByFile("mg_stats.smx"))
     {
-        PrintToChat(client, "请到[娱乐休闲]服务器中申请此认证");
+        PrintToChat(client, "请到[\x0C娱乐休闲\x01]服务器中申请此认证");
         return;
     }
 
     if(300 < AuthId < 400 && !FindPluginByFile("public_ext.smx"))
     {
-        PrintToChat(client, "请到[混战休闲]服务器中申请此认证");
+        PrintToChat(client, "请到[\x0C混战休闲\x01]服务器中申请此认证");
+        return;
+    }
+    
+    if(500 < AuthId < 600)
+    {
+        PrintToChat(client, "[\x0C越狱搞基\x01]服务器认证当前正在建设中...");
         return;
     }
 
     if(1000 < AuthId)
     {
-        PrintToChat(client, "此认证需要猫灵手动发放");
+        PrintToChat(client, "\x07此认证需要猫灵手动发放...");
         return;
     }
 
-    PrintToChat(client, "正在查询...");
+    PrintToChat(client, "\x04正在查询...");
 
     if(!OnCheckAuthTerm(client, AuthId))
     {
-        PrintToChat(client, "\x07很抱歉噢,你没有达到该认证的要求");
+        PrintToChat(client, "\x07很抱歉噢,你没有达到该认证的要求...");
         return;
     }
 
@@ -143,7 +157,7 @@ public void AuthGroup_SQLCallback_GiveAuth(Handle owner, Handle hndl, const char
         return;
     }
 
-    PrintToChatAll("\x0C%N\x04获得了新的认证", client);
+    PrintToChatAll("[\x0CCG\x01]   \x0C%N\x04获得了新的认证", client);
 }
 
 void AuthGroup_GetClientAuthName(int client, char[] buffer, int maxLen)
