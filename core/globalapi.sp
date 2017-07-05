@@ -653,7 +653,7 @@ public Action Event_PlayerName(Event event, const char[] name, bool dontBroadcas
     return Plugin_Changed;
 }
 
-void GlobalApi_OnConfigsExecuted()
+void GlobalApi_OnMapStart()
 {
     for(int channel = 0; channel < MAX_CHANNEL; ++channel)
     {

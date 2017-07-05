@@ -2,8 +2,8 @@
 
 #pragma newdecls required //let`s go! new syntax!!!
 
-#define Build 453
-#define PLUGIN_VERSION " 8.04 - 2017/07/04 07:58 "
+#define Build 454
+#define PLUGIN_VERSION " 8.04a - 2017/07/06 07:40 "
 
 enum Clients
 {
@@ -132,6 +132,18 @@ public void OnPluginStart()
     Signature_OnPluginStart();
 }
 
+public void OnMapStart()
+{
+    //Forward To Modules
+    GlobalApi_OnMapStart();
+}
+
+public void OnMapEnd()
+{
+    //Forward To Modules
+    GlobalApi_OnMapStart();
+}
+
 public void OnConfigsExecuted()
 {
     //Locked Cvars
@@ -139,9 +151,6 @@ public void OnConfigsExecuted()
     SetConVarInt(FindConVar("sv_disable_motd"), 1);
     SetConVarString(FindConVar("hostname"), g_szHostName, false, false);
     SetConVarString(FindConVar("rcon_password"), g_szRconPwd, false, false);
-
-    //Forward To Modules
-    GlobalApi_OnConfigsExecuted();
 }
 
 public Action Timer_GlobalTimer(Handle timer)
