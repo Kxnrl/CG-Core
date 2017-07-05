@@ -437,7 +437,7 @@ public void Couples_SQLCallback_UpdateCP(Handle owner, Handle hndl, const char[]
         Call_PushCell(target);
         Call_Finish();
 
-        PrintToChatAll("\x10恭喜\x0E%N\x10和\x0E%N\x10结成CP.", source, target);
+        PrintToChatAll("[\x0CCG\x01]   \x10恭喜\x0E%N\x10和\x0E%N\x10结成CP.", source, target);
         Couples_DisplayMainMenu(source);
         Couples_DisplayMainMenu(target);
     }
@@ -528,7 +528,7 @@ public void SQLCallback_UpdateDivorce(Handle owner, Handle hndl, const char[] er
         return;
     }
 
-    PrintToChatAll("\x10%N\x05解除了和\x10%s\x05的CP,他们的关系维持了\x02%d\x05天", client, Couples_Data_Client[client][szPartnerName], (GetTime()-Couples_Data_Client[client][iWeddingDate])/86400);
+    PrintToChatAll("[\x0CCG\x01]   \x10%N\x05解除了和\x10%s\x05的CP,他们的关系维持了\x02%d\x05天", client, Couples_Data_Client[client][szPartnerName], (GetTime()-Couples_Data_Client[client][iWeddingDate])/86400);
 
     Call_StartForward(Couples_Forward_OnDivorce);
     Call_PushCell(client);

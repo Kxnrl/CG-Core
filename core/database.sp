@@ -367,14 +367,14 @@ public void SQLCallback_OfficalGroup(Handle owner, Handle hndl, const char[] err
     if(SQL_GetRowCount(hndl) < 1)
         return;
 
-    ClearArray(g_eHandle[Array_Groups]);
+    ClearArray(g_GlobalHandle[Array_Groups]);
 
     char FriendID[32];
 
     while(SQL_FetchRow(hndl))
     {
         SQL_FetchString(hndl, 0, FriendID, 32);
-        PushArrayString(g_eHandle[Array_Groups], FriendID);
+        PushArrayString(g_GlobalHandle[Array_Groups], FriendID);
     }
 
     for(int client = 1; client <= MaxClients; ++client)
@@ -390,7 +390,7 @@ public void SQLCallback_OfficalGroup(Handle owner, Handle hndl, const char[] err
         if(StrContains(FriendID, "765") != 0)
             continue;
 
-        if(FindStringInArray(g_eHandle[Array_Groups], FriendID) == -1)
+        if(FindStringInArray(g_GlobalHandle[Array_Groups], FriendID) == -1)
             continue;
 
         g_ClientGlobal[client][bInGroup] = true;
@@ -408,7 +408,7 @@ public void SQLCallback_LoadDiscuzData(Handle owner, Handle hndl, const char[] e
     if(SQL_GetRowCount(hndl) < 1)
         return;
 
-    ClearArray(g_eHandle[Array_Discuz]);
+    ClearArray(g_GlobalHandle[Array_Discuz]);
 
     Discuz_Data data[Discuz_Data];
 
@@ -420,7 +420,7 @@ public void SQLCallback_LoadDiscuzData(Handle owner, Handle hndl, const char[] e
         data[iExpTime] = SQL_FetchInt(hndl, 3);
         data[iGrowths] = SQL_FetchInt(hndl, 4);
         data[bIsRealName] = (SQL_FetchInt(hndl, 5) == 99);
-        PushArrayArray(g_eHandle[Array_Discuz], data[0], view_as<int>(Discuz_Data));
+        PushArrayArray(g_GlobalHandle[Array_Discuz], data[0], view_as<int>(Discuz_Data));
     }
 
     for(int client = 1; client <= MaxClients; ++client)

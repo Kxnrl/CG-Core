@@ -2,8 +2,8 @@
 
 #pragma newdecls required //let`s go! new syntax!!!
 
-#define Build 452
-#define PLUGIN_VERSION " 8.03 - 2017/07/01 18:55 "
+#define Build 453
+#define PLUGIN_VERSION " 8.04 - 2017/07/04 07:58 "
 
 enum Clients
 {
@@ -37,7 +37,7 @@ enum Handles
     Handle:Array_Groups,
     Handle:Array_Discuz
 }
-Handles g_eHandle[Handles];
+Handles g_GlobalHandle[Handles];
 
 enum Discuz_Data
 {
@@ -120,8 +120,8 @@ public void OnPluginStart()
     CreateTimer(1.0, Timer_GlobalTimer, _, TIMER_REPEAT);
 
     //Create cache array
-    g_eHandle[Array_Discuz] = CreateArray(view_as<int>(Discuz_Data));
-    g_eHandle[Array_Groups] = CreateArray(ByteCountToCells(32));
+    g_GlobalHandle[Array_Discuz] = CreateArray(view_as<int>(Discuz_Data));
+    g_GlobalHandle[Array_Groups] = CreateArray(ByteCountToCells(32));
 
     //Forward To Modules
     AuthGroup_OnPluginStart();
@@ -165,7 +165,7 @@ public Action Timer_GlobalTimer(Handle timer)
     }
 
     //Tracking
-    if(g_eHandle[KV_Local] != INVALID_HANDLE)
+    if(g_GlobalHandle[KV_Local] != INVALID_HANDLE)
     {
         for(int client = 1; client <= MaxClients; ++client)
         {
@@ -188,19 +188,19 @@ public Action Timer_GlobalTimer(Handle timer)
             char m_szAuth[32];
             GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
 
-            KvJumpToKey(g_eHandle[KV_Local], m_szAuth, true);
+            KvJumpToKey(g_GlobalHandle[KV_Local], m_szAuth, true);
 
-            KvSetNum(g_eHandle[KV_Local], "PlayerId", g_ClientGlobal[client][iPId]);
-            KvSetNum(g_eHandle[KV_Local], "Connect", ++g_ClientGlobal[client][iConnectTime]);
-            KvSetNum(g_eHandle[KV_Local], "TrackID", g_ClientGlobal[client][iTId]);
-            KvSetString(g_eHandle[KV_Local], "IP", g_ClientGlobal[client][szIP]);
-            KvSetNum(g_eHandle[KV_Local], "LastTime", GetTime());
-            KvSetNum(g_eHandle[KV_Local], "DayTime", g_ClientGlobal[client][iDaily]);
+            KvSetNum(g_GlobalHandle[KV_Local], "PlayerId", g_ClientGlobal[client][iPId]);
+            KvSetNum(g_GlobalHandle[KV_Local], "Connect", ++g_ClientGlobal[client][iConnectTime]);
+            KvSetNum(g_GlobalHandle[KV_Local], "TrackID", g_ClientGlobal[client][iTId]);
+            KvSetString(g_GlobalHandle[KV_Local], "IP", g_ClientGlobal[client][szIP]);
+            KvSetNum(g_GlobalHandle[KV_Local], "LastTime", GetTime());
+            KvSetNum(g_GlobalHandle[KV_Local], "DayTime", g_ClientGlobal[client][iDaily]);
 
-            KvRewind(g_eHandle[KV_Local]);
+            KvRewind(g_GlobalHandle[KV_Local]);
         }
         
-        KeyValuesToFile(g_eHandle[KV_Local], "addons/sourcemod/data/core.track.kv.txt");
+        KeyValuesToFile(g_GlobalHandle[KV_Local], "addons/sourcemod/data/core.track.kv.txt");
     }
 
     OnGlobalTimer();
@@ -254,7 +254,7 @@ public Action Timer_AuthorizedClient(Handle timer, int client)
     char FriendID[32];
     if(!GetClientAuthId(client, AuthId_SteamID64, FriendID, 32, true))
         return Plugin_Continue;
-    
+
     if(StrContains(FriendID, "765") != 0)
         return Plugin_Continue;
 
@@ -326,11 +326,11 @@ public void OnClientDisconnect(int client)
     ResetPack(data);
     MySQL_Query(false, Database_SQLCallback_SaveDatabase, m_szQuery, data, DBPrio_High);
 
-    if(KvJumpToKey(g_eHandle[KV_Local], m_szAuth))
+    if(KvJumpToKey(g_GlobalHandle[KV_Local], m_szAuth))
     {
-        KvDeleteThis(g_eHandle[KV_Local]);
-        KvRewind(g_eHandle[KV_Local]);
-        KeyValuesToFile(g_eHandle[KV_Local], "addons/sourcemod/data/core.track.kv.txt");
+        KvDeleteThis(g_GlobalHandle[KV_Local]);
+        KvRewind(g_GlobalHandle[KV_Local]);
+        KeyValuesToFile(g_GlobalHandle[KV_Local], "addons/sourcemod/data/core.track.kv.txt");
     }
 }
 
@@ -349,24 +349,24 @@ void UTIL_OnServerLoaded()
     MySQL_Query(false, SQLCallback_GetAdvData, m_szQuery, _, DBPrio_High);
 
     //Update local data if server was crashed
-    if(g_eHandle[KV_Local] != INVALID_HANDLE)
-        CloseHandle(g_eHandle[KV_Local]);
+    if(g_GlobalHandle[KV_Local] != INVALID_HANDLE)
+        CloseHandle(g_GlobalHandle[KV_Local]);
 
-    g_eHandle[KV_Local] = CreateKeyValues("core_track", "", "");
+    g_GlobalHandle[KV_Local] = CreateKeyValues("core_track", "", "");
 
-    FileToKeyValues(g_eHandle[KV_Local], "addons/sourcemod/data/core.track.kv.txt");
+    FileToKeyValues(g_GlobalHandle[KV_Local], "addons/sourcemod/data/core.track.kv.txt");
     
-    while(KvGotoFirstSubKey(g_eHandle[KV_Local], true))
+    while(KvGotoFirstSubKey(g_GlobalHandle[KV_Local], true))
     {
         char m_szAuthId[32], m_szIp[16];
-        KvGetSectionName(g_eHandle[KV_Local], m_szAuthId, 32);
+        KvGetSectionName(g_GlobalHandle[KV_Local], m_szAuthId, 32);
 
-        int m_iPlayerId = KvGetNum(g_eHandle[KV_Local], "PlayerId", 0);
-        int m_iConnect = KvGetNum(g_eHandle[KV_Local], "Connect", 0);
-        int m_iTrackId = KvGetNum(g_eHandle[KV_Local], "TrackID", 0);
-        KvGetString(g_eHandle[KV_Local], "IP", m_szIp, 16, "127.0.0.1");
-        int m_iLastTime = KvGetNum(g_eHandle[KV_Local], "LastTime", 0);
-        int m_iDaily = KvGetNum(g_eHandle[KV_Local], "DayTime", 0);
+        int m_iPlayerId = KvGetNum(g_GlobalHandle[KV_Local], "PlayerId", 0);
+        int m_iConnect = KvGetNum(g_GlobalHandle[KV_Local], "Connect", 0);
+        int m_iTrackId = KvGetNum(g_GlobalHandle[KV_Local], "TrackID", 0);
+        KvGetString(g_GlobalHandle[KV_Local], "IP", m_szIp, 16, "127.0.0.1");
+        int m_iLastTime = KvGetNum(g_GlobalHandle[KV_Local], "LastTime", 0);
+        int m_iDaily = KvGetNum(g_GlobalHandle[KV_Local], "DayTime", 0);
         Format(m_szQuery, 512, "UPDATE playertrack_player AS a, playertrack_analytics AS b SET a.onlines = a.onlines+%d, a.lastip = '%s', a.lasttime = '%d', a.number = a.number+1, a.daytime = '%d', b.duration = '%d' WHERE a.id = '%d' AND b.id = '%d' AND a.steamid = '%s' AND b.playerid = '%d'", m_iConnect, m_szIp, m_iLastTime, m_iDaily, m_iConnect, m_iPlayerId, m_iTrackId, m_szAuthId, m_iPlayerId);
         Handle data = CreateDataPack();
         WritePackString(data, m_szQuery);
@@ -380,17 +380,17 @@ void UTIL_OnServerLoaded()
 
         MySQL_Query(false, SQLCallback_SaveTempLog, m_szQuery, data);
 
-        if(KvDeleteThis(g_eHandle[KV_Local]))
+        if(KvDeleteThis(g_GlobalHandle[KV_Local]))
         {
             char m_szAfter[32];
-            KvGetSectionName(g_eHandle[KV_Local], m_szAfter, 32);
+            KvGetSectionName(g_GlobalHandle[KV_Local], m_szAfter, 32);
             if(StrContains(m_szAfter, "STEAM", false) != -1)
-                KvGoBack(g_eHandle[KV_Local]);
+                KvGoBack(g_GlobalHandle[KV_Local]);
         }
     }
 
-    KvRewind(g_eHandle[KV_Local]);
-    KeyValuesToFile(g_eHandle[KV_Local], "addons/sourcemod/data/core.track.kv.txt");
+    KvRewind(g_GlobalHandle[KV_Local]);
+    KeyValuesToFile(g_GlobalHandle[KV_Local], "addons/sourcemod/data/core.track.kv.txt");
 
     //If lateload
     for(int client = 1; client <= MaxClients; ++client)
@@ -428,7 +428,7 @@ public Action Command_Online(int client, int args)
 
     int m_iHours = g_ClientGlobal[client][iOnline] / 3600;
     int m_iMins = g_ClientGlobal[client][iOnline] % 3600;
-    PrintToChat(client, "尊贵的CG玩家\x04%N\x01,你已经在CG社区进行了\x0C%d\x01小时\x0C%d\x01分钟的游戏(\x02%d\x01次连线)", client, m_iHours, m_iMins/60, g_ClientGlobal[client][iNumber]);
+    PrintToChat(client, "[\x0CCG\x01]   尊贵的CG玩家\x04%N\x01,你已经在CG社区进行了\x0C%d\x01小时\x0C%d\x01分钟的游戏(\x02%d\x01次连线)", client, m_iHours, m_iMins/60, g_ClientGlobal[client][iNumber]);
 
     return Plugin_Handled;
 }
@@ -462,8 +462,8 @@ public Action Command_Track(int client, int args)
         }
     }
     
-    PrintToChat(client, "请查看控制台输出");
-    PrintToChat(client, "当前已在服务器内\x04%d\x01人,已建立连接的玩家\x02%d\x01人", ingame, connected);
+    PrintToChat(client, "[\x0CCG\x01]   请查看控制台输出");
+    PrintToChat(client, "[\x0CCG\x01]   当前已在服务器内\x04%d\x01人,已建立连接的玩家\x02%d\x01人", ingame, connected);
 
     return Plugin_Handled;
 }
@@ -531,17 +531,17 @@ public int MenuHandler_CGMainMenu(Handle menu, MenuAction action, int client, in
                 case 0:
                 {
                     SetClientLanguage(client, 23);
-                    PrintToChat(client, "你的语言已切换为\x04简体中文");
+                    PrintToChat(client, "[\x0CCG\x01]   你的语言已切换为\x04简体中文");
                 }
                 case 23:
                 {
                     SetClientLanguage(client, 27);
-                    PrintToChat(client, "你的語言已經切換到\x04繁體中文");
+                    PrintToChat(client, "[\x0CCG\x01]   你的語言已經切換到\x04繁體中文");
                 }
                 case 27:
                 {
                     SetClientLanguage(client, 0);
-                    PrintToChat(client, "you language has been changed to \x04English");
+                    PrintToChat(client, "[\x0CCG\x01]   you language has been changed to \x04English");
                 }
             }
         }
@@ -552,12 +552,12 @@ public int MenuHandler_CGMainMenu(Handle menu, MenuAction action, int client, in
 
 void UTIL_LoadClientDiscuzData(int client, const char[] FriendID)
 {
-    int array_size = GetArraySize(g_eHandle[Array_Discuz]);
+    int array_size = GetArraySize(g_GlobalHandle[Array_Discuz]);
     Discuz_Data data[Discuz_Data];
 
     for(int i = 0; i < array_size; i++)
     {
-        GetArrayArray(g_eHandle[Array_Discuz], i, data[0], view_as<int>(Discuz_Data));
+        GetArrayArray(g_GlobalHandle[Array_Discuz], i, data[0], view_as<int>(Discuz_Data));
         
         if(!StrEqual(FriendID, data[szSteamId64]))
             continue;
@@ -570,7 +570,7 @@ void UTIL_LoadClientDiscuzData(int client, const char[] FriendID)
         break;
     }
 
-    if(FindStringInArray(g_eHandle[Array_Groups], FriendID) != -1)
+    if(FindStringInArray(g_GlobalHandle[Array_Groups], FriendID) != -1)
         g_ClientGlobal[client][bInGroup] = true;
 }
 
