@@ -516,10 +516,10 @@ void GetServerTag(char[] m_szServerTag, int maxLen)
 {
 	switch(CG_GetServerId())
 	{
-		case  1: strcopy(m_szServerTag, maxLen, "僵尸逃跑①");
-		case  2: strcopy(m_szServerTag, maxLen, "匪镇碟影①");
+		case  1: strcopy(m_szServerTag, maxLen, "僵尸逃跑");
+		case  2: strcopy(m_szServerTag, maxLen, "匪镇碟影");
 		case  3: strcopy(m_szServerTag, maxLen, "娱乐休闲");
-		case  4: strcopy(m_szServerTag, maxLen, "僵尸逃跑②");
+		case  4: strcopy(m_szServerTag, maxLen, "僵尸逃跑");
 		case  5: strcopy(m_szServerTag, maxLen, "越狱搞基");
 		case  6: strcopy(m_szServerTag, maxLen, "混战干拉");
 		case  7: strcopy(m_szServerTag, maxLen, "死斗练枪");
