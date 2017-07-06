@@ -3,7 +3,7 @@
 #pragma newdecls required //let`s go! new syntax!!!
 
 #define Build 454
-#define PLUGIN_VERSION " 8.04a - 2017/07/06 07:40 "
+#define PLUGIN_VERSION " 8.04b - 2017/07/07 02:57 "
 
 enum Clients
 {
@@ -553,6 +553,7 @@ public int MenuHandler_CGMainMenu(Handle menu, MenuAction action, int client, in
                     PrintToChat(client, "[\x0CCG\x01]   you language has been changed to \x04English");
                 }
             }
+            Command_Menu(client, 0);
         }
     }
     else if(action == MenuAction_End)

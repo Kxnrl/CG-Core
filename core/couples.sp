@@ -117,8 +117,8 @@ void Couples_InitializeCouplesData(int client, int CP_PlayerId, int CP_WeddingDa
     if(IsValidClient(m_iPartner))
     {
         Couples_Data_Client[m_iPartner][iPartnerIndex] = client;
-        PrintToChat(m_iPartner, "\x0E你的CP已经登陆游戏...");
-        PrintToChat(client, "\x0E你的CP当前在线哦...");
+        PrintToChat(m_iPartner, "[\x0CCG\x01]   \x0E你的CP已经登陆游戏...");
+        PrintToChat(client, "[\x0CCG\x01]   \x0E你的CP当前在线哦...");
     }
 }
 
@@ -168,14 +168,14 @@ void Couples_DisplaySeleteMenu(int client)
     int num = Couples_Data_Client[client][iWeddingDate] - GetTime();
     if(num > 0)
     {
-        PrintToChat(client, "你还有\x04%d\x01秒才能再次组成CP", num);
+        PrintToChat(client, "[\x0CCG\x01]   你还有\x04%d\x01秒才能再次组成CP", num);
         return;
     }
 
     num = Couples_Data_Client_ProposeSelectedTime[client] > GetTime();
     if(num > 0)
     {
-        PrintToChat(client, "请勿频繁发起请求,请等待\x04%d\x01秒后再试", num);
+        PrintToChat(client, "[\x0CCG\x01]   请勿频繁发起请求,请等待\x04%d\x01秒后再试", num);
         return;
     }
 
@@ -194,7 +194,7 @@ void Couples_DisplaySeleteMenu(int client)
 
     if(GetMenuItemCount(menu) < 1)
     {
-        PrintToChat(client, "当前服务器内没有玩家能跟你组CP...");
+        PrintToChat(client, "[\x0CCG\x01]   当前服务器内没有玩家能跟你组CP...");
         CloseHandle(menu);
         Couples_DisplayMainMenu(client);
         return;
@@ -220,7 +220,7 @@ public int MenuHandler_CouplesSelectMenu(Handle menu, MenuAction action, int sou
 
             if(!IsValidClient(target) || Couples_Data_Client[target][iPartnerPlayerId] != 0)
             {
-                PrintToChat(source, "你选择的对象目前不可用#03");
+                PrintToChat(source, "[\x0CCG\x01]   你选择的对象目前不可用#03");
                 Couples_DisplayMainMenu(source);
                 return;
             }
@@ -229,7 +229,7 @@ public int MenuHandler_CouplesSelectMenu(Handle menu, MenuAction action, int sou
             Couples_Data_Client_ProposeSelectedTime[source] = GetTime();
             Couples_DisplayProposeMenu(target);
 
-            PrintToChat(source, "已将你的CP请求发送至\x0E%N", target);
+            PrintToChat(source, "[\x0CCG\x01]   已将你的CP请求发送至\x0E%N", target);
         }
         case MenuAction_End:    CloseHandle(menu);
         case MenuAction_Cancel: if(itemNum == MenuCancel_ExitBack) Couples_DisplayMainMenu(source);
@@ -255,7 +255,7 @@ void Couples_DisplayProposeMenu(int target)
 
     if(GetMenuItemCount(menu) < 1)
     {
-        PrintToChat(target, "别自恋了,没人跟你求婚...");
+        PrintToChat(target, "[\x0CCG\x01]   别自恋了,没人跟你求婚...");
         CloseHandle(menu);
         Couples_DisplayMainMenu(target);
         return;
@@ -281,7 +281,7 @@ public int MenuHandler_CouplesProposeMenu(Handle menu, MenuAction action, int ta
 
             if(!IsValidClient(source) || Couples_Data_Client[source][iPartnerPlayerId] != 0)
             {
-                PrintToChat(target, "你选择的对象目前不可用#01");
+                PrintToChat(target, "[\x0CCG\x01]   你选择的对象目前不可用#01");
                 Couples_DisplayMainMenu(target);
                 return;
             }
@@ -330,7 +330,7 @@ public int MenuHandler_CouplesConfirmMenu(Handle menu, MenuAction action, int ta
         {
             if(!IsValidClient(source) || Couples_Data_Client[source][iPartnerPlayerId] > 0)
             {
-                PrintToChat(target, "你选择的对象目前不可用#02->%d.%d", source, Couples_Data_Client[source][iPartnerPlayerId]);
+                PrintToChat(target, "[\x0CCG\x01]   你选择的对象目前不可用#02->%d.%d", source, Couples_Data_Client[source][iPartnerPlayerId]);
                 Couples_DisplaySeleteMenu(target);
                 return;
             }
@@ -343,8 +343,8 @@ public int MenuHandler_CouplesConfirmMenu(Handle menu, MenuAction action, int ta
             if(!IsValidClient(source))
                 return;
 
-            PrintToChat(target, "你拒绝了\x0E%N\x01的CP邀请", source);
-            PrintToChat(source, "\x0E%N\x01拒绝了你的CP邀请", target);
+            PrintToChat(target, "[\x0CCG\x01]   你拒绝了\x0E%N\x01的CP邀请", source);
+            PrintToChat(source, "[\x0CCG\x01]   \x0E%N\x01拒绝了你的CP邀请", target);
         }
     }
     else if(action == MenuAction_End)
@@ -365,8 +365,8 @@ void Couples_GetMarried(int source, int target)
     //her -> source
     if(g_ClientGlobal[source][iPId] == 167606 && g_ClientGlobal[target][iPId] != 1)
     {
-        PrintToChat(source, "系统错误 \x02CP#33");
-        PrintToChat(target, "系统错误 \x02CP#33");
+        PrintToChat(source, "[\x0CCG\x01]   系统错误 \x02CP#33");
+        PrintToChat(target, "[\x0CCG\x01]   系统错误 \x02CP#33");
         Couples_DisplayMainMenu(source);
         return;
     }
@@ -398,10 +398,10 @@ public void Couples_SQLCallback_UpdateCP(Handle owner, Handle hndl, const char[]
     if(hndl == INVALID_HANDLE)
     {
         if(TargetValid)
-            PrintToChat(target, "系统错误 \x02CP#02");
+            PrintToChat(target, "[\x0CCG\x01]   系统错误 \x02CP#02");
 
         if(SourceValid)
-            PrintToChat(source, "系统错误 \x02CP#02");
+            PrintToChat(source, "[\x0CCG\x01]   系统错误 \x02CP#02");
 
         UTIL_LogError("Couples_SQLCallback_UpdateCP", "UpdateCP->hndl [%d] <-> [%d] error: %s", srcpid, tgrpid, error);
 
@@ -411,10 +411,10 @@ public void Couples_SQLCallback_UpdateCP(Handle owner, Handle hndl, const char[]
     if(!SQL_GetAffectedRows(hndl))
     {
         if(TargetValid)
-            PrintToChat(target, "系统错误 \x02CP#03");
+            PrintToChat(target, "[\x0CCG\x01]   系统错误 \x02CP#03");
 
         if(SourceValid)
-            PrintToChat(source, "系统错误 \x02CP#03");
+            PrintToChat(source, "[\x0CCG\x01]   系统错误 \x02CP#03");
 
         UTIL_LogError("Couples_SQLCallback_UpdateCP", "UpdateCP->Affected [%d] <-> [%d]", srcpid, tgrpid);
 
@@ -458,7 +458,7 @@ public void Couples_SQLCallback_UpdateCP(Handle owner, Handle hndl, const char[]
         Couples_Data_Client[target][iWeddingDate] = GetTime();
         strcopy(Couples_Data_Client[target][szPartnerName], 32, "未知");
 
-        PrintToChat(target, "系统已保存你们的数据,但是你CP当前离线,你不能享受新婚祝福");
+        PrintToChat(target, "[\x0CCG\x01]   系统已保存你们的数据,但是你CP当前离线,你不能享受新婚祝福");
         Couples_DisplayMainMenu(target);
     }
 }
@@ -467,7 +467,7 @@ void Couples_DisplayDivorceMenu(int client)
 {
     if((GetTime() - Couples_Data_Client[client][iWeddingDate]) < 1209600)
     {
-        PrintToChat(client, "新组成CP之后14天内不能申请解除...");
+        PrintToChat(client, "[\x0CCG\x01]   新组成CP之后14天内不能申请解除...");
         Couples_DisplayMainMenu(client);
         return;
     }
@@ -523,7 +523,7 @@ public void SQLCallback_UpdateDivorce(Handle owner, Handle hndl, const char[] er
 
     if(hndl == INVALID_HANDLE)
     {
-        PrintToChat(client, "系统错误 \x02CP#06");
+        PrintToChat(client, "[\x0CCG\x01]   系统错误 \x02CP#06");
         UTIL_LogError("SQLCallback_UpdateDivorce", "UpdateDivorce %L error: %s", client, error);
         return;
     }

@@ -15,7 +15,7 @@ public Action Command_GetAuth(int client, int args)
 
     if(g_ClientGlobal[client][iGId] > 0)
     {
-        PrintToChat(client, "\x04你已经有认证了");
+        PrintToChat(client, "[\x0CCG\x01]   \x04你已经有认证了");
         return Plugin_Handled;
     }
 
@@ -91,37 +91,37 @@ void AuthGroup_CheckClientAuthTerm(int client, int AuthId)
 {
     if(1 < AuthId < 100 && !FindPluginByFile("zombiereloaded.smx"))
     {
-        PrintToChat(client, "请到[\x0C僵尸逃跑\x01]服务器中申请此认证");
+        PrintToChat(client, "[\x0CCG\x01]   请到[\x0C僵尸逃跑\x01]服务器中申请此认证");
         return;
     }
 
     if(100 < AuthId < 200 && !FindPluginByFile("ct.smx"))
     {
-        PrintToChat(client, "请到[\x0C匪镇谍影\x01]服务器中申请此认证");
+        PrintToChat(client, "[\x0CCG\x01]   请到[\x0C匪镇谍影\x01]服务器中申请此认证");
         return;
     }
 
     if(200 < AuthId < 300 && !FindPluginByFile("mg_stats.smx"))
     {
-        PrintToChat(client, "请到[\x0C娱乐休闲\x01]服务器中申请此认证");
+        PrintToChat(client, "[\x0CCG\x01]   请到[\x0C娱乐休闲\x01]服务器中申请此认证");
         return;
     }
 
     if(300 < AuthId < 400 && !FindPluginByFile("public_ext.smx"))
     {
-        PrintToChat(client, "请到[\x0C混战休闲\x01]服务器中申请此认证");
+        PrintToChat(client, "[\x0CCG\x01]   请到[\x0C混战休闲\x01]服务器中申请此认证");
         return;
     }
     
     if(500 < AuthId < 600)
     {
-        PrintToChat(client, "[\x0C越狱搞基\x01]服务器认证当前正在建设中...");
+        PrintToChat(client, "[\x0CCG\x01]   [\x0C越狱搞基\x01]服务器认证当前正在建设中...");
         return;
     }
 
     if(1000 < AuthId)
     {
-        PrintToChat(client, "\x07此认证需要猫灵手动发放...");
+        PrintToChat(client, "[\x0CCG\x01]   \x07此认证需要猫灵手动发放...");
         return;
     }
 
@@ -129,7 +129,7 @@ void AuthGroup_CheckClientAuthTerm(int client, int AuthId)
 
     if(!OnCheckAuthTerm(client, AuthId))
     {
-        PrintToChat(client, "\x07很抱歉噢,你没有达到该认证的要求...");
+        PrintToChat(client, "[\x0CCG\x01]   \x07很抱歉噢,你没有达到该认证的要求...");
         return;
     }
 
@@ -139,7 +139,7 @@ void AuthGroup_CheckClientAuthTerm(int client, int AuthId)
     AuthGroup_GetClientAuthName(client, g_ClientGlobal[client][szGroupName], 16);
     Format(m_szQuery, 256, "UPDATE `playertrack_player` SET `groupid` = '%d', `groupname` = '%s' WHERE `id` = '%d' and `steamid` = '%s';", AuthId, g_ClientGlobal[client][szGroupName], g_ClientGlobal[client][iPId], m_szAuthId);
     MySQL_Query(false, AuthGroup_SQLCallback_GiveAuth, m_szQuery, GetClientUserId(client));
-    PrintToChat(client, "\x0C正在同步数据库...");
+    PrintToChat(client, "[\x0CCG\x01]   \x0C正在同步数据库...");
 }
 
 public void AuthGroup_SQLCallback_GiveAuth(Handle owner, Handle hndl, const char[] error, int userid)
@@ -152,7 +152,7 @@ public void AuthGroup_SQLCallback_GiveAuth(Handle owner, Handle hndl, const char
     if(hndl == INVALID_HANDLE)
     {
         UTIL_LogError("AuthGroup_SQLCallback_GiveAuth", "UPDATE auth Failed: client:%N ERROR:%s", client, error);
-        PrintToChat(client, "系统中闪光弹了,请重试!  错误:\x02 x99");
+        PrintToChat(client, "[\x0CCG\x01]   系统中闪光弹了,请重试!  错误:\x02 x99");
         g_ClientGlobal[client][iGId] = 0;
         return;
     }

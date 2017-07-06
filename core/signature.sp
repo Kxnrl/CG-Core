@@ -23,14 +23,14 @@ public Action Command_Signature(int client, int args)
 {
     if(StrContains(g_ClientGlobal[client][szSignature], "该玩家未设置签名") != -1)
     {
-        PrintToChat(client, "首次设置签名免费!");
+        PrintToChat(client, "[\x0CCG\x01]   首次设置签名免费!");
         BuildListenerMenu(client);
         return Plugin_Handled;
     }
 
     if(OnAPIStoreGetCredits(client) < 500)
     {
-        PrintToChat(client, "\x04信用点不足,不能设置签名");
+        PrintToChat(client, "[\x0CCG\x01]   \x04信用点不足,不能设置签名");
         return Plugin_Handled;
     }
 
@@ -125,7 +125,7 @@ public int MenuHandler_Listener(Handle menu, MenuAction action, int client, int 
         {
             if(!OnAPIStoreSetCredits(client, -500, "设置签名", true))
             {
-                PrintToChat(client, "\x07信用点不足,不能设置签名");
+                PrintToChat(client, "[\x0CCG\x01]   \x07信用点不足,不能设置签名");
                 return;
             }
 
@@ -138,7 +138,7 @@ public int MenuHandler_Listener(Handle menu, MenuAction action, int client, int 
             WritePackCell(data, 0);
             ResetPack(data);
             MySQL_Query(false, Database_SQLCallback_SaveDatabase, m_szQuery, data);
-            PrintToChat(client, "\x04已成功设置您的签名,花费了\x10500\x04信用点");
+            PrintToChat(client, "[\x0CCG\x01]   \x04已成功设置您的签名,花费了\x10500\x04信用点");
             strcopy(g_ClientGlobal[client][szSignature], 256, Signature_Data_Client[client][szNewSignature]);
             ReplaceString(Signature_Data_Client[client][szNewSignature], 512, "{白}",    "\x01");
             ReplaceString(Signature_Data_Client[client][szNewSignature], 512, "{红}",    "\x02");
