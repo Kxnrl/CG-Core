@@ -207,14 +207,14 @@ public int GlobalApi_Native_RemoveMotd(Handle plugin, int numParams)
 
 public int GlobalApi_Native_ShowGameText(Handle plugin, int numParams)
 {
-    char color[32], message[256], holdtime[16], szX[16], szY[160];
+    char color[32], message[1024], holdtime[16], szX[16], szY[160];
     if
     (
-        GetNativeString(1, message, 256) != SP_ERROR_NONE ||
-        GetNativeString(2, holdtime, 16) != SP_ERROR_NONE ||
-        GetNativeString(3, color,    32) != SP_ERROR_NONE ||
-        GetNativeString(4, szX,      16) != SP_ERROR_NONE ||
-        GetNativeString(5, szY,      16) != SP_ERROR_NONE
+        GetNativeString(1, message, 1024) != SP_ERROR_NONE ||
+        GetNativeString(2, holdtime,  16) != SP_ERROR_NONE ||
+        GetNativeString(3, color,     32) != SP_ERROR_NONE ||
+        GetNativeString(4, szX,       16) != SP_ERROR_NONE ||
+        GetNativeString(5, szY,       16) != SP_ERROR_NONE
     )
         return false;
 
@@ -257,7 +257,7 @@ public int GlobalApi_Native_ShowGameText(Handle plugin, int numParams)
         entity = EntRefToEntIndex(GlobalApi_Data_TextHud[channel][iEntRef]);
 
     char szChannel[4];
-    IntToString(channel+4, szChannel, 4);
+    IntToString(channel+5, szChannel, 4);
     
     DispatchKeyValue(entity, "message", message);
     DispatchKeyValue(entity, "spawnflags", "0");
@@ -282,14 +282,14 @@ public int GlobalApi_Native_ShowGameText(Handle plugin, int numParams)
 
 public int GlobalApi_Native_ShowGameTextAll(Handle plugin, int numParams)
 {
-    char color[32], message[256], holdtime[16], szX[16], szY[160];
+    char color[32], message[1024], holdtime[16], szX[16], szY[160];
     if
     (
-        GetNativeString(1, message, 256) != SP_ERROR_NONE ||
-        GetNativeString(2, holdtime, 16) != SP_ERROR_NONE ||
-        GetNativeString(3, color,    32) != SP_ERROR_NONE ||
-        GetNativeString(4, szX,      16) != SP_ERROR_NONE ||
-        GetNativeString(5, szY,      16) != SP_ERROR_NONE
+        GetNativeString(1, message, 1024) != SP_ERROR_NONE ||
+        GetNativeString(2, holdtime,  16) != SP_ERROR_NONE ||
+        GetNativeString(3, color,     32) != SP_ERROR_NONE ||
+        GetNativeString(4, szX,       16) != SP_ERROR_NONE ||
+        GetNativeString(5, szY,       16) != SP_ERROR_NONE
     )
         return false;
 
@@ -322,7 +322,7 @@ public int GlobalApi_Native_ShowGameTextAll(Handle plugin, int numParams)
         entity = EntRefToEntIndex(GlobalApi_Data_TextHud[channel][iEntRef]);
 
     char szChannel[4];
-    IntToString(channel+4, szChannel, 4);
+    IntToString(channel+5, szChannel, 4);
 
     DispatchKeyValue(entity, "message", message);
     DispatchKeyValue(entity, "spawnflags", "1");
