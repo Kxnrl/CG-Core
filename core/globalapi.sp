@@ -453,7 +453,7 @@ void GlobalApi_OnClientLoaded(int client)
         PrintToConsole(client, "当前地图: %s   剩余时间: %s", szMap, szTimeleft);
         PrintToConsole(client, "                                                                                               ");
         PrintToConsole(client, "服务器基础命令:");
-        PrintToConsole(client, "核心命令:  !cg    [核心菜单]");
+        PrintToConsole(client, "核心命令： !cg    [核心菜单]");
         PrintToConsole(client, "商店相关： !store [打开商店]  !credits  [显示余额]      !inv       [查看库存]");
         PrintToConsole(client, "地图相关： !rtv   [滚动投票]  !revote   [重新选择]      !nominate  [预定地图]");
         PrintToConsole(client, "娱乐相关： !music [点歌菜单]  !mapmusic [停止地图音乐]  !dj        [停止点播歌曲]");
