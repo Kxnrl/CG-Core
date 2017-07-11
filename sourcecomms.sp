@@ -282,15 +282,14 @@ public OnClientPostAdminCheck(client)
 		FormatEx(Query, sizeof(Query),
 			"SELECT		(c.ends - UNIX_TIMESTAMP()) AS remaining, \
 						c.length, c.type, c.created, c.reason, a.user, \
-						IF (a.immunity>=g.immunity, a.immunity, IFNULL(g.immunity,0)) AS immunity, \
+						a.immunity AS immunity, \
 						c.aid, c.sid, a.authid \
 			FROM		%s_comms	AS c \
 			LEFT JOIN	%s_admins	AS a  ON a.aid = c.aid \
-			LEFT JOIN	%s_srvgroups AS g  ON g.name = a.srv_group \
 			WHERE		RemoveType IS NULL \
 							AND c.authid REGEXP '^STEAM_[0-9]:%s$' \
 							AND (length = '0' OR ends > UNIX_TIMESTAMP())",
-			DatabasePrefix, DatabasePrefix, DatabasePrefix, sClAuthYZEscaped);
+			DatabasePrefix, DatabasePrefix, sClAuthYZEscaped);
 		#if defined LOG_QUERIES
 		LogToFile(logQuery, "OnClientPostAdminCheck for: %s. QUERY: %s", clientAuth, Query);
 		#endif
@@ -2283,11 +2282,10 @@ stock ProcessUnBlock(client, targetId = 0, type, String:sReason[] = "", const St
 				"SELECT		c.bid, \
 							IFNULL((SELECT aid FROM %s_admins WHERE authid = '%s' OR authid REGEXP '^STEAM_[0-9]:%s$'), '0') as iaid, \
 							c.aid, \
-							IF (a.immunity>=g.immunity, a.immunity, IFNULL(g.immunity,0)) as immunity, \
+							a.immunity as immunity, \
 							c.type \
 				FROM		%s_comms	 AS c \
 				LEFT JOIN	%s_admins	AS a ON a.aid = c.aid \
-				LEFT JOIN	%s_srvgroups AS g ON g.name = a.srv_group \
 				WHERE		RemoveType IS NULL \
 								AND (c.authid = '%s' OR c.authid REGEXP '^STEAM_[0-9]:%s$') \
 								AND (length = '0' OR ends > UNIX_TIMESTAMP()) \
