@@ -46,7 +46,6 @@ public Action Command_GetAuth(int client, int args)
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "502", "[越狱搞基] 暴乱领袖");
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "503", "[越狱搞基] 模范狱长");
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "504", "[越狱搞基] 防暴警察");
-    AddMenuItemEx(menu, ITEMDRAW_DEFAULT,  "505", "[越狱搞基] 单挑达人");
 
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "9901", "[全服认证] CG地图组");
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "9902", "[全服认证] CG测试组");
@@ -76,7 +75,7 @@ public int MenuHandler_GetAuth(Handle menu, MenuAction action, int client, int i
 
 bool OnCheckAuthTerm(int client, int AuthId) 
 {
-    bool result;
+    bool result = false;
 
     //Call Forward
     Call_StartForward(AuthGroup_Forward_AuthTerm);
@@ -113,9 +112,9 @@ void AuthGroup_CheckClientAuthTerm(int client, int AuthId)
         return;
     }
     
-    if(500 < AuthId < 600)
+    if(500 < AuthId < 600 && !FindPluginByFile("jb_stats.smx"))
     {
-        PrintToChat(client, "[\x0CCG\x01]   [\x0C越狱搞基\x01]服务器认证当前正在建设中...");
+        PrintToChat(client, "[\x0CCG\x01]   请到[\x0C越狱搞基\x01]服务器中申请此认证");
         return;
     }
 
@@ -178,5 +177,9 @@ void AuthGroup_GetClientAuthName(int client, char[] buffer, int maxLen)
         case  302: strcopy(buffer, maxLen, "混战指挥");
         case  303: strcopy(buffer, maxLen, "爆头狂魔");
         case  304: strcopy(buffer, maxLen, "助攻之神");
+        case  501: strcopy(buffer, maxLen, "暴动狂魔");
+        case  502: strcopy(buffer, maxLen, "暴乱领袖");
+        case  503: strcopy(buffer, maxLen, "模范狱长");
+        case  504: strcopy(buffer, maxLen, "防暴警察");
     }
 }
