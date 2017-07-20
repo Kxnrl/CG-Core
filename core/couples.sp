@@ -15,6 +15,8 @@ Couples Couples_Data_Client[MAXPLAYERS+1][Couples];
 Handle Couples_Forward_OnWedding;
 Handle Couples_Forward_OnDivorce;
 
+bool g_bDisableCouples = true;
+
 void Couples_OnAskPluginLoad2()
 {
     CreateNative("CG_CouplesGetPartnerIndex",    Native_Couples_GetPartnerIndex);
@@ -52,12 +54,28 @@ void Couples_OnPluginStart()
     RegConsoleCmd("sm_cp",      Command_Couples);
     RegConsoleCmd("sm_couples", Command_Couples);
     RegConsoleCmd("sm_propose", Command_Propose);
+    
+    RegServerCmd("cp_toggle",   Command_Toggle);
+}
+
+public Action Command_Toggle(int args)
+{
+    g_bDisableCouples = !g_bDisableCouples;
+    PrintToServer("[Core]  Couples now %s!", g_bDisableCouples ? "Disabled" : "Enabled");
+    PrintToChatAll("[\x0CCore\x01]  \x0ECouples now %s\x0E!", g_bDisableCouples ? "\x07Disabled" : "\x04Enabled");
+    return Plugin_Handled;
 }
 
 public Action Command_Couples(int client, int args)
 {
     if(!IsValidClient(client) || !g_ClientGlobal[client][bLoaded])
         return Plugin_Handled;
+    
+    if(g_bDisableCouples)
+    {
+        PrintToChat(client, "[\x0CCore\x01]  \x0ECouples now %s\x0E on this server!", g_bDisableCouples ? "\x07Disabled" : "\x04Enabled");
+        return Plugin_Handled;
+    }
 
     Couples_DisplayMainMenu(client);
 
