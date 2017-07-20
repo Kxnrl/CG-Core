@@ -205,6 +205,10 @@ public void CG_OnCouplesWedding(int source, int target)
 
 	char m_szFinalMsg[1024];
 	Format(m_szFinalMsg, 1024, "恭喜[%N]和[%N]组成了一对CP!", source, target);
+    
+	char fmt[512];
+	Format(fmt, 512, ">>> 新婚大吉 <<<\n%s", m_szFinalMsg);
+	CG_ShowGameTextAll(fmt, "10.0", "255 255 255", "-1.0", "0.2");
 
 	Handle database = CG_DatabaseGetForum();
 
