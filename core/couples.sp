@@ -15,7 +15,7 @@ Couples Couples_Data_Client[MAXPLAYERS+1][Couples];
 Handle Couples_Forward_OnWedding;
 Handle Couples_Forward_OnDivorce;
 
-bool g_bDisableCouples = true;
+bool g_bDisableCouples = false;
 
 void Couples_OnAskPluginLoad2()
 {
@@ -372,22 +372,22 @@ public int MenuHandler_CouplesConfirmMenu(Handle menu, MenuAction action, int ta
 void Couples_GetMarried(int source, int target)
 {
     //her -> target
-    if(g_ClientGlobal[target][iPId] == 167606 && g_ClientGlobal[source][iPId] != 1)
-    {
-        char cmd_callbacl[128];
-        ServerCommandEx(cmd_callbacl, 128 , "sm_ban #%d 0 \"CAT: 你想干嘛?\"", GetClientUserId(source));
-        UTIL_LogError("Couples_GetMarried", "Auto ban %s permanent: %s", g_ClientGlobal[source][szGamesName], cmd_callbacl);
-        return;
-    }
+    //if(g_ClientGlobal[target][iPId] == 167606 && g_ClientGlobal[source][iPId] != 1)
+    //{
+    //    char cmd_callbacl[128];
+    //    ServerCommandEx(cmd_callbacl, 128 , "sm_ban #%d 0 \"CAT: 你想干嘛?\"", GetClientUserId(source));
+    //    UTIL_LogError("Couples_GetMarried", "Auto ban %s permanent: %s", g_ClientGlobal[source][szGamesName], cmd_callbacl);
+    //    return;
+    //}
 
     //her -> source
-    if(g_ClientGlobal[source][iPId] == 167606 && g_ClientGlobal[target][iPId] != 1)
-    {
-        PrintToChat(source, "[\x0CCG\x01]   系统错误 \x02CP#33");
-        PrintToChat(target, "[\x0CCG\x01]   系统错误 \x02CP#33");
-        Couples_DisplayMainMenu(source);
-        return;
-    }
+    //if(g_ClientGlobal[source][iPId] == 167606 && g_ClientGlobal[target][iPId] != 1)
+    //{
+    //    PrintToChat(source, "[\x0CCG\x01]   系统错误 \x02CP#33");
+    //    PrintToChat(target, "[\x0CCG\x01]   系统错误 \x02CP#33");
+    //    Couples_DisplayMainMenu(source);
+    //    return;
+    //}
 
     Handle m_hPack = CreateDataPack();
     WritePackCell(m_hPack, GetClientUserId(source));
