@@ -2,8 +2,8 @@
 
 #pragma newdecls required //let`s go! new syntax!!!
 
-#define Build 460
-#define PLUGIN_VERSION " 8.07a - 2017/07/20 10:06 "
+#define Build 461
+#define PLUGIN_VERSION " 8.1 - 2017/07/23 13:45 "
 
 enum Clients
 {
@@ -113,8 +113,8 @@ public void OnPluginStart()
     RegConsoleCmd("sm_cg",           Command_Menu);
 
     //Createe admin command
-    RegAdminCmd("sm_reloadadv",      Command_ReloadAdv,   ADMFLAG_ROOT);
-    RegAdminCmd("sm_reloadcache",    Command_ReloadCache, ADMFLAG_ROOT);
+    RegAdminCmd("sm_reloadadv",      Command_ReloadAdv,   ADMFLAG_BAN);
+    RegAdminCmd("sm_reloadcache",    Command_ReloadCache, ADMFLAG_BAN);
 
     //Global timer
     CreateTimer(1.0, Timer_GlobalTimer, _, TIMER_REPEAT);
@@ -603,4 +603,69 @@ void Frame_KickDelay(int client)
     char fmt[256];
     Format(fmt, 256, "你因为太久没有激活游戏,已被踢出游戏.\nYou have been AFK too long");
     KickClient(client, fmt);
+}
+
+public Action OnClientSayCommand(int client, const char[] command, const char[] sArgs)
+{
+    if(!IsValidClient(client))
+        return Plugin_Continue;
+    
+    if(Couples_OnClientSay(client, sArgs) >= Plugin_Handled)
+        return Plugin_Stop;
+
+    if(Signature_OnClientSay(client, sArgs) >= Plugin_Handled)
+        return Plugin_Stop;
+
+    if(sArgs[0] != '@')
+        return Plugin_Continue;
+
+    if(strcmp(command, "say", false) == 0)
+    {
+        if(!CheckCommandAccess(client, "sm_reloadadv", ADMFLAG_BAN))
+            return Plugin_Continue;
+
+        UTIL_SendChatToAll(client, sArgs[1]);
+        LogAction(client, -1, "\"%L\" 管理员频道喊话 [%s]", client, sArgs[1]);
+
+        return Plugin_Stop;
+    }
+    else if(strcmp(command, "say_team", false) == 0 || strcmp(command, "say_squad", false) == 0)
+    {
+        UTIL_SendChatToAdmins(client, sArgs[1]);
+
+        return Plugin_Stop;
+    }
+
+    return Plugin_Continue;
+}
+
+void UTIL_SendChatToAll(int client, const char[] message)
+{
+    for(int target = 1; target <= MaxClients; ++target)
+    {
+        if(!IsClientInGame(target) || IsFakeClient(target))
+            continue;
+
+        PrintToChat(target, "[\x10管理员\x01] \x0C%N\x01 :\x07  %s", client, message);
+    }
+
+    char fmt[256];
+    Format(fmt, 256, "[管理员] %N\n %s", client, message);
+    GlobalApi_ShowGameText(INVALID_HANDLE, message, "8.0", "233 0 0", "-1.0", "0.32");
+
+    EmitSoundToAll("buttons/button18.wav");
+}
+
+void UTIL_SendChatToAdmins(int client, const char[] message)
+{
+    for(int target = 1; target <= MaxClients; ++target)
+    {
+        if(!IsClientInGame(target) || IsFakeClient(target))
+            continue;
+        
+        if(!CheckCommandAccess(target, "sm_reloadadv", ADMFLAG_BAN) && target != client)
+            continue;
+
+        PrintToChat(target, "[\x0A发送至管理员\x01] \x05%N\x01 :\x07  %s", client, message);
+    }
 }

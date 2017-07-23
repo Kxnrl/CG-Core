@@ -39,7 +39,7 @@ public Action Command_Signature(int client, int args)
     return Plugin_Handled;
 }
 
-public Action OnClientSayCommand(int client, const char[] command, const char[] sArgs)
+Action Signature_OnClientSay(int client, const char[] sArgs)
 {
     if(!Signature_Data_Client[client][bListener])
         return Plugin_Continue;
@@ -58,7 +58,7 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 
     BuildListenerMenu(client);
 
-    return Plugin_Handled;
+    return Plugin_Stop;
 }
 
 void BuildListenerMenu(int client)

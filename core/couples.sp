@@ -596,3 +596,28 @@ int FindClientByPlayerId(int playerid)
 
     return -1;
 }
+
+Action Couples_OnClientSay(int client, const char[] message)
+{
+    if(message[0] != '/')
+        return Plugin_Continue;
+    
+    int target = Couples_Data_Client[client][iPartnerIndex];
+    if(target == -2)
+    {
+        PrintToChat(client, "[\x0ECP频道\x01]  \x07你没有CP,发什么发");
+        return Plugin_Stop;
+    }
+    else if(target == -1)
+    {
+        PrintToChat(client, "[\x0ECP频道\x01]  \x05你的CP \x0E%N \x05当前已经离家", client, Couples_Data_Client[client][szPartnerName]);
+        return Plugin_Stop;
+    }
+    else if(!IsValidClient(target))
+        return Plugin_Stop;
+
+    PrintToChat(target, "[\x0ECP频道\x01]  \x0E%N\x01 :  \x10%s", client, message);
+    PrintToChat(client, "[\x0ECP频道\x01]  \x0E%N\x01 :  \x10%s", client, message);
+
+    return Plugin_Stop;
+}
