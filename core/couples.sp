@@ -610,7 +610,7 @@ Action Couples_OnClientSay(int client, const char[] message)
     }
     else if(target == -1)
     {
-        PrintToChat(client, "[\x0ECP频道\x01]  \x05你的CP \x0E%N \x05当前已经离家", client, Couples_Data_Client[client][szPartnerName]);
+        PrintToChat(client, "[\x0ECP频道\x01]  \x05你的CP \x0E%s \x05当前已经离线", Couples_Data_Client[client][szPartnerName]);
         return Plugin_Stop;
     }
     else if(!IsValidClient(target))

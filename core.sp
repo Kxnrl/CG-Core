@@ -3,7 +3,7 @@
 #pragma newdecls required //let`s go! new syntax!!!
 
 #define Build 461
-#define PLUGIN_VERSION " 8.1 - 2017/07/23 13:45 "
+#define PLUGIN_VERSION " 8.1 - 2017/07/23 13:56 "
 
 enum Clients
 {
@@ -646,12 +646,12 @@ void UTIL_SendChatToAll(int client, const char[] message)
         if(!IsClientInGame(target) || IsFakeClient(target))
             continue;
 
-        PrintToChat(target, "[\x10管理员\x01] \x0C%N\x01 :\x07  %s", client, message);
+        PrintToChat(target, "[\x10管理员频道\x01] \x0C%N\x01 :\x07  %s", client, message);
     }
 
     char fmt[256];
-    Format(fmt, 256, "[管理员] %N\n %s", client, message);
-    GlobalApi_ShowGameText(INVALID_HANDLE, message, "8.0", "233 0 0", "-1.0", "0.32");
+    Format(fmt, 256, "[管理员频道] %N\n %s", client, message);
+    GlobalApi_ShowGameText(INVALID_HANDLE, fmt, "10.0", "233 0 0", "-1.0", "0.32");
 
     EmitSoundToAll("buttons/button18.wav");
 }
