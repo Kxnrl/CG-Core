@@ -218,66 +218,15 @@ public int GlobalApi_Native_ShowGameText(Handle plugin, int numParams)
     )
         return false;
 
-    int channel = GlobalApi_GetFreelyChannel(szX, szY);
-
-    if(channel < 0 || channel >= MAX_CHANNEL)
-        return false;
-
     ArrayList array_client = GetNativeCell(6);
 
     if(array_client == INVALID_HANDLE)
         return false;
 
-    int arraysize = GetArraySize(array_client);
-
-    if(arraysize < 1)
+    if(GetArraySize(array_client) < 1)
         return false;
 
-    if(GlobalApi_Data_TextHud[channel][hTimer] != INVALID_HANDLE)
-        KillTimer(GlobalApi_Data_TextHud[channel][hTimer]);
-
-    float hold = StringToFloat(holdtime);
-
-    GlobalApi_Data_TextHud[channel][fHolded] = GetGameTime()+hold;
-    GlobalApi_Data_TextHud[channel][hTimer] = CreateTimer(hold, Timer_ResetChannel, channel, TIMER_FLAG_NO_MAPCHANGE);
-    strcopy(GlobalApi_Data_TextHud[channel][szPosX], 16, szX);
-    strcopy(GlobalApi_Data_TextHud[channel][szPosY], 16, szY);
-
-    int entity = -1;
-    if(!IsValidEntity(GlobalApi_Data_TextHud[channel][iEntRef]))
-    {
-        entity = CreateEntityByName("game_text");
-        GlobalApi_Data_TextHud[channel][iEntRef] = EntIndexToEntRef(entity);
-
-        char tname[32]
-        Format(tname, 32, "game_text_%i", entity);
-        DispatchKeyValue(entity,"targetname", tname);
-    }
-    else
-        entity = EntRefToEntIndex(GlobalApi_Data_TextHud[channel][iEntRef]);
-
-    char szChannel[4];
-    IntToString(channel+5, szChannel, 4);
-    
-    DispatchKeyValue(entity, "message", message);
-    DispatchKeyValue(entity, "spawnflags", "0");
-    DispatchKeyValue(entity, "channel", szChannel);
-    DispatchKeyValue(entity, "holdtime", holdtime);
-    DispatchKeyValue(entity, "fxtime", "99.9");
-    DispatchKeyValue(entity, "fadeout", "0");
-    DispatchKeyValue(entity, "fadein", "0");
-    DispatchKeyValue(entity, "x", szX);
-    DispatchKeyValue(entity, "y", szY);
-    DispatchKeyValue(entity, "color", color);
-    DispatchKeyValue(entity, "color2", color);
-    DispatchKeyValue(entity, "effect", "0");
-
-    DispatchSpawn(entity);
-
-    for(int x = 0; x < arraysize; ++x)
-        AcceptEntityInput(entity, "Display", GetArrayCell(array_client, x));
-
-    return true;
+    return GlobalApi_ShowGameText(array_client, message, holdtime, color, szX, szY);
 }
 
 public int GlobalApi_Native_ShowGameTextAll(Handle plugin, int numParams)
@@ -293,6 +242,11 @@ public int GlobalApi_Native_ShowGameTextAll(Handle plugin, int numParams)
     )
         return false;
 
+    return GlobalApi_ShowGameText(INVALID_HANDLE, message, holdtime, color, szX, szY);
+}
+
+bool GlobalApi_ShowGameText(Handle array_client, const char[] message, const char[] holdtime, const char[] color, const char[] szX, const char[] szY)
+{
     int channel = GlobalApi_GetFreelyChannel(szX, szY);
 
     if(channel < 0 || channel >= MAX_CHANNEL)
@@ -315,7 +269,7 @@ public int GlobalApi_Native_ShowGameTextAll(Handle plugin, int numParams)
         GlobalApi_Data_TextHud[channel][iEntRef] = EntIndexToEntRef(entity);
 
         char tname[32]
-        Format(tname, 32, "game_text_%i", entity);
+        Format(tname, 32, "game_text_core_%d", channel);
         DispatchKeyValue(entity,"targetname", tname);
     }
     else
@@ -325,7 +279,7 @@ public int GlobalApi_Native_ShowGameTextAll(Handle plugin, int numParams)
     IntToString(channel+5, szChannel, 4);
 
     DispatchKeyValue(entity, "message", message);
-    DispatchKeyValue(entity, "spawnflags", "1");
+    DispatchKeyValue(entity, "spawnflags", array_client == INVALID_HANDLE ? "1" : "0");
     DispatchKeyValue(entity, "channel", szChannel);
     DispatchKeyValue(entity, "holdtime", holdtime);
     DispatchKeyValue(entity, "fxtime", "99.9");
@@ -339,7 +293,13 @@ public int GlobalApi_Native_ShowGameTextAll(Handle plugin, int numParams)
 
     DispatchSpawn(entity);
 
-    AcceptEntityInput(entity, "Display");
+    if(array_client != INVALID_HANDLE)
+    {
+        int arraysize = GetArraySize(array_client);
+        for(int x = 0; x < arraysize; ++x)
+            AcceptEntityInput(entity, "Display", GetArrayCell(array_client, x));
+    }
+    else AcceptEntityInput(entity, "Display");
 
     return true;
 }
