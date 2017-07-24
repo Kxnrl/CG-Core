@@ -571,7 +571,9 @@ void Couples_DisplayAboutCPMenu(int client)
 
     AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "组成CP需要两厢情愿");
     AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "CP配对后14天内不能解除");
+    AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "CP解除后30天内不能再组");
     AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "CP能为你提供一定的加成");
+    AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "按Y输入[/内容]可以发送CP频道");
 
     SetMenuExitBackButton(menu, true);
     SetMenuExitButton(menu, true);
@@ -601,7 +603,7 @@ Action Couples_OnClientSay(int client, const char[] message)
 {
     if(message[0] != '/')
         return Plugin_Continue;
-    
+
     int target = Couples_Data_Client[client][iPartnerIndex];
     if(target == -2)
     {
@@ -616,8 +618,8 @@ Action Couples_OnClientSay(int client, const char[] message)
     else if(!IsValidClient(target))
         return Plugin_Stop;
 
-    PrintToChat(target, "[\x0ECP频道\x01]  \x0E%N\x01 :  \x10%s", client, message);
-    PrintToChat(client, "[\x0ECP频道\x01]  \x0E%N\x01 :  \x10%s", client, message);
+    PrintToChat(target, "[\x0ECP频道\x01]  \x0E%N\x01 :  \x10%s", client, message[1]);
+    PrintToChat(client, "[\x0ECP频道\x01]  \x0E%N\x01 :  \x10%s", client, message[1]);
 
     return Plugin_Stop;
 }
