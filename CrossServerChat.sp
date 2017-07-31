@@ -10,8 +10,8 @@
 
 #pragma newdecls required 
 
-#define DISCONNECTSTR    "DISCONNECTMEPLSTHX"
-#define key                "[&KVJL>P*^Y*(JHjkhlsa]"
+#define DISCONNECTSTR   "DISCONNECTMEPLSTHX"
+#define key             "[&KVJL>P*^Y*(JHjkhlsa]"
 #define MasterServer    "112.74.128.238"
 #define port            "64333"
 
@@ -531,21 +531,25 @@ void GetServerTag(char[] m_szServerTag, int maxLen)
 {
     switch(CG_GetServerId())
     {
-        case  1: strcopy(m_szServerTag, maxLen, "僵尸逃跑");
-        case  2: strcopy(m_szServerTag, maxLen, "匪镇碟影");
-        case  3: strcopy(m_szServerTag, maxLen, "娱乐休闲");
-        case  4: strcopy(m_szServerTag, maxLen, "僵尸逃跑");
-        case  5: strcopy(m_szServerTag, maxLen, "越狱搞基");
-        case  6: strcopy(m_szServerTag, maxLen, "混战干拉");
-        case  7: strcopy(m_szServerTag, maxLen, "死斗练枪");
-        case  8: strcopy(m_szServerTag, maxLen, "死亡练枪");
-        case  9: strcopy(m_szServerTag, maxLen, "满十比赛");
-        case 10: strcopy(m_szServerTag, maxLen, "KreedZ①");
-        case 11: strcopy(m_szServerTag, maxLen, "KreedZ②");
-        case 15: strcopy(m_szServerTag, maxLen, "回防对抗");
-        case 21: strcopy(m_szServerTag, maxLen, "测试调试");
-        case 22: strcopy(m_szServerTag, maxLen, "饥饿游戏");
-        case 23: strcopy(m_szServerTag, maxLen, "死亡滑翔");
+        case  1: strcopy(m_szServerTag, maxLen, "僵尸逃跑①");
+        case  2: strcopy(m_szServerTag, maxLen, "僵尸逃跑②");
+        case  3: strcopy(m_szServerTag, maxLen, "僵尸逃跑③");
+        case  4: strcopy(m_szServerTag, maxLen, "僵尸逃跑④");
+        case  5: strcopy(m_szServerTag, maxLen, "匪镇碟影①");
+        case  6: strcopy(m_szServerTag, maxLen, "匪镇碟影②");
+        case  7: strcopy(m_szServerTag, maxLen, "娱乐休闲①");
+        case  8: strcopy(m_szServerTag, maxLen, "越狱搞基①");
+        case  9: strcopy(m_szServerTag, maxLen, "越狱搞基②");
+        case 10: strcopy(m_szServerTag, maxLen, "混战干拉①");
+        case 11: strcopy(m_szServerTag, maxLen, "饥饿游戏①");
+        case 12: strcopy(m_szServerTag, maxLen, "死亡滑翔①");
+        case 13: strcopy(m_szServerTag, maxLen, "死斗练枪①");
+        case 14: strcopy(m_szServerTag, maxLen, "死亡练枪①");
+        case 15: strcopy(m_szServerTag, maxLen, "KreedZ①");
+        case 16: strcopy(m_szServerTag, maxLen, "KreedZ②");
+        case 17: strcopy(m_szServerTag, maxLen, "满十比赛①");
+        case 18: strcopy(m_szServerTag, maxLen, "回防对抗①");
+        case 99: strcopy(m_szServerTag, maxLen, "测试调试①");
         default: strcopy(m_szServerTag, maxLen, "论坛");
     }
 }
