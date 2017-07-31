@@ -60,8 +60,8 @@ void GlobalApi_OnAskPluginLoad2()
     CreateNative("CG_ClientInGroup",      GlobalApi_Native_ClientInGroup);
     CreateNative("CG_ClientIsRealName",   GlobalApi_Native_ClientIsRealName);
     CreateNative("CG_ClientSetVIP",       GlobalApi_Native_ClientSetVIP);
-    CreateNative("CG_ClientGetForumName",     GlobalApi_Native_ClientGetForumName);
-    CreateNative("CG_ClientGetGroupName",     GlobalApi_Native_ClientGetGroupName);
+    CreateNative("CG_ClientGetForumName", GlobalApi_Native_ClientGetForumName);
+    CreateNative("CG_ClientGetGroupName", GlobalApi_Native_ClientGetGroupName);
     CreateNative("CG_ClientGetSignature", GlobalApi_Native_ClientGetSingature);
 }
 
@@ -250,7 +250,10 @@ bool GlobalApi_ShowGameText(Handle array_client, const char[] message, const cha
     int channel = GlobalApi_GetFreelyChannel(szX, szY);
 
     if(channel < 0 || channel >= MAX_CHANNEL)
+    {
+        UTIL_LogError("GlobalApi_ShowGameText", "Can not find free channel");
         return false;
+    }
 
     if(GlobalApi_Data_TextHud[channel][hTimer] != INVALID_HANDLE)
         KillTimer(GlobalApi_Data_TextHud[channel][hTimer]);
@@ -274,22 +277,28 @@ bool GlobalApi_ShowGameText(Handle array_client, const char[] message, const cha
     }
     else
         entity = EntRefToEntIndex(GlobalApi_Data_TextHud[channel][iEntRef]);
+    
+    if(!IsValidEntity(entity))
+    {
+        UTIL_LogError("GlobalApi_ShowGameText", "game_text entity is not valid CBaseEntity");
+        return false;
+    }
 
     char szChannel[4];
     IntToString(channel+5, szChannel, 4);
 
-    DispatchKeyValue(entity, "message", message);
-    DispatchKeyValue(entity, "spawnflags", array_client == INVALID_HANDLE ? "1" : "0");
-    DispatchKeyValue(entity, "channel", szChannel);
-    DispatchKeyValue(entity, "holdtime", holdtime);
-    DispatchKeyValue(entity, "fxtime", "99.9");
-    DispatchKeyValue(entity, "fadeout", "0");
-    DispatchKeyValue(entity, "fadein", "0");
-    DispatchKeyValue(entity, "x", szX);
-    DispatchKeyValue(entity, "y", szY);
-    DispatchKeyValue(entity, "color", color);
-    DispatchKeyValue(entity, "color2", color);
-    DispatchKeyValue(entity, "effect", "0");
+    DispatchKeyValue(entity, "message",     message);
+    DispatchKeyValue(entity, "spawnflags",  array_client == INVALID_HANDLE ? "1" : "0");
+    DispatchKeyValue(entity, "channel",     szChannel);
+    DispatchKeyValue(entity, "holdtime",    holdtime);
+    DispatchKeyValue(entity, "fxtime",      "30.0");
+    DispatchKeyValue(entity, "fadeout",     "0.0");
+    DispatchKeyValue(entity, "fadein",      "0.0");
+    DispatchKeyValue(entity, "x",           szX);
+    DispatchKeyValue(entity, "y",           szY);
+    DispatchKeyValue(entity, "color",       color);
+    DispatchKeyValue(entity, "color2",      color);
+    DispatchKeyValue(entity, "effect",      "0");
 
     DispatchSpawn(entity);
 
