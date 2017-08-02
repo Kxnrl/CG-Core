@@ -2,8 +2,8 @@
 
 #pragma newdecls required //let`s go! new syntax!!!
 
-#define Build 464
-#define PLUGIN_VERSION " 8.11f - 2017/07/29 02:37 "
+#define Build 465
+#define PLUGIN_VERSION " 8.12 - 2017/08/01 18:06 "
 
 enum Clients
 {
@@ -610,6 +610,12 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
     if(!IsValidClient(client))
         return Plugin_Continue;
     
+    if(UTIL_IsChatDirty(sArgs))
+    {
+        PrintToChat(client, "[\x0CCG\x01]   \x07请注意文明用语...");
+        return Plugin_Stop;
+    } 
+    
     if(Couples_OnClientSay(client, sArgs) >= Plugin_Handled)
         return Plugin_Stop;
 
@@ -651,7 +657,7 @@ void UTIL_SendChatToAll(int client, const char[] message)
 
     char fmt[256];
     Format(fmt, 256, "[管理员频道] %N\n %s", client, message);
-    GlobalApi_ShowGameText(INVALID_HANDLE, fmt, "10.0", "233 0 0", "-1.0", "0.32");
+    GlobalApi_ShowGameText(INVALID_HANDLE, fmt, 10.0, "233 0 0", -1.0, 0.32);
 
     EmitSoundToAll("buttons/button18.wav");
 }
@@ -668,4 +674,23 @@ void UTIL_SendChatToAdmins(int client, const char[] message)
 
         PrintToChat(target, "[\x0A发送至管理员\x01] \x05%N\x01 :\x07  %s", client, message);
     }
+}
+
+bool UTIL_IsChatDirty(const char[] chat)
+{
+    if( 
+        StrContains(chat, "cnm", false)         != -1 ||
+        StrContains(chat, "rbq", false)         != -1 ||
+        StrContains(chat, "gnm", false)         != -1 ||
+        StrContains(chat, "93", false)          != -1 ||
+        StrContains(chat, "x社", false)         != -1 ||
+        StrContains(chat, "操你妈", false)      != -1 ||
+        StrContains(chat, "傻逼", false)        != -1 ||
+        StrContains(chat, "干你妈", false)      != -1 ||
+        StrContains(chat, "日你妈", false)      != -1 ||
+        StrContains(chat, "肏", false)          != -1
+      )
+        return true;
+
+    return false;
 }

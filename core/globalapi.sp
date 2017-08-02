@@ -25,10 +25,9 @@ enum Forwards
 
 enum TextHud
 {
-    iEntRef,
-    Float:fHolded,
-    String:szPosX[16],
-    String:szPosY[16],
+    Float:fHold,
+    Float:fX,
+    Float:fY,
     Handle:hTimer
 }
 
@@ -207,7 +206,7 @@ public int GlobalApi_Native_RemoveMotd(Handle plugin, int numParams)
 
 public int GlobalApi_Native_ShowGameText(Handle plugin, int numParams)
 {
-    char color[32], message[1024], holdtime[16], szX[16], szY[160];
+    char color[32], message[1024], holdtime[16], szX[16], szY[16];
     if
     (
         GetNativeString(1, message, 1024) != SP_ERROR_NONE ||
@@ -226,12 +225,12 @@ public int GlobalApi_Native_ShowGameText(Handle plugin, int numParams)
     if(GetArraySize(array_client) < 1)
         return false;
 
-    return GlobalApi_ShowGameText(array_client, message, holdtime, color, szX, szY);
+    return GlobalApi_ShowGameText(array_client, message, StringToFloat(holdtime), color, StringToFloat(szX), StringToFloat(szY));
 }
 
 public int GlobalApi_Native_ShowGameTextAll(Handle plugin, int numParams)
 {
-    char color[32], message[1024], holdtime[16], szX[16], szY[160];
+    char color[32], message[1024], holdtime[16], szX[16], szY[16];
     if
     (
         GetNativeString(1, message, 1024) != SP_ERROR_NONE ||
@@ -242,12 +241,12 @@ public int GlobalApi_Native_ShowGameTextAll(Handle plugin, int numParams)
     )
         return false;
 
-    return GlobalApi_ShowGameText(INVALID_HANDLE, message, holdtime, color, szX, szY);
+    return GlobalApi_ShowGameText(INVALID_HANDLE, message, StringToFloat(holdtime), color, StringToFloat(szX), StringToFloat(szY));
 }
 
-bool GlobalApi_ShowGameText(Handle array_client, const char[] message, const char[] holdtime, const char[] color, const char[] szX, const char[] szY)
+bool GlobalApi_ShowGameText(Handle array_client, const char[] message, const float holdtime, const char[] color, const float x, const float y)
 {
-    int channel = GlobalApi_GetFreelyChannel(szX, szY);
+    int channel = GlobalApi_GetFreelyChannel(x, y);
 
     if(channel < 0 || channel >= MAX_CHANNEL)
     {
@@ -255,60 +254,36 @@ bool GlobalApi_ShowGameText(Handle array_client, const char[] message, const cha
         return false;
     }
 
+    char szColor[3][4];
+    ExplodeString(color, " ", szColor, 3, 4);
+    int r = StringToInt(szColor[0]);
+    int g = StringToInt(szColor[1]);
+    int b = StringToInt(szColor[2]);
+
+    SetHudTextParams(x, y, holdtime, r, g, b, 255, 0, 30.0, 0.0, 0.0);
+
     if(GlobalApi_Data_TextHud[channel][hTimer] != INVALID_HANDLE)
         KillTimer(GlobalApi_Data_TextHud[channel][hTimer]);
 
-    float hold = StringToFloat(holdtime);
-
-    GlobalApi_Data_TextHud[channel][fHolded] = GetGameTime()+hold;
-    GlobalApi_Data_TextHud[channel][hTimer] = CreateTimer(hold, Timer_ResetChannel, channel, TIMER_FLAG_NO_MAPCHANGE);
-    strcopy(GlobalApi_Data_TextHud[channel][szPosX], 16, szX);
-    strcopy(GlobalApi_Data_TextHud[channel][szPosY], 16, szY);
-
-    int entity = -1;
-    if(!IsValidEntity(GlobalApi_Data_TextHud[channel][iEntRef]))
-    {
-        entity = CreateEntityByName("game_text");
-        GlobalApi_Data_TextHud[channel][iEntRef] = EntIndexToEntRef(entity);
-
-        char tname[32]
-        Format(tname, 32, "game_text_core_%d", channel);
-        DispatchKeyValue(entity,"targetname", tname);
-    }
-    else
-        entity = EntRefToEntIndex(GlobalApi_Data_TextHud[channel][iEntRef]);
+    GlobalApi_Data_TextHud[channel][fHold] = GetGameTime()+holdtime;
+    GlobalApi_Data_TextHud[channel][hTimer] = CreateTimer(holdtime, Timer_ResetChannel, channel, TIMER_FLAG_NO_MAPCHANGE);
+    GlobalApi_Data_TextHud[channel][fX] = x;
+    GlobalApi_Data_TextHud[channel][fY] = y;
     
-    if(!IsValidEntity(entity))
-    {
-        UTIL_LogError("GlobalApi_ShowGameText", "game_text entity is not valid CBaseEntity");
-        return false;
-    }
-
-    char szChannel[4];
-    IntToString(channel+5, szChannel, 4);
-
-    DispatchKeyValue(entity, "message",     message);
-    DispatchKeyValue(entity, "spawnflags",  array_client == INVALID_HANDLE ? "1" : "0");
-    DispatchKeyValue(entity, "channel",     szChannel);
-    DispatchKeyValue(entity, "holdtime",    holdtime);
-    DispatchKeyValue(entity, "fxtime",      "30.0");
-    DispatchKeyValue(entity, "fadeout",     "0.0");
-    DispatchKeyValue(entity, "fadein",      "0.0");
-    DispatchKeyValue(entity, "x",           szX);
-    DispatchKeyValue(entity, "y",           szY);
-    DispatchKeyValue(entity, "color",       color);
-    DispatchKeyValue(entity, "color2",      color);
-    DispatchKeyValue(entity, "effect",      "0");
-
-    DispatchSpawn(entity);
+    channel += 4;
 
     if(array_client != INVALID_HANDLE)
     {
         int arraysize = GetArraySize(array_client);
-        for(int x = 0; x < arraysize; ++x)
-            AcceptEntityInput(entity, "Display", GetArrayCell(array_client, x));
+        for(int index = 0; index < arraysize; ++index)
+            ShowHudText(GetArrayCell(array_client, index), channel, message);
     }
-    else AcceptEntityInput(entity, "Display");
+    else
+    {
+        for(int client = 1; client <= MaxClients; ++client)
+            if(IsClientInGame(client) && !IsFakeClient(client))
+                ShowHudText(client, channel, message);
+    }
 
     return true;
 }
@@ -418,7 +393,7 @@ void GlobalApi_OnClientLoaded(int client)
         PrintToConsole(client, "                                                                                               ");
         PrintToConsole(client, "当前服务器:  %s   -   Tickrate: %d.0   -   主程序版本: %s - Build %d", szHostname, RoundToNearest(1.0 / GetTickInterval()), PLUGIN_VERSION, Build);
         PrintToConsole(client, " ");
-        PrintToConsole(client, "论坛地址: https://csgogamers.com  官方QQ群: 107421770");
+        PrintToConsole(client, "论坛地址: https://csgogamers.com  官方QQ群: 107421770  官方YY: 497416");
         PrintToConsole(client, "当前地图: %s   剩余时间: %s", szMap, szTimeleft);
         PrintToConsole(client, "                                                                                               ");
         PrintToConsole(client, "服务器基础命令:");
@@ -626,11 +601,10 @@ void GlobalApi_OnMapStart()
 {
     for(int channel = 0; channel < MAX_CHANNEL; ++channel)
     {
-        GlobalApi_Data_TextHud[channel][iEntRef] = INVALID_ENT_REFERENCE;
-        GlobalApi_Data_TextHud[channel][fHolded] = GetGameTime();
+        GlobalApi_Data_TextHud[channel][fHold] = GetGameTime();
         GlobalApi_Data_TextHud[channel][hTimer] = INVALID_HANDLE;
-        GlobalApi_Data_TextHud[channel][szPosX][0] = '\0';
-        GlobalApi_Data_TextHud[channel][szPosY][0] = '\0';
+        GlobalApi_Data_TextHud[channel][fX] = 0.0;
+        GlobalApi_Data_TextHud[channel][fY] = 0.0;
     }
 }
 
@@ -676,14 +650,14 @@ public void GlobalApi_SQLCallback_WebInterface(Handle owner, Handle hndl, const 
     GlobalApi_ShowMOTDPanelEx(client, show);
 }
 
-int GlobalApi_GetFreelyChannel(const char[] szX, const char[] szY)
+int GlobalApi_GetFreelyChannel(const float x, const float y)
 {
     for(int channel = 0; channel < MAX_CHANNEL; ++channel)
-        if(StrEqual(GlobalApi_Data_TextHud[channel][szPosX], szX) && StrEqual(GlobalApi_Data_TextHud[channel][szPosY], szY))
+        if(GlobalApi_Data_TextHud[channel][fX] == x && GlobalApi_Data_TextHud[channel][fY] == y)
             return channel;
 
     for(int channel = 0; channel < MAX_CHANNEL; ++channel)
-        if(GlobalApi_Data_TextHud[channel][fHolded] <= GetGameTime())
+        if(GlobalApi_Data_TextHud[channel][fHold] <= GetGameTime())
             return channel;
 
     return -1;
@@ -692,8 +666,8 @@ int GlobalApi_GetFreelyChannel(const char[] szX, const char[] szY)
 public Action Timer_ResetChannel(Handle timer, int channel)
 {
     GlobalApi_Data_TextHud[channel][hTimer] = INVALID_HANDLE;
-    GlobalApi_Data_TextHud[channel][szPosX][0] = '\0';
-    GlobalApi_Data_TextHud[channel][szPosY][0] = '\0';
+    GlobalApi_Data_TextHud[channel][fX] = 0.0;
+    GlobalApi_Data_TextHud[channel][fY] = 0.0;
 
     return Plugin_Stop;
 }
