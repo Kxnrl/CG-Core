@@ -250,7 +250,7 @@ bool GlobalApi_ShowGameText(Handle array_client, const char[] message, const flo
 
     if(channel < 0 || channel >= MAX_CHANNEL)
     {
-        UTIL_LogError("GlobalApi_ShowGameText", "Can not find free channel");
+        UTIL_LogError("GlobalApi_ShowGameText", "Can not find free channel -> [%f,%f]", x, y);
         return false;
     }
 
@@ -350,13 +350,14 @@ void GlobalApi_OnPluginStart()
 
 void GlobalApi_OnClientLoaded(int client)
 {
-    //Call Forward
-    Call_StartForward(GlobalApi_Forwards[ClientLoaded]);
-    Call_PushCell(client);
-    Call_Finish();
-
     if(IsFakeClient(client))
+    {
+        //Call Forward
+        Call_StartForward(GlobalApi_Forwards[ClientLoaded]);
+        Call_PushCell(client);
+        Call_Finish();
         return;
+    }
 
     //Check join game.
     CreateTimer(45.0, Timer_CheckJoinGame, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
@@ -409,34 +410,11 @@ void GlobalApi_OnClientLoaded(int client)
         PrintToConsole(client, "-----------------------------------------------------------------------------------------------");        
         PrintToConsole(client, "                                                                                               ")
     }
-
-    //Check Flags
-    if(StrEqual(g_ClientGlobal[client][szFlags], "OP+VIP") && g_ClientGlobal[client][bVip])
-        return;
-
-    if(StrEqual(g_ClientGlobal[client][szFlags], "OP") && !(GetUserFlagBits(client) & ADMFLAG_CHANGEMAP))
-        return;
-
-    char newflags[16];
-
-    if(g_ClientGlobal[client][iGId] >= 9990)
-        strcopy(newflags, 16, "Admin");
-    else if(GetUserFlagBits(client) & ADMFLAG_CHANGEMAP)
-        strcopy(newflags, 16, g_ClientGlobal[client][bVip] ? "OP+VIP" : "OP");
-    else if(g_ClientGlobal[client][bVip])
-        strcopy(newflags, 16, "VIP"); //SVIP
-    else
-        strcopy(newflags, 16, "荣誉会员");
-
-    if(StrEqual(g_ClientGlobal[client][szFlags], newflags))
-        return;
-
-    strcopy(g_ClientGlobal[client][szFlags], 16, newflags);
-
-    char m_szQuery[128];
-    Format(m_szQuery, 128, "UPDATE `playertrack_player` SET `flags` = '%s' WHERE `id` = '%d'", g_ClientGlobal[client][szFlags], g_ClientGlobal[client][iPId]);
-    MySQL_Query(false, Database_SQLCallback_NoResults, m_szQuery, 1);
-
+    
+    //Call Forward
+    Call_StartForward(GlobalApi_Forwards[ClientLoaded]);
+    Call_PushCell(client);
+    Call_Finish();
 }
 
 void OnClientVipChecked(int client)

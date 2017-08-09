@@ -1,4 +1,5 @@
-#include <sdktools>
+#include <sdktools_functions>   // for set client name
+#include <sdktools_sound>       // for emit sound to all
 
 stock void RemoveCharFromName(char[] code, int maxLen)
 {
@@ -234,41 +235,7 @@ stock int CharToNumber(const int cNum)
 {
     return (cNum >= '0' && cNum <= '9') ? (cNum - '0') : 0;
 }
-/*
-void Chat(int client, const char[] message, any ...)
-{
-    char m_szBuffer[512];
-    VFormat(m_szBuffer, 512, message, 3);
-    Format(m_szBuffer, 512, "[\x0CCG\x01]  %s", m_szBuffer);
 
-    Handle pb = StartMessageOne("SayText2", client);
-    PbSetInt(pb, "ent_idx", 0);
-    PbSetBool(pb, "chat", false);
-    PbSetString(pb, "msg_name", m_szBuffer);
-    PbAddString(pb, "params", "");
-    PbAddString(pb, "params", "");
-    PbAddString(pb, "params", "");
-    PbAddString(pb, "params", "");
-    EndMessage();
-}
-
-void ChatAll(const char[] message, any ...)
-{
-    char m_szBuffer[512];
-    VFormat(m_szBuffer, 512, message, 2);
-    Format(m_szBuffer, 512, "[\x0CCG\x01]  %s", m_szBuffer);
-
-    Handle pb = StartMessageAll("SayText2");
-    PbSetInt(pb, "ent_idx", 0);
-    PbSetBool(pb, "chat", false);
-    PbSetString(pb, "msg_name", m_szBuffer);
-    PbAddString(pb, "params", "");
-    PbAddString(pb, "params", "");
-    PbAddString(pb, "params", "");
-    PbAddString(pb, "params", "");
-    EndMessage();
-}
-*/
 stock bool IsValidClient(int client)
 {
     if(!(1 <= client <= MaxClients))

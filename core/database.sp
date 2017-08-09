@@ -56,6 +56,8 @@ bool MySQL_Query(bool toForum, SQLTCallback callback, const char[] query, any da
             Database_SQLCallback_ConnectToGames();
         else if(database == Database_DBHandle_Forum)
             Database_SQLCallback_ConnectToForum();
+        
+        UTIL_LogError("MySQL_Query", "Query To DB[%s] is INVALID_HANDLE -> %s", toForum ? "discuz" : "csgo", query);
 
         return false;
     }
@@ -63,6 +65,13 @@ bool MySQL_Query(bool toForum, SQLTCallback callback, const char[] query, any da
     SQL_TQuery(database, callback, query, data, prio);
 
     return true;
+}
+
+bool Database_EscapeName(int client, char[] buffer, int maxLen)
+{
+    char name[32];
+    GetClientName(client, name, 32);
+    SQL_EscapeString(Database_DBHandle_Games, name, buffer, maxLen);
 }
 
 void Database_OnPluginStart()
@@ -149,7 +158,7 @@ public void SQL_TConnect_Callback_csgo(Handle owner, Handle hndl, const char[] e
     MySQL_Query(false, Database_SQLCallback_GetServerIP, m_szQuery, _, DBPrio_High);
 
     Format(m_szQuery, 256, "DELETE FROM `playertrack_analytics` WHERE connect_time < %d and duration = -1", GetTime()-18000);
-    MySQL_Query(false, Database_SQLCallback_NoResults, m_szQuery, 2, DBPrio_Low);
+    MySQL_Query(false, Database_SQLCallback_NoResults, m_szQuery, 1, DBPrio_Low);
 
     Format(m_szQuery, 256, "SELECT * FROM playertrack_officalgroup");
     MySQL_Query(false, SQLCallback_OfficalGroup, m_szQuery, _, DBPrio_High);
@@ -236,8 +245,7 @@ public void Database_SQLCallback_NoResults(Handle owner, Handle hndl, const char
         switch(type)
         {
             case 0: UTIL_LogError("Database_SQLCallback_NoResults", "Update rcon password failed :  %s", error);
-            case 1: UTIL_LogError("Database_SQLCallback_NoResults", "Update client flags failed :  %s", error);
-            case 2: UTIL_LogError("Database_SQLCallback_NoResults", "Delete on connected failed :  %s", error);
+            case 1: UTIL_LogError("Database_SQLCallback_NoResults", "Delete on connected failed :  %s", error);
         }
     }
 }
@@ -435,7 +443,7 @@ public void SQLCallback_LoadDiscuzData(Handle owner, Handle hndl, const char[] e
         if(StrContains(FriendID, "765611") != 0)
             continue;
 
-        UTIL_LoadClientDiscuzData(client, FriendID);
+        LoadClientDiscuzData(client, FriendID);
     }
 }
 
@@ -457,7 +465,7 @@ public void Database_SQLCallback_GetClientBaseData(Handle owner, Handle hndl, co
 
         char m_szAuth[32], m_szQuery[512];
         GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-        Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.lasttime, a.number, a.signature, a.signnumber, a.signtime, a.groupid, a.groupname, a.lilyid, a.lilydate, a.active, a.daytime, a.flags, b.name FROM playertrack_player a LEFT JOIN playertrack_player b ON a.lilyid = b.id WHERE a.steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
+        Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.lasttime, a.number, a.signature, a.signnumber, a.signtime, a.groupid, a.groupname, a.lilyid, a.lilydate, a.active, a.daytime, b.name FROM playertrack_player a LEFT JOIN playertrack_player b ON a.lilyid = b.id WHERE a.steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
         MySQL_Query(false, Database_SQLCallback_GetClientBaseData, m_szQuery, GetClientUserId(client), DBPrio_High);
         return;
     }
@@ -474,10 +482,9 @@ public void Database_SQLCallback_GetClientBaseData(Handle owner, Handle hndl, co
 
         SQL_FetchString(hndl,  8, g_ClientGlobal[client][szGroupName],  16);
         SQL_FetchString(hndl,  4, g_ClientGlobal[client][szSignature], 256);
-        SQL_FetchString(hndl, 13, g_ClientGlobal[client][szFlags],      16);
 
         char cpname[32];
-        SQL_FetchString(hndl, 14, cpname, 32);
+        SQL_FetchString(hndl, 13, cpname, 32);
         Couples_InitializeCouplesData(client, SQL_FetchInt(hndl, 9), SQL_FetchInt(hndl, 10), cpname);
         DailySign_InitializeSignData(client, SQL_FetchInt(hndl, 5), SQL_FetchInt(hndl, 6));
 
@@ -493,11 +500,10 @@ public void Database_SQLCallback_GetClientBaseData(Handle owner, Handle hndl, co
     }
     else
     {
-        char m_szAuth[32], username[128], EscapeName[256], m_szQuery[512];
+        char m_szAuth[32], EscapeName[64], m_szQuery[512];
         GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-        GetClientName(client, username, 128);
-        SQL_EscapeString(Database_DBHandle_Games, username, EscapeName, 256);
-        Format(m_szQuery, 512, "INSERT INTO playertrack_player (name, steamid, onlines, lastip, firsttime, lasttime, number, flags, signature) VALUES ('%s', '%s', '0', '%s', '%d', '0', '0', 'unknow', DEFAULT)", EscapeName, m_szAuth, g_ClientGlobal[client][szIP], GetTime());
+        Database_EscapeName(client, EscapeName, 64);
+        Format(m_szQuery, 512, "INSERT INTO playertrack_player (name, steamid, onlines, lastip, firsttime, lasttime, number, signature) VALUES ('%s', '%s', '0', '%s', '%d', '0', '0', DEFAULT)", EscapeName, m_szAuth, g_ClientGlobal[client][szIP], GetTime());
         MySQL_Query(false, Database_SQLCallback_InsertClientBaseData, m_szQuery, GetClientUserId(client));
     }
 }
@@ -520,7 +526,7 @@ public void Database_SQLCallback_InsertClientBaseData(Handle owner, Handle hndl,
 
         char m_szAuth[32], m_szQuery[512];
         GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-        Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.lasttime, a.number, a.signature, a.signnumber, a.signtime, a.groupid, a.groupname, a.lilyid, a.lilydate, a.active, a.daytime, a.flags, b.name FROM playertrack_player a LEFT JOIN playertrack_player b ON a.lilyid = b.id WHERE a.steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
+        Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.lasttime, a.number, a.signature, a.signnumber, a.signtime, a.groupid, a.groupname, a.lilyid, a.lilydate, a.active, a.daytime, b.name FROM playertrack_player a LEFT JOIN playertrack_player b ON a.lilyid = b.id WHERE a.steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
         MySQL_Query(false, Database_SQLCallback_GetClientBaseData, m_szQuery, GetClientUserId(client), DBPrio_High);
 
         return;
