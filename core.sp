@@ -2,8 +2,7 @@
 
 #pragma newdecls required //let`s go! new syntax!!!
 
-#define Build 467
-#define PLUGIN_VERSION " 8.2 - 2017/08/09 02:48 "
+#define PLUGIN_VERSION " 8.21.469 - 2017/08/11 06:46 "
 
 enum Clients
 {
@@ -210,7 +209,7 @@ public void OnClientConnected(int client)
 
 public Action OnClientAuthorizedPost(Handle timer, int client)
 {
-    if(!IsClientConnected(client))
+    if(!IsClientConnected(client) || IsFakeClient(client))
         return Plugin_Stop;
 
     if(IsFakeClient(client))

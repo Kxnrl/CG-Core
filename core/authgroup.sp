@@ -1,25 +1,18 @@
 Handle AuthGroup_Forward_AuthTerm;
+Handle AuthGroup_Menu_Handle;
 
 void AuthGroup_OnPluginStart()
 {
     AuthGroup_Forward_AuthTerm = CreateGlobalForward("CG_OnCheckAuthTerm", ET_Event, Param_Cell, Param_Cell);
+    
+    InitAuthMenu();
 
     RegConsoleCmd("sm_rz",   Command_GetAuth);
     RegConsoleCmd("sm_auth", Command_GetAuth);
 }
 
-public Action Command_GetAuth(int client, int args)
+void InitAuthMenu()
 {
-    if(!g_ClientGlobal[client][bLoaded])
-        return Plugin_Handled;
-
-    if(g_ClientGlobal[client][iGId] > 0)
-    {
-        PrintToChat(client, "[\x0CCG\x01]   \x04你已经有认证了");
-        return Plugin_Handled;
-    }
-
-    //创建CG玩家主菜单
     Handle menu = CreateMenu(MenuHandler_GetAuth);
     SetMenuTitleEx(menu, "[CG]  认证菜单");
 
@@ -53,7 +46,24 @@ public Action Command_GetAuth(int client, int args)
 
     SetMenuExitBackButton(menu, true);
     SetMenuExitButton(menu, true);
-    DisplayMenu(menu, client, 0);
+    
+    AuthGroup_Menu_Handle = menu;
+}
+
+public Action Command_GetAuth(int client, int args)
+{
+    if(!g_ClientGlobal[client][bLoaded])
+        return Plugin_Handled;
+
+    if(g_ClientGlobal[client][iGId] > 0)
+    {
+        PrintToChat(client, "[\x0CCG\x01]   \x04你已经有认证了");
+        return Plugin_Handled;
+    }
+
+    //创建CG玩家主菜单
+    
+    DisplayMenu(AuthGroup_Menu_Handle, client, 0);
 
     return Plugin_Handled;
 }
@@ -68,7 +78,6 @@ public int MenuHandler_GetAuth(Handle menu, MenuAction action, int client, int i
             GetMenuItem(menu, itemNum, info, 32);
             AuthGroup_CheckClientAuthTerm(client, StringToInt(info));
         }
-        case MenuAction_End:    CloseHandle(menu);
         case MenuAction_Cancel: if(itemNum == MenuCancel_ExitBack) Command_Menu(client, 0);
     }
 }
@@ -167,6 +176,8 @@ void AuthGroup_GetClientAuthName(int client, char[] buffer, int maxLen)
         case    1: strcopy(buffer, maxLen, "断后达人");
         case    2: strcopy(buffer, maxLen, "指挥大佬");
         case    3: strcopy(buffer, maxLen, "僵尸克星");
+        case    4: strcopy(buffer, maxLen, "丢雷楼谋");
+        case    5: strcopy(buffer, maxLen, "破点大神");
         case  101: strcopy(buffer, maxLen, "职业侦探");
         case  102: strcopy(buffer, maxLen, "心机婊");
         case  103: strcopy(buffer, maxLen, "TTT影帝");
@@ -181,5 +192,6 @@ void AuthGroup_GetClientAuthName(int client, char[] buffer, int maxLen)
         case  502: strcopy(buffer, maxLen, "暴乱领袖");
         case  503: strcopy(buffer, maxLen, "模范狱长");
         case  504: strcopy(buffer, maxLen, "防暴警察");
+        default  : strcopy(buffer, maxLen, "未知错误");
     }
 }

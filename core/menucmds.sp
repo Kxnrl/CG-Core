@@ -1,4 +1,5 @@
 int MenuCmds_PlayListCurIndex[MAXPLAYERS+1];
+int MenuCmds_PlayListCooldown[MAXPLAYERS+1];
 Handle MenuCmds_GlobalMenuHandler;
 
 void MenuCmds_OnPluginStart()
@@ -6,15 +7,16 @@ void MenuCmds_OnPluginStart()
     //Create console command
     RegConsoleCmd("sm_online",       Command_Online);
     RegConsoleCmd("sm_track",        Command_Track);
+    RegConsoleCmd("sm_players",      Command_Players);
     RegConsoleCmd("sm_cg",           Command_Menu);
 
     //Createe admin command
     RegAdminCmd("sm_reloadadv",      Command_ReloadAdv,   ADMFLAG_BAN);
     RegAdminCmd("sm_reloadcache",    Command_ReloadCache, ADMFLAG_BAN);
-    
+
     //Add command listener
     AddCommandListener(Command_Status, "status");
-    
+
     //Create Global Menu
     Handle menu = CreateMenu(MenuHandler_CGMainMenu);
     SetMenuTitleEx(menu, "[CG]  主菜单");
@@ -53,7 +55,6 @@ public Action Command_ReloadCache(int client, int args)
     return Plugin_Handled;
 }
 
-
 public Action Command_Online(int client, int args)
 {
     if(!IsValidClient(client) || !g_ClientGlobal[client][bLoaded])
@@ -68,11 +69,7 @@ public Action Command_Online(int client, int args)
 
 public Action Command_Status(int client, const char[] command, int argc)
 {
-    if(!IsValidClient(client))
-        return Plugin_Handled;
-    
-    Command_PlayerList(client);
-    
+    PrintToChatAll("[\x0CCG\x01]   服务器已屏蔽\x07status\x01指令,输入\x07!players\x01可查看详细信息");
     return Plugin_Handled;
 }
 
@@ -81,23 +78,36 @@ public Action Command_Track(int client, int args)
     if(!IsValidClient(client))
         return Plugin_Handled;
 
-    PrintToChat(client, "[\x0CCG\x01]   当前已在服务器内\x04%d\x01人,已建立连接的玩家\x02%d\x01人", GetClientCount(true), GetClientCount(false));
+    PrintToChat(client, "[\x0CCG\x01]   当前已在服务器内\x04%d\x01人,已建立连接的玩家\x02%d\x01人,输入\x07!players\x01可查看详细信息", GetClientCount(true), GetClientCount(false));
 
     return Plugin_Handled;
 }
 
-void Command_PlayerList(int client)
+public Action  Command_Players(int client, int args)
 {
+    if(!IsValidClient(client))
+        return Plugin_Handled;
+
     if(MenuCmds_PlayListCurIndex[client] != 0)
-        return;
+        return Plugin_Handled;
+    
+    if(MenuCmds_PlayListCooldown[client] > GetTime())
+    {
+        PrintToChat(client, "[\x0CCG\x01]   \x07请勿频繁使用该指令...");
+        return Plugin_Handled;
+    }
+    
+    MenuCmds_PlayListCooldown[client] = GetTime() + 45;
 
     MenuCmds_PlayListCurIndex[client] = 1;
-    
+
     PrintToChat(client, "[\x0CCG\x01]   请查看控制台输出");
 
-    PrintToConsole(client, "#PlayerId   玩家姓名    UID   论坛名称   steam32   steam64    认证    VIP\n========================================================================================");
+    PrintToConsole(client, "#userid    PID    UID   玩家   论坛名称   steam32   steam64    认证    VIP\n========================================================================================");
 
     CreateTimer(0.1, Timer_PrintPlayerList, client, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+
+    return Plugin_Handled;
 }
 
 public Action Timer_PrintPlayerList(Handle timer, int client)
@@ -123,14 +133,14 @@ public Action Timer_PrintPlayerList(Handle timer, int client)
             {
                 GetClientAuthId(i, AuthId_Steam2, szAuth32, 32, true);
                 GetClientAuthId(i, AuthId_SteamID64, szAuth64, 64, true);
-                Format(szItem, 512, " %d    %N    %d    %s    %s    %s    %s    %s", g_ClientGlobal[i][iPId], i, g_ClientGlobal[i][iUId], g_ClientGlobal[i][szForumName], szAuth32, szAuth64, g_ClientGlobal[i][szGroupName], g_ClientGlobal[i][bVip] ? "Y" : "N");
+                Format(szItem, 512, " %d    %d    %d    %N    %s    %s    %s    %s    %s", GetClientUserId(i), g_ClientGlobal[i][iPId], g_ClientGlobal[i][iUId], i, g_ClientGlobal[i][szForumName], szAuth32, szAuth64, g_ClientGlobal[i][szGroupName], g_ClientGlobal[i][bVip] ? "Y" : "N");
                 PrintToConsole(client, szItem);
             }
         }
         MenuCmds_PlayListCurIndex[client] = i;
     }
 
-    return Plugin_Stop;
+    return Plugin_Continue;
 }
 
 public Action Command_Menu(int client, int args)

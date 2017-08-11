@@ -363,54 +363,11 @@ void GlobalApi_OnClientLoaded(int client)
     CreateTimer(45.0, Timer_CheckJoinGame, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 
     //Format Name
-    if(g_ClientGlobal[client][iUId] > 0)
-    {
-        strcopy(g_ClientGlobal[client][szGamesName], 32, g_ClientGlobal[client][szForumName]);
-        if(g_ClientGlobal[client][iUId] != 1) RemoveCharFromName(g_ClientGlobal[client][szGamesName], 32);
-        if(strlen(g_ClientGlobal[client][szGamesName]) < 3) Format(g_ClientGlobal[client][szGamesName], 32, "[E#%06d] unnamed", g_ClientGlobal[client][iPId]);
-    }
-    else
-    {
-        GetClientName(client, g_ClientGlobal[client][szGamesName], 32);
-        RemoveCharFromName(g_ClientGlobal[client][szGamesName], 32);
-        Format(g_ClientGlobal[client][szGamesName], 32, "[V#%06d] %s", g_ClientGlobal[client][iPId], g_ClientGlobal[client][szGamesName]);
-    }
-
-    SetClientName(client, g_ClientGlobal[client][szGamesName]);
+    ReCheckClientName(client);
 
     //Colsole print
-    int timeleft;
-    GetMapTimeLeft(timeleft);
-    if(timeleft > 30)
-    {
-        char szTimeleft[32], szMap[128], szHostname[128];
-        Format(szTimeleft, 32, "%d:%02d", timeleft / 60, timeleft % 60);
-        GetCurrentMap(szMap, 128);
-        GetConVarString(FindConVar("hostname"), szHostname, 128);
+    PrintWelcomeMessage(client);
 
-        PrintToConsole(client, "-----------------------------------------------------------------------------------------------");
-        PrintToConsole(client, "                                                                                               ");
-        PrintToConsole(client, "                                     欢迎来到[CG]游戏社区                                      ");    
-        PrintToConsole(client, "                                                                                               ");
-        PrintToConsole(client, "当前服务器:  %s   -   Tickrate: %d.0   -   主程序版本: %s - Build %d", szHostname, RoundToNearest(1.0 / GetTickInterval()), PLUGIN_VERSION, Build);
-        PrintToConsole(client, " ");
-        PrintToConsole(client, "论坛地址: https://csgogamers.com  官方QQ群: 107421770  官方YY: 497416");
-        PrintToConsole(client, "当前地图: %s   剩余时间: %s", szMap, szTimeleft);
-        PrintToConsole(client, "                                                                                               ");
-        PrintToConsole(client, "服务器基础命令:");
-        PrintToConsole(client, "核心命令： !cg    [核心菜单]");
-        PrintToConsole(client, "商店相关： !store [打开商店]  !credits  [显示余额]      !inv       [查看库存]");
-        PrintToConsole(client, "地图相关： !rtv   [滚动投票]  !revote   [重新选择]      !nominate  [预定地图]");
-        PrintToConsole(client, "娱乐相关： !music [点歌菜单]  !mapmusic [停止地图音乐]  !dj        [停止点播歌曲]");
-        PrintToConsole(client, "其他命令： !sign  [每日签到]  !hide     [屏蔽足迹霓虹]  !tp/!seeme [第三人称视角]");
-        PrintToConsole(client, "玩家认证： !track [查询认证]  !rz       [申请认证]");
-        PrintToConsole(client, "搞基系统： !cp    [功能菜单]");
-        PrintToConsole(client, "天赋系统： !talent[功能菜单]");
-        PrintToConsole(client, "                                                                                               ");
-        PrintToConsole(client, "-----------------------------------------------------------------------------------------------");        
-        PrintToConsole(client, "                                                                                               ")
-    }
-    
     //Call Forward
     Call_StartForward(GlobalApi_Forwards[ClientLoaded]);
     Call_PushCell(client);
@@ -650,22 +607,8 @@ public Action Timer_ResetChannel(Handle timer, int channel)
     return Plugin_Stop;
 }
 
-public void OnGetClientCVAR(QueryCookie cookie, int client, ConVarQueryResult result, char [] cvarName, char [] cvarValue)
+public void OnGetClientCVAR(QueryCookie cookie, int client, ConVarQueryResult result, char[] cvarName, char[] cvarValue)
 {
     if(StringToInt(cvarValue) > 0)
         PrintToChat(client, " 请在控制台中输入:   \x04cl_disablehtmlmotd 0");
-}
-
-void Frame_CheckClientName(int client)
-{
-    if(IsFakeClient(client))
-        return;
-
-    char name[32];
-    GetClientName(client, name, 32);
-
-    if(StrEqual(name, g_ClientGlobal[client][szGamesName]))
-        return;
-
-    SetClientName(client, g_ClientGlobal[client][szGamesName]);
 }

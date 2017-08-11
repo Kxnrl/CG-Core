@@ -617,6 +617,9 @@ Action Couples_OnClientSay(int client, const char[] message)
     }
     else if(!IsValidClient(target))
         return Plugin_Stop;
+    
+    ClientCommand(client, "play buttons/bell1.wav");
+    ClientCommand(target, "play buttons/bell1.wav");
 
     PrintToChat(target, "[\x0ECP频道\x01]  \x0E%N\x01 :  \x10%s", client, message[1]);
     PrintToChat(client, "[\x0ECP频道\x01]  \x0E%N\x01 :  \x10%s", client, message[1]);
