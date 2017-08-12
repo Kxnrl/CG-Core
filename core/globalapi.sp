@@ -269,8 +269,8 @@ bool GlobalApi_ShowGameText(Handle array_client, const char[] message, const flo
     GlobalApi_Data_TextHud[channel][hTimer] = CreateTimer(holdtime, Timer_ResetChannel, channel, TIMER_FLAG_NO_MAPCHANGE);
     GlobalApi_Data_TextHud[channel][fX] = x;
     GlobalApi_Data_TextHud[channel][fY] = y;
-    
-    channel += 4;
+
+    channel += 5;
 
     if(array_client != INVALID_HANDLE)
     {
