@@ -776,7 +776,7 @@ void LoadAdminsAndGroups()
 {
 	char query[512];
 
-	FormatEx(query,1024,"SELECT authid, srv_flags, user, immunity FROM sb_admins_servers_groups AS asg LEFT JOIN sb_admins AS a ON a.aid = asg.admin_id WHERE server_id = %d AND lastvisit > UNIX_TIMESTAMP()-259200 GROUP BY aid, authid, srv_password, srv_group, srv_flags, user", g_iServerId, g_iServerId);
+	FormatEx(query,1024,"SELECT authid, srv_flags, user, immunity FROM sb_admins_servers_groups AS asg LEFT JOIN sb_admins AS a ON a.aid = asg.admin_id WHERE server_id = %d AND lastvisit > UNIX_TIMESTAMP()-259200 AND hide = 0 GROUP BY aid, authid, srv_password, srv_group, srv_flags, user", g_iServerId, g_iServerId);
 	SQL_TQuery(g_hDatabase,AdminsDone,query);
 	g_bAdminLoading = true;
 }
