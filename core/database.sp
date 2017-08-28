@@ -88,6 +88,7 @@ public Action Timer_RefreshData(Handle timer)
 {
     MySQL_Query(true, SQLCallback_LoadDiscuzData, "SELECT b.uid,a.steamID64,b.username,c.exptime,d.growth,e.issm FROM dz_steam_users a LEFT JOIN dz_common_member b ON a.uid=b.uid LEFT JOIN dz_dc_vip c ON a.uid=c.uid LEFT JOIN dz_pay_growth d ON a.uid=d.uid LEFT JOIN dz_lev_user_sm e ON a.uid=e.uid ORDER by b.uid ASC", _, DBPrio_Low);
     MySQL_Query(false, SQLCallback_OfficalGroup, "SELECT * FROM playertrack_officalgroup", _, DBPrio_Low);
+    MySQL_Query(false, SQLCallback_BuildCPRank, "SELECT id, name, lilyid, lilydate from playertrack_player where lilyid > 0 order by lilydate asc", _, DBPrio_Low);
     return Plugin_Continue;
 }
 
@@ -162,6 +163,9 @@ public void SQL_TConnect_Callback_csgo(Handle owner, Handle hndl, const char[] e
 
     Format(m_szQuery, 256, "SELECT * FROM playertrack_officalgroup");
     MySQL_Query(false, SQLCallback_OfficalGroup, m_szQuery, _, DBPrio_High);
+    
+    Format(m_szQuery, 256, "SELECT id, name, lilyid, lilydate from playertrack_player where lilyid > 0 order by lilydate asc");
+    MySQL_Query(false, SQLCallback_BuildCPRank, m_szQuery, _, DBPrio_Low);
 
     m_iConnect = 1;
 }
@@ -403,6 +407,46 @@ public void SQLCallback_OfficalGroup(Handle owner, Handle hndl, const char[] err
 
         g_ClientGlobal[client][bInGroup] = true;
     }
+}
+
+public void SQLCallback_BuildCPRank(Handle owner, Handle hndl, const char[] error, any unuse)
+{
+    if(hndl == INVALID_HANDLE)
+    {
+        UTIL_LogError("SQLCallback_BuildCPRank", "Load Couples List failed. Error happened: %s", error);
+        return;
+    }
+    
+    int amount = SQL_GetRowCount(hndl);
+
+    if(amount % 2 != 0)
+    {
+        UTIL_LogError("SQLCallback_BuildCPRank", "Load Couples List failed. Error happened: CPs number is %d", amount);
+        return;
+    }
+    
+    ArrayList aPlayerId = CreateArray();
+    ArrayList aNickname = CreateArray(ByteCountToCells(32));
+    ArrayList aLilyPIdx = CreateArray();
+    ArrayList aLilyDate = CreateArray();
+    
+    char name[32];
+    
+    while(SQL_FetchRow(hndl))
+    {
+        PushArrayCell(aPlayerId, SQL_FetchInt(hndl, 0));
+        SQL_FetchString(hndl, 1, name, 32);
+        PushArrayString(aNickname, name);
+        PushArrayCell(aLilyPIdx, SQL_FetchInt(hndl, 2));
+        PushArrayCell(aLilyDate, SQL_FetchInt(hndl, 3));
+    }
+    
+    Couples_BuildLilyRanking(aPlayerId, aNickname, aLilyPIdx, aLilyDate);
+    
+    delete aPlayerId;
+    delete aNickname;
+    delete aLilyPIdx;
+    delete aLilyDate;
 }
 
 public void SQLCallback_LoadDiscuzData(Handle owner, Handle hndl, const char[] error, any unuse)

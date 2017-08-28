@@ -5,6 +5,14 @@ enum Couples
     iWeddingDate,
     String:szPartnerName[32]
 }
+enum Couples_Ranking
+{
+    iWeddingDay,
+    iSource_PId,
+    iTarget_Pid,
+    String:szSource_Name[32],
+    String:szTarget_Name[32]
+}
 
 int Couples_Data_Client_ProposeTargetUserId[MAXPLAYERS+1];
 int Couples_Data_Client_ProposeSelectUserId[MAXPLAYERS+1];
@@ -14,8 +22,12 @@ Couples Couples_Data_Client[MAXPLAYERS+1][Couples];
 
 Handle Couples_Forward_OnWedding;
 Handle Couples_Forward_OnDivorce;
+Handle Couples_Menu_Ranking;
+Handle Couples_Menu_About;
 
-bool g_bDisableCouples = false;
+ArrayList Couples_Array_Ranking;
+
+bool g_bDisableCouples = true;
 
 void Couples_OnAskPluginLoad2()
 {
@@ -56,6 +68,10 @@ void Couples_OnPluginStart()
     RegConsoleCmd("sm_propose", Command_Propose);
     
     RegServerCmd("cp_toggle",   Command_Toggle);
+    
+    Couples_Array_Ranking = CreateArray(view_as<int>(Couples_Ranking));
+    
+    Couples_CreateAboutMenu();
 }
 
 public Action Command_Toggle(int args)
@@ -70,12 +86,6 @@ public Action Command_Couples(int client, int args)
 {
     if(!IsValidClient(client) || !g_ClientGlobal[client][bLoaded])
         return Plugin_Handled;
-    
-    if(g_bDisableCouples)
-    {
-        PrintToChat(client, "[\x0CCore\x01]  \x0ECouples now %s\x0E on this server!", g_bDisableCouples ? "\x07Disabled" : "\x04Enabled");
-        return Plugin_Handled;
-    }
 
     Couples_DisplayMainMenu(client);
 
@@ -158,6 +168,7 @@ void Couples_DisplayMainMenu(int client)
     AddMenuItemEx(menu, Couples_Data_Client[client][iPartnerPlayerId] == 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "receive", "求婚列表");
     AddMenuItemEx(menu, Couples_Data_Client[client][iPartnerPlayerId] == 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "propose", "发起求婚");
     AddMenuItemEx(menu, Couples_Data_Client[client][iPartnerPlayerId] != 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "divorce", "发起离婚");
+    AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "ranking", "登记列表");
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "aboutcp", "功能介绍");
 
     DisplayMenu(menu, client, 20);
@@ -174,7 +185,8 @@ public int MenuHandler_CouplesMainMenu(Handle menu, MenuAction action, int clien
             if(StrEqual(info, "receive"))       Couples_DisplayProposeMenu(client);
             else if(StrEqual(info, "propose"))  Couples_DisplaySeleteMenu(client);
             else if(StrEqual(info, "divorce"))  Couples_DisplayDivorceMenu(client);
-            else if(StrEqual(info, "aboutcp"))  Couples_DisplayAboutCPMenu(client);
+            else if(StrEqual(info, "ranking"))  DisplayMenu(Couples_Menu_Ranking, client, 0);
+            else if(StrEqual(info, "aboutcp"))  DisplayMenu(Couples_Menu_About, client, 0);
         }
         case MenuAction_End:    CloseHandle(menu);
         case MenuAction_Cancel: if(itemNum == MenuCancel_ExitBack) Command_Menu(client, 0);
@@ -190,12 +202,18 @@ void Couples_DisplaySeleteMenu(int client)
         return;
     }
 
-    num = Couples_Data_Client_ProposeSelectedTime[client] > GetTime();
+    num = Couples_Data_Client_ProposeSelectedTime[client] > GetTime()+60;
     if(num > 0)
     {
         PrintToChat(client, "[\x0CCG\x01]   请勿频繁发起请求,请等待\x04%d\x01秒后再试", num);
         return;
     }
+    
+    //if(g_bDisableCouples)
+    //{
+    //    PrintToChat(client, "[\x0CCore\x01]  \x0E当前CP系统维护中,暂时不能组成CP!");
+    //    return;
+    //}
 
     Handle menu = CreateMenu(MenuHandler_CouplesSelectMenu)
 
@@ -489,6 +507,12 @@ void Couples_DisplayDivorceMenu(int client)
         Couples_DisplayMainMenu(client);
         return;
     }
+    
+    if(g_bDisableCouples)
+    {
+        PrintToChat(client, "[\x0CCore\x01]  \x0E当前CP系统维护中,暂时不能解除CP!");
+        return;
+    }
 
     Handle menu = CreateMenu(MenuHandler_CouplesDivorceMenu);
     SetMenuTitleEx(menu, "[CP]  离婚登记台");
@@ -556,28 +580,27 @@ public void SQLCallback_UpdateDivorce(Handle owner, Handle hndl, const char[] er
     if(target > 0)
     {
         Couples_OnClientConnected(target);
-        Couples_Data_Client[target][iWeddingDate] = GetTime()+2592000;
+        Couples_Data_Client[target][iWeddingDate] = GetTime()+1209600;
     }
 
     Couples_OnClientConnected(client);
-    Couples_Data_Client[client][iWeddingDate] = GetTime()+2592000;
+    Couples_Data_Client[client][iWeddingDate] = GetTime()+1209600;
     Couples_DisplayMainMenu(client);
 }
 
-void Couples_DisplayAboutCPMenu(int client)
+void Couples_CreateAboutMenu()
 {
-    Handle menu = CreateMenu(MenuHandler_CouplesAboutCPMenu);
-    SetMenuTitleEx(menu, "[CP]  系统说明");
+    Couples_Menu_About = CreateMenu(MenuHandler_CouplesAboutCPMenu);
+    SetMenuTitleEx(Couples_Menu_About, "[CP]  系统说明");
 
-    AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "组成CP需要两厢情愿");
-    AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "CP配对后14天内不能解除");
-    AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "CP解除后30天内不能再组");
-    AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "CP能为你提供一定的加成");
-    AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "按Y输入[/内容]可以发送CP频道");
+    AddMenuItemEx(Couples_Menu_About, ITEMDRAW_DISABLED, "", "组成CP需要两厢情愿");
+    AddMenuItemEx(Couples_Menu_About, ITEMDRAW_DISABLED, "", "CP配对后14天内不能解除");
+    AddMenuItemEx(Couples_Menu_About, ITEMDRAW_DISABLED, "", "CP解除后14天内不能再组");
+    AddMenuItemEx(Couples_Menu_About, ITEMDRAW_DISABLED, "", "CP能为你提供一定的加成");
+    AddMenuItemEx(Couples_Menu_About, ITEMDRAW_DISABLED, "", "按Y输入[/内容]可以发送CP频道");
 
-    SetMenuExitBackButton(menu, true);
-    SetMenuExitButton(menu, true);
-    DisplayMenu(menu, client, 0);
+    SetMenuExitBackButton(Couples_Menu_About, true);
+    SetMenuExitButton(Couples_Menu_About, true);
 }
 
 public int MenuHandler_CouplesAboutCPMenu(Handle menu, MenuAction action, int client, int itemNum)
@@ -625,4 +648,104 @@ Action Couples_OnClientSay(int client, const char[] message)
     PrintToChat(client, "[\x0ECP频道\x01]  \x0E%N\x01 :  \x10%s", client, message[1]);
 
     return Plugin_Stop;
+}
+
+void Couples_BuildLilyRanking(ArrayList aPlayerId, ArrayList aNickname, ArrayList aLilyPIdx, ArrayList aLilyDate)
+{
+    ClearArray(Couples_Array_Ranking);
+    
+    if(Couples_Menu_Ranking != INVALID_HANDLE)
+        CloseHandle(Couples_Menu_Ranking);
+    
+    Couples_Menu_Ranking = CreateMenu(MenuHandler_CouplesRanking);
+    SetMenuTitleEx(Couples_Menu_Ranking, "[CP]  登记列表 (%d对)", GetArraySize(aPlayerId)/2);
+
+    while(GetArraySize(aPlayerId) > 1)
+    {
+        Couples_Ranking data[Couples_Ranking];
+
+        data[iSource_PId] = GetArrayCell(aPlayerId, 0);
+        data[iTarget_Pid] = GetArrayCell(aLilyPIdx, 0);
+        data[iWeddingDay] = GetArrayCell(aLilyDate, 0);
+
+        GetArrayString(aNickname, 0, data[szSource_Name], 32);
+
+        int index = FindValueInArray(aPlayerId, data[iTarget_Pid]);
+        GetArrayString(aNickname, index, data[szTarget_Name], 32);
+        if(GetArrayCell(aLilyPIdx, index) != data[iSource_PId])
+            UTIL_LogError("Couples_BuildLilyRanking", "Load Couples List failed. %d.%s <-> %d.%s ? %d", data[iSource_PId], data[szSource_Name], data[iTarget_Pid], data[szTarget_Name], GetArrayCell(aPlayerId, index));
+
+        RemoveFromArray(aPlayerId, index);
+        RemoveFromArray(aNickname, index);
+        RemoveFromArray(aLilyPIdx, index);
+        RemoveFromArray(aLilyDate, index);
+        
+        RemoveFromArray(aPlayerId, 0);
+        RemoveFromArray(aNickname, 0);
+        RemoveFromArray(aLilyPIdx, 0);
+        RemoveFromArray(aLilyDate, 0);
+
+        index = PushArrayArray(Couples_Array_Ranking, data[0], view_as<int>(Couples_Ranking));
+
+        char menuIndex[16];
+        IntToString(index, menuIndex, 16);
+
+        AddMenuItemEx(Couples_Menu_Ranking, ITEMDRAW_DEFAULT, menuIndex, "[%s] ♥ [%s]", data[szSource_Name], data[szTarget_Name]);
+    }
+
+    SetMenuExitButton(Couples_Menu_Ranking, true);
+    SetMenuExitBackButton(Couples_Menu_Ranking, true);
+}
+
+public int MenuHandler_CouplesRanking(Handle menu, MenuAction action, int client, int itemNum) 
+{
+    if(action == MenuAction_Select) 
+    {
+        char info[16];
+        GetMenuItem(menu, itemNum, info, 16);
+        
+        Couples_DisplayCPsDetails(client, StringToInt(info));
+    }
+    else if(action == MenuAction_Cancel)
+        if(itemNum == MenuCancel_ExitBack)
+            Couples_DisplayMainMenu(client);
+}
+
+void Couples_DisplayCPsDetails(int client, int index)
+{
+    Couples_Ranking data[Couples_Ranking];
+    GetArrayArray(Couples_Array_Ranking, index, data[0], view_as<int>(Couples_Ranking));
+    
+    char date[64];
+    FormatTime(date, 64, "%Y.%m.%d", data[iWeddingDay]);
+
+    Handle panel = CreatePanel();
+
+    DrawPanelTextEx(panel, "▽ Couples Details ▽");
+    DrawPanelTextEx(panel, " ");
+    DrawPanelTextEx(panel, "%s", data[szSource_Name]);
+    DrawPanelTextEx(panel, "         ↑♥↓         ");
+    DrawPanelTextEx(panel, "%s", data[szTarget_Name]);
+    DrawPanelTextEx(panel, " ");
+    DrawPanelTextEx(panel, "CP日期:  %s", date);
+    DrawPanelTextEx(panel, "CP天数:  %d", (GetTime()-data[iWeddingDay])/86400);
+    DrawPanelTextEx(panel, "CP排名:  %d", index+1);
+    DrawPanelTextEx(panel, " ");
+    DrawPanelTextEx(panel, " ");
+
+    DrawPanelItem(panel, "返回");
+    DrawPanelItem(panel, "退出");
+    
+    SendPanelToClient(panel, client, Couples_CPsDetailesPanel, 30);
+}
+
+public int Couples_CPsDetailesPanel(Handle menu, MenuAction action, int client, int itemNum)
+{
+    if(action == MenuAction_Select)
+    {
+        if(itemNum==1)
+            DisplayMenu(Couples_Menu_Ranking, client, 0);
+    }
+    else if(action == MenuAction_End)
+        CloseHandle(menu);
 }

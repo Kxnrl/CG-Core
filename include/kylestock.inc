@@ -172,6 +172,7 @@ stock void RemoveCharFromName(char[] code, int maxLen)
     ReplaceString(code, maxLen, "☃", "");
     ReplaceString(code, maxLen, "初音", ".");
     ReplaceString(code, maxLen, "ミク", ".");
+    ReplaceString(code, maxLen, "Miku", ".", false);
 }
 
 stock void FriendIDtoSteamID(const char[] szSteam64, char[] szSteam2, int iLen)
@@ -263,4 +264,11 @@ stock bool AddMenuItemEx(Handle menu, int style, const char[] info, const char[]
     char m_szBuffer[256];
     VFormat(m_szBuffer, 256, display, 5);
     return AddMenuItem(menu, info, m_szBuffer, style);
+}
+
+stock void DrawPanelTextEx(Handle panel, const char[] fmt, any ...)
+{
+    char vf[256];
+    VFormat(vf, 256, fmt, 3);
+    DrawPanelText(panel, vf);
 }

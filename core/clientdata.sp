@@ -52,7 +52,7 @@ void ReCheckClientName(int client)
     {
         strcopy(g_ClientGlobal[client][szGamesName], 32, g_ClientGlobal[client][szForumName]);
         if(g_ClientGlobal[client][iUId] != 1) RemoveCharFromName(g_ClientGlobal[client][szGamesName], 32);
-        if(strlen(g_ClientGlobal[client][szGamesName]) < 3) Format(g_ClientGlobal[client][szGamesName], 32, "[E#%06d] unnamed", g_ClientGlobal[client][iPId]);
+        if(strlen(g_ClientGlobal[client][szGamesName]) < 4) Format(g_ClientGlobal[client][szGamesName], 32, "[E#%06d] unnamed", g_ClientGlobal[client][iPId]);
     }
     else
     {
