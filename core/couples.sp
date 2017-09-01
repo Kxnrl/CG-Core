@@ -18,12 +18,12 @@ int Couples_Data_Client_ProposeTargetUserId[MAXPLAYERS+1];
 int Couples_Data_Client_ProposeSelectUserId[MAXPLAYERS+1];
 int Couples_Data_Client_ProposeSelectedTime[MAXPLAYERS+1];
 
-Couples Couples_Data_Client[MAXPLAYERS+1][Couples];
+int Couples_Data_Client[MAXPLAYERS+1][Couples];
 
 Handle Couples_Forward_OnWedding;
 Handle Couples_Forward_OnDivorce;
 Handle Couples_Menu_Ranking;
-Handle Couples_Menu_About;
+Handle Couples_Panel_About;
 
 ArrayList Couples_Array_Ranking;
 
@@ -186,7 +186,7 @@ public int MenuHandler_CouplesMainMenu(Handle menu, MenuAction action, int clien
             else if(StrEqual(info, "propose"))  Couples_DisplaySeleteMenu(client);
             else if(StrEqual(info, "divorce"))  Couples_DisplayDivorceMenu(client);
             else if(StrEqual(info, "ranking"))  DisplayMenu(Couples_Menu_Ranking, client, 0);
-            else if(StrEqual(info, "aboutcp"))  DisplayMenu(Couples_Menu_About, client, 0);
+            else if(StrEqual(info, "aboutcp"))  SendPanelToClient(Couples_Panel_About, client, MenuHandler_CouplesAboutCPPanel, 15);
         }
         case MenuAction_End:    CloseHandle(menu);
         case MenuAction_Cancel: if(itemNum == MenuCancel_ExitBack) Command_Menu(client, 0);
@@ -590,26 +590,28 @@ public void SQLCallback_UpdateDivorce(Handle owner, Handle hndl, const char[] er
 
 void Couples_CreateAboutMenu()
 {
-    Couples_Menu_About = CreateMenu(MenuHandler_CouplesAboutCPMenu);
-    SetMenuTitleEx(Couples_Menu_About, "[CP]  系统说明");
+    Couples_Panel_About = CreatePanel();
 
-    AddMenuItemEx(Couples_Menu_About, ITEMDRAW_DISABLED, "", "组成CP需要两厢情愿");
-    AddMenuItemEx(Couples_Menu_About, ITEMDRAW_DISABLED, "", "CP配对后14天内不能解除");
-    AddMenuItemEx(Couples_Menu_About, ITEMDRAW_DISABLED, "", "CP解除后14天内不能再组");
-    AddMenuItemEx(Couples_Menu_About, ITEMDRAW_DISABLED, "", "CP能为你提供一定的加成");
-    AddMenuItemEx(Couples_Menu_About, ITEMDRAW_DISABLED, "", "按Y输入[/内容]可以发送CP频道");
+    DrawPanelText(Couples_Panel_About, "[CP]  系统说明");
+    DrawPanelText(Couples_Panel_About, " ");
+    DrawPanelText(Couples_Panel_About, "组成CP需要两厢情愿,无法单方面组CP");
+    DrawPanelText(Couples_Panel_About, "发起请求之后需要对方确认才能配对");
+    DrawPanelText(Couples_Panel_About, "组成CP后14天内不能解除");
+    DrawPanelText(Couples_Panel_About, "解除CP后14天内不能再组");
+    DrawPanelText(Couples_Panel_About, "CP能为你提供一定的加成(道具商店,天赋等)");
+    DrawPanelText(Couples_Panel_About, "按Y输入[/内容]可以发送CP频道");
+    DrawPanelText(Couples_Panel_About, "还有更多的功能正在开发中...");
+    DrawPanelText(Couples_Panel_About, "希望你和你的另1半在服务器里玩得开心");
+    DrawPanelText(Couples_Panel_About, " ");
+    DrawPanelText(Couples_Panel_About, " ");
 
-    SetMenuExitBackButton(Couples_Menu_About, true);
-    SetMenuExitButton(Couples_Menu_About, true);
+    DrawPanelItem(Couples_Panel_About, "返回");
 }
 
-public int MenuHandler_CouplesAboutCPMenu(Handle menu, MenuAction action, int client, int itemNum)
+public int MenuHandler_CouplesAboutCPPanel(Handle menu, MenuAction action, int client, int itemNum)
 {
-    if(action == MenuAction_End)
-        CloseHandle(menu);
-    else if(action == MenuAction_Cancel)
-        if(itemNum == MenuCancel_ExitBack)
-            Couples_DisplayProposeMenu(client);
+    if(action == MenuAction_Select)
+        Couples_DisplayMainMenu(client);
 }
 
 int FindClientByPlayerId(int playerid)

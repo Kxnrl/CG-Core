@@ -6,7 +6,7 @@ enum DailySign
     Handle:hSignTimer
 }
 
-DailySign DailySign_Data_Client[MAXPLAYERS+1][DailySign];
+int DailySign_Data_Client[MAXPLAYERS+1][DailySign];
 
 Handle DailySign_Forward_OnDailySigned;
 

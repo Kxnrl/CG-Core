@@ -2,7 +2,7 @@
 
 #pragma newdecls required //let`s go! new syntax!!!
 
-#define PLUGIN_VERSION " 8.3.473 - 2017/08/28 06:02 "
+#define PLUGIN_VERSION " 8.3.474 - 2017/08/29 21:20 "
 
 enum Clients
 {
@@ -27,7 +27,7 @@ enum Clients
     String:szGamesName[32],
     String:szSignature[256]
 }
-Clients g_ClientGlobal[MAXPLAYERS+1][Clients];
+int g_ClientGlobal[MAXPLAYERS+1][Clients];
 
 enum Handles
 {
@@ -35,7 +35,7 @@ enum Handles
     Handle:Array_Groups,
     Handle:Array_Discuz
 }
-Handles g_GlobalHandle[Handles];
+int g_GlobalHandle[Handles];
 
 enum Discuz_Data
 {
@@ -388,7 +388,7 @@ void UTIL_SendChatToAll(int client, const char[] message)
 
     char fmt[256];
     Format(fmt, 256, "[管理员频道] %N\n %s", client, message);
-    GlobalApi_ShowGameText(INVALID_HANDLE, fmt, 10.0, "233 0 0", -1.0, 0.32);
+    GlobalApi_ShowGameText(INVALID_HANDLE, fmt, 10.0, "233 0 0", "-1.0", "0.32");
 
     EmitSoundToAll("buttons/button18.wav");
 }

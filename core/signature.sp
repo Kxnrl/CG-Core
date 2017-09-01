@@ -5,7 +5,7 @@ enum Signature
     String:szNewSignature[256],
 }
 
-Signature Signature_Data_Client[MAXPLAYERS+1][Signature];
+int Signature_Data_Client[MAXPLAYERS+1][Signature];
 
 void Signature_OnPluginStart()
 {

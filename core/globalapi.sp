@@ -26,14 +26,13 @@ enum Forwards
 enum TextHud
 {
     Float:fHold,
-    Float:fX,
-    Float:fY,
+    String:szPosX[16],
+    String:szPosY[16],
     Handle:hTimer
 }
 
-Handle GlobalApi_Forwards[Forwards];
-
-TextHud GlobalApi_Data_TextHud[MAX_CHANNEL][TextHud];
+int GlobalApi_Forwards[Forwards];
+int GlobalApi_Data_TextHud[MAX_CHANNEL][TextHud];
 
 void GlobalApi_OnAskPluginLoad2()
 {
@@ -225,7 +224,7 @@ public int GlobalApi_Native_ShowGameText(Handle plugin, int numParams)
     if(GetArraySize(array_client) < 1)
         return false;
 
-    return GlobalApi_ShowGameText(array_client, message, StringToFloat(holdtime), color, StringToFloat(szX), StringToFloat(szY));
+    return GlobalApi_ShowGameText(array_client, message, StringToFloat(holdtime), color, szX, szY);
 }
 
 public int GlobalApi_Native_ShowGameTextAll(Handle plugin, int numParams)
@@ -241,16 +240,16 @@ public int GlobalApi_Native_ShowGameTextAll(Handle plugin, int numParams)
     )
         return false;
 
-    return GlobalApi_ShowGameText(INVALID_HANDLE, message, StringToFloat(holdtime), color, StringToFloat(szX), StringToFloat(szY));
+    return GlobalApi_ShowGameText(INVALID_HANDLE, message, StringToFloat(holdtime), color, szX, szY);
 }
 
-bool GlobalApi_ShowGameText(Handle array_client, const char[] message, const float holdtime, const char[] color, const float x, const float y)
+bool GlobalApi_ShowGameText(Handle array_client, const char[] message, const float holdtime, const char[] color, const char[] x, const char[] y)
 {
     int channel = GlobalApi_GetFreelyChannel(x, y);
 
     if(channel < 0 || channel >= MAX_CHANNEL)
     {
-        UTIL_LogError("GlobalApi_ShowGameText", "Can not find free channel -> [%f,%f]", x, y);
+        UTIL_LogError("GlobalApi_ShowGameText", "Can not find free channel -> [%s,%s]", x, y);
         return false;
     }
 
@@ -260,15 +259,15 @@ bool GlobalApi_ShowGameText(Handle array_client, const char[] message, const flo
     int g = StringToInt(szColor[1]);
     int b = StringToInt(szColor[2]);
 
-    SetHudTextParams(x, y, holdtime, r, g, b, 255, 0, 30.0, 0.0, 0.0);
+    SetHudTextParams(StringToFloat(x), StringToFloat(y), holdtime, r, g, b, 255, 0, 30.0, 0.0, 0.0);
 
     if(GlobalApi_Data_TextHud[channel][hTimer] != INVALID_HANDLE)
         KillTimer(GlobalApi_Data_TextHud[channel][hTimer]);
 
     GlobalApi_Data_TextHud[channel][fHold] = GetGameTime()+holdtime;
     GlobalApi_Data_TextHud[channel][hTimer] = CreateTimer(holdtime, Timer_ResetChannel, channel, TIMER_FLAG_NO_MAPCHANGE);
-    GlobalApi_Data_TextHud[channel][fX] = x;
-    GlobalApi_Data_TextHud[channel][fY] = y;
+    strcopy(GlobalApi_Data_TextHud[channel][szPosX], 16, x);
+    strcopy(GlobalApi_Data_TextHud[channel][szPosY], 16, y);
 
     channel += 5;
 
@@ -538,8 +537,8 @@ void GlobalApi_OnMapStart()
     {
         GlobalApi_Data_TextHud[channel][fHold] = GetGameTime();
         GlobalApi_Data_TextHud[channel][hTimer] = INVALID_HANDLE;
-        GlobalApi_Data_TextHud[channel][fX] = 0.0;
-        GlobalApi_Data_TextHud[channel][fY] = 0.0;
+        GlobalApi_Data_TextHud[channel][szPosX][0] = '\0';
+        GlobalApi_Data_TextHud[channel][szPosY][0] = '\0';
     }
 }
 
@@ -585,10 +584,10 @@ public void GlobalApi_SQLCallback_WebInterface(Handle owner, Handle hndl, const 
     GlobalApi_ShowMOTDPanelEx(client, show);
 }
 
-int GlobalApi_GetFreelyChannel(const float x, const float y)
+int GlobalApi_GetFreelyChannel(const char[] x, const char[] y)
 {
     for(int channel = 0; channel < MAX_CHANNEL; ++channel)
-        if(GlobalApi_Data_TextHud[channel][fX] == x && GlobalApi_Data_TextHud[channel][fY] == y)
+        if(strcmp(GlobalApi_Data_TextHud[channel][szPosX], x) == 0 && strcmp(GlobalApi_Data_TextHud[channel][szPosY], y) == 0)
             return channel;
 
     for(int channel = 0; channel < MAX_CHANNEL; ++channel)
@@ -601,8 +600,8 @@ int GlobalApi_GetFreelyChannel(const float x, const float y)
 public Action Timer_ResetChannel(Handle timer, int channel)
 {
     GlobalApi_Data_TextHud[channel][hTimer] = INVALID_HANDLE;
-    GlobalApi_Data_TextHud[channel][fX] = 0.0;
-    GlobalApi_Data_TextHud[channel][fY] = 0.0;
+    GlobalApi_Data_TextHud[channel][szPosX][0] = '\0';
+    GlobalApi_Data_TextHud[channel][szPosY][0] = '\0';
 
     return Plugin_Stop;
 }
