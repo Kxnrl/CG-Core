@@ -5,8 +5,11 @@
 #pragma newdecls required
 
 ArrayList g_aBlackGroups[2];
+ArrayList g_aBlockClient;
 
 int g_iSpamTag[MAXPLAYERS+1];
+int g_iCheckTk[MAXPLAYERS+1];
+char g_szClantag[MAXPLAYERS+1][32];
 
 public Plugin myinfo =
 {
@@ -21,6 +24,7 @@ public void OnPluginStart()
 {
     g_aBlackGroups[0] = CreateArray();
     g_aBlackGroups[1] = CreateArray(ByteCountToCells(32));
+    g_aBlockClient    = CreateArray(ByteCountToCells(32));
 
     // Balck Hacking Group
     g_aBlackGroups[0].Push(103582791455638129); //http://steamcommunity.com/groups/SDYniuB/memberslistxml/?xml=1
@@ -29,6 +33,7 @@ public void OnPluginStart()
     g_aBlackGroups[0].Push(103582791455441970); //http://steamcommunity.com/groups/woshijilao/memberslistxml/?xml=1
     g_aBlackGroups[0].Push(103582791456788193); //http://steamcommunity.com/groups/zhongguohaolaiwu/memberslistxml/?xml=1
     g_aBlackGroups[0].Push(103582791454558691); //http://steamcommunity.com/groups/sssfffggghhhjr/memberslistxml/?xml=1
+    g_aBlackGroups[0].Push(103582791459721846); //http://steamcommunity.com/groups/SBmaoling/memberslistxml/?xml=1
     
     g_aBlackGroups[1].PushString("4=1电竞SDY");
     g_aBlackGroups[1].PushString("【50电竞】");
@@ -36,7 +41,8 @@ public void OnPluginStart()
     g_aBlackGroups[1].PushString("woshijilao");
     g_aBlackGroups[1].PushString("大牛影业");
     g_aBlackGroups[1].PushString("中国反作弊");
-    
+    g_aBlackGroups[1].PushString("弱智小学生");
+
     CreateTimer(10.0, Timer_CheckSpamTag, _, TIMER_REPEAT);
 }
 
@@ -50,36 +56,66 @@ public Action Timer_CheckSpamTag(Handle timer)
 
 public void OnClientCommandKeyValues_Post(int client, KeyValues kv)
 {
+    if(g_iSpamTag[client] == -1)
+        return;
+    
     char szCommmand[32];
     if(KvGetSectionName(kv, szCommmand, 32) && StrEqual(szCommmand, "ClanTagChanged", false))
-        if(++g_iSpamTag[client] > 3)
+    {
+        int tick = GetGameTickCount();
+
+        if(tick == g_iCheckTk[client])
+            return;
+
+        g_iCheckTk[client] = tick;
+
+        char tag[32], name[128];
+        KvGetString(kv, "tag", tag, 32);
+        KvGetString(kv, "name", name, 128);
+
+        UTIL_LogProcess("OnClientCommandKeyValues_Post", "tick[%d] -> \"%L\" -> %s -> %s", tick, client, tag, name);
+
+        if(strcmp(tag, g_szClantag[client]) == 0)
+            return;
+
+        strcopy(g_szClantag[client], 32, tag);
+
+        if(++g_iSpamTag[client] >= 5)
             UTIL_PreBanClientByTag(client);
+    }
 }
 
 void UTIL_PreBanClientByTag(int client)
 {
-    char fmt[128], AuthId[32], Nickname[32];
-    
+    char AuthId[32], Nickname[32];
+
     GetClientAuthId(client, AuthId_Steam2, AuthId, 32, true);
     GetClientName(client, Nickname, 32);
 
     KickClient(client, "CAT:  \n系统检测到你使用了键位自动更换组标.\n已将你封禁60分钟.\n屡教不改将会导致永久封禁");
+
+    int time = 60;
     
-    FormatEx(fmt, 128, "CAT:  ClanTag Spam -> 键位自动更换组标");
+    if(FindStringInArray(g_aBlockClient, AuthId) != -1)
+        time = 0;
+    else
+        g_aBlockClient.PushString(AuthId);
 
     Handle pack;
     CreateDataTimer(1.0, Timer_BanClient, pack);
     WritePackString(pack, AuthId);
     WritePackString(pack, Nickname);
-    WritePackString(pack, fmt);
-    WritePackCell(pack, 60);
+    WritePackString(pack, "CAT:  ClanTag Spam -> 键位自动更换组标");
+    WritePackCell(pack, time);
     ResetPack(pack);
+    
+    g_iSpamTag[client] = -1;
 }
 
 public void OnClientPutInServer(int client)
 {
     g_iSpamTag[client] = 0;
-    
+
     int number = GetArraySize(g_aBlackGroups[0]);
     
     for(int index = 1; index < number; ++index)
