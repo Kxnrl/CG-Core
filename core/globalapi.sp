@@ -250,6 +250,8 @@ bool GlobalApi_ShowGameText(Handle array_client, const char[] message, const flo
     if(channel < 0 || channel >= MAX_CHANNEL)
     {
         UTIL_LogError("GlobalApi_ShowGameText", "Can not find free channel -> [%s,%s]", x, y);
+        for(int channel = 0; channel < MAX_CHANNEL; ++channel)
+            UTIL_LogError("GlobalApi_ShowGameText", "Dump -> No.%d -> %f -> %s,%s", channel+1, GlobalApi_Data_TextHud[channel][fHold], GlobalApi_Data_TextHud[channel][szPosX], GlobalApi_Data_TextHud[channel][szPosY]);
         return false;
     }
 
@@ -535,7 +537,7 @@ void GlobalApi_OnMapStart()
 {
     for(int channel = 0; channel < MAX_CHANNEL; ++channel)
     {
-        GlobalApi_Data_TextHud[channel][fHold] = GetGameTime();
+        GlobalApi_Data_TextHud[channel][fHold] = 0.0;
         GlobalApi_Data_TextHud[channel][hTimer] = INVALID_HANDLE;
         GlobalApi_Data_TextHud[channel][szPosX][0] = '\0';
         GlobalApi_Data_TextHud[channel][szPosY][0] = '\0';
@@ -590,8 +592,9 @@ int GlobalApi_GetFreelyChannel(const char[] x, const char[] y)
         if(strcmp(GlobalApi_Data_TextHud[channel][szPosX], x) == 0 && strcmp(GlobalApi_Data_TextHud[channel][szPosY], y) == 0)
             return channel;
 
+    int fTime = GetGameTime();
     for(int channel = 0; channel < MAX_CHANNEL; ++channel)
-        if(GlobalApi_Data_TextHud[channel][fHold] <= GetGameTime())
+        if(GlobalApi_Data_TextHud[channel][fHold] <= fTime)
             return channel;
 
     return -1;
@@ -599,6 +602,7 @@ int GlobalApi_GetFreelyChannel(const char[] x, const char[] y)
 
 public Action Timer_ResetChannel(Handle timer, int channel)
 {
+    GlobalApi_Data_TextHud[channel][fHold] = 0.0;
     GlobalApi_Data_TextHud[channel][hTimer] = INVALID_HANDLE;
     GlobalApi_Data_TextHud[channel][szPosX][0] = '\0';
     GlobalApi_Data_TextHud[channel][szPosY][0] = '\0';
