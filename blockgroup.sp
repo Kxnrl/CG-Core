@@ -34,6 +34,7 @@ public void OnPluginStart()
     g_aBlackGroups[0].Push(103582791456788193); //http://steamcommunity.com/groups/zhongguohaolaiwu/memberslistxml/?xml=1
     g_aBlackGroups[0].Push(103582791454558691); //http://steamcommunity.com/groups/sssfffggghhhjr/memberslistxml/?xml=1
     g_aBlackGroups[0].Push(103582791459721846); //http://steamcommunity.com/groups/SBmaoling/memberslistxml/?xml=1
+    g_aBlackGroups[0].Push(103582791459811347); //http://steamcommunity.com/groups/antiowrage/memberslistxml/?xml=1
     
     g_aBlackGroups[1].PushString("4=1电竞SDY");
     g_aBlackGroups[1].PushString("【50电竞】");
@@ -42,6 +43,7 @@ public void OnPluginStart()
     g_aBlackGroups[1].PushString("大牛影业");
     g_aBlackGroups[1].PushString("中国反作弊");
     g_aBlackGroups[1].PushString("弱智小学生");
+    g_aBlackGroups[1].PushString("我演你妈了个逼");
 
     CreateTimer(10.0, Timer_CheckSpamTag, _, TIMER_REPEAT);
 }
