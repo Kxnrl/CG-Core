@@ -250,8 +250,8 @@ bool GlobalApi_ShowGameText(Handle array_client, const char[] message, const flo
     if(channel < 0 || channel >= MAX_CHANNEL)
     {
         UTIL_LogError("GlobalApi_ShowGameText", "Can not find free channel -> [%s,%s]", x, y);
-        for(int channel = 0; channel < MAX_CHANNEL; ++channel)
-            UTIL_LogError("GlobalApi_ShowGameText", "Dump -> No.%d -> %f -> %s,%s", channel+1, GlobalApi_Data_TextHud[channel][fHold], GlobalApi_Data_TextHud[channel][szPosX], GlobalApi_Data_TextHud[channel][szPosY]);
+        for(int i = 0; i < MAX_CHANNEL; ++i)
+            UTIL_LogError("GlobalApi_ShowGameText", "Dump -> No.%d -> %f -> %s,%s", i+1, GlobalApi_Data_TextHud[i][fHold], GlobalApi_Data_TextHud[i][szPosX], GlobalApi_Data_TextHud[i][szPosY]);
         return false;
     }
 
@@ -592,7 +592,7 @@ int GlobalApi_GetFreelyChannel(const char[] x, const char[] y)
         if(strcmp(GlobalApi_Data_TextHud[channel][szPosX], x) == 0 && strcmp(GlobalApi_Data_TextHud[channel][szPosY], y) == 0)
             return channel;
 
-    int fTime = GetGameTime();
+    float fTime = GetGameTime();
     for(int channel = 0; channel < MAX_CHANNEL; ++channel)
         if(GlobalApi_Data_TextHud[channel][fHold] <= fTime)
             return channel;

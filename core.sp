@@ -2,7 +2,7 @@
 
 #pragma newdecls required //let`s go! new syntax!!!
 
-#define PLUGIN_VERSION " 8.3.474 - 2017/08/29 21:20 "
+#define PLUGIN_VERSION " 8.31.475 - 2017/09/03 10:27 "
 
 enum Clients
 {
@@ -33,7 +33,7 @@ enum Handles
 {
     Handle:KV_Local,
     Handle:Array_Groups,
-    Handle:Array_Discuz
+    Handle:Trie_Discuz
 }
 int g_GlobalHandle[Handles];
 
@@ -111,7 +111,7 @@ public void OnPluginStart()
     CreateTimer(1.0, Timer_GlobalTimer, _, TIMER_REPEAT);
 
     //Create cache array
-    g_GlobalHandle[Array_Discuz] = CreateArray(view_as<int>(Discuz_Data));
+    g_GlobalHandle[Trie_Discuz] = CreateTrie();
     g_GlobalHandle[Array_Groups] = CreateArray(ByteCountToCells(32));
 
     //Forward To Modules

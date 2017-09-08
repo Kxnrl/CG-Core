@@ -460,9 +460,9 @@ public void SQLCallback_LoadDiscuzData(Handle owner, Handle hndl, const char[] e
     if(SQL_GetRowCount(hndl) < 1)
         return;
 
-    ClearArray(g_GlobalHandle[Array_Discuz]);
+    ClearTrie(g_GlobalHandle[Trie_Discuz]);
 
-    Discuz_Data data[Discuz_Data];
+    int data[Discuz_Data];
 
     while(SQL_FetchRow(hndl))
     {
@@ -472,7 +472,7 @@ public void SQLCallback_LoadDiscuzData(Handle owner, Handle hndl, const char[] e
         data[iExpTime] = SQL_FetchInt(hndl, 3);
         data[iGrowths] = SQL_FetchInt(hndl, 4);
         data[bIsRealName] = (SQL_FetchInt(hndl, 5) == 99);
-        PushArrayArray(g_GlobalHandle[Array_Discuz], data[0], view_as<int>(Discuz_Data));
+        SetTrieArray(g_GlobalHandle[Trie_Discuz], data[szSteamId64], data[0], view_as<int>(Discuz_Data));
     }
 
     for(int client = 1; client <= MaxClients; ++client)

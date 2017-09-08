@@ -24,26 +24,24 @@ void ClientData_OnClientConnected(int client)
 
 void LoadClientDiscuzData(int client, const char[] FriendID)
 {
-    int array_size = GetArraySize(g_GlobalHandle[Array_Discuz]);
-    Discuz_Data data[Discuz_Data];
+    int data[Discuz_Data];
 
-    for(int i = 0; i < array_size; i++)
+    if(!GetTrieArray(g_GlobalHandle[Trie_Discuz], FriendID, data[0], view_as<int>(Discuz_Data), _))
     {
-        GetArrayArray(g_GlobalHandle[Array_Discuz], i, data[0], view_as<int>(Discuz_Data));
-        
-        if(!StrEqual(FriendID, data[szSteamId64]))
-            continue;
-
-        g_ClientGlobal[client][bVip] = (data[iExpTime] > GetTime());
-        g_ClientGlobal[client][iUId] = data[iUId];
-        g_ClientGlobal[client][iGrowth] = data[iGrowths];
-        g_ClientGlobal[client][bRealName] = data[bIsRealName];
-        strcopy(g_ClientGlobal[client][szForumName], 24, data[szDName]);
-        break;
+        //UTIL_LogError("LoadClientDiscuzData", "Can not get data in trie -> \"%L\" -> %s", client, FriendID);
+        return;
     }
+
+    g_ClientGlobal[client][bVip] = (data[iExpTime] > GetTime());
+    g_ClientGlobal[client][iUId] = data[iUId];
+    g_ClientGlobal[client][iGrowth] = data[iGrowths];
+    g_ClientGlobal[client][bRealName] = data[bIsRealName];
+    strcopy(g_ClientGlobal[client][szForumName], 24, data[szDName]);
 
     if(FindStringInArray(g_GlobalHandle[Array_Groups], FriendID) != -1)
         g_ClientGlobal[client][bInGroup] = true;
+    
+    //LogMessage("LoadClientDiscuzData -> Load data successful! -> \"%L\" -> %s", client, FriendID);
 }
 
 void ReCheckClientName(int client)
