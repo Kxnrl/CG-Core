@@ -2,18 +2,18 @@
 
 #pragma newdecls required //let`s go! new syntax!!!
 
-#define PLUGIN_VERSION " 8.31.475 - 2017/09/03 10:27 "
+#define PLUGIN_VERSION " 10.0.480 - 2017/09/29 07:43 "
 
 enum Clients
 {
-    iPId,
-    iUId,
-    iGId,
-    iTId,
-    iNumber,
-    iOnline,
-    iGrowth,
-    iVitality,
+    iPId,       //Player ID
+    iUId,       //Discuz UID
+    iGId,       //AuthGroup ID
+    iTId,       //TrackAnalytics ID
+    iNumber,    //Connect number
+    iOnline,    //Online time total
+    iGrowth,    //Grouwth
+    iVitality,  //Vitality
     iDaily,
     iLastseen,
     iConnectTime,
@@ -22,49 +22,34 @@ enum Clients
     bool:bInGroup,
     bool:bRealName,
     String:szIP[32],
-    String:szGroupName[32],
+    String:szGroupName[16],
     String:szForumName[32],
-    String:szGamesName[32],
     String:szSignature[256]
 }
 int g_ClientGlobal[MAXPLAYERS+1][Clients];
 
-enum Handles
-{
-    Handle:KV_Local,
-    Handle:Array_Groups,
-    Handle:Trie_Discuz
-}
-int g_GlobalHandle[Handles];
-
-enum Discuz_Data
-{
-    iUId,
-    iExpTime,
-    iGrowths,
-    bool:bIsRealName,
-    String:szDName[24],
-    String:szSteamId64[32]
-}
-
-//全部变量
 int g_iServerId;
 int g_iNowDate;
 char g_szIP[32];
 char g_szRconPwd[32];
 char g_szHostName[256];
 
-#include "core/authgroup.sp"
-#include "core/clientdata.sp"
+Handle g_dbForum;
+Handle g_dbGames;
+
+#include "core/auth.sp"
+#include "core/cache.sp"
+#include "core/client.sp"
 #include "core/couples.sp"
 #include "core/dailysign.sp"
 #include "core/database.sp"
 #include "core/globalapi.sp"
 #include "core/menucmds.sp"
 #include "core/signature.sp"
+#include "core/server.sp"
 
 //////////////////////////////
-//        PLUGIN DEFINITION    //
+//     PLUGIN DEFINITION    //
 //////////////////////////////
 public Plugin myinfo = 
 {
@@ -80,65 +65,46 @@ public Plugin myinfo =
 //////////////////////////////
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-    //Mark native
+    AuthGroup_OnAskPluginLoad2();
+    Client_OnAskPluginLoad2();
+    Server_OnAskPluginLoad2();
     Couples_OnAskPluginLoad2();
     Database_OnAskPluginLoad2();
     GlobalApi_OnAskPluginLoad2();
 
-    //注册函数库
     RegPluginLibrary("csgogamers");
-
-    //Fix Plugin Load
-    SetConVarInt(FindConVar("sv_hibernate_when_empty"), 0);
-    FormatEx(g_szRconPwd, 32, "%d", GetRandomInt(10000000, 99999999));
-    SetConVarString(FindConVar("rcon_password"), g_szRconPwd); 
 
     return APLRes_Success;
 }
 
 public void OnPluginStart()
 {
-    //Init date
-    char m_szDate[32];
-    FormatTime(m_szDate, 64, "%Y%m%d", GetTime());
-    g_iNowDate = StringToInt(m_szDate);
-
-    //Get server IP
-    int ip = GetConVarInt(FindConVar("hostip"));
-    FormatEx(g_szIP, 32, "%d.%d.%d.%d:%d", ((ip & 0xFF000000) >> 24) & 0xFF, ((ip & 0x00FF0000) >> 16) & 0xFF, ((ip & 0x0000FF00) >>  8) & 0xFF, ((ip & 0x000000FF) >>  0) & 0xFF, GetConVarInt(FindConVar("hostport")));
-
-    //Global timer
-    CreateTimer(1.0, Timer_GlobalTimer, _, TIMER_REPEAT);
-
-    //Create cache array
-    g_GlobalHandle[Trie_Discuz] = CreateTrie();
-    g_GlobalHandle[Array_Groups] = CreateArray(ByteCountToCells(32));
-
-    //Forward To Modules
     AuthGroup_OnPluginStart();
+    Cache_OnPluginStart();
     Couples_OnPluginStart();
+    Client_OnPluginStart();
     Database_OnPluginStart();
     DailySign_OnPluginStart();
     GlobalApi_OnPluginStart();
     MenuCmds_OnPluginStart();
     Signature_OnPluginStart();
+    Server_OnPluginStart();
+    
+    CreateTimer(1.0, Timer_GlobalTimer, _, TIMER_REPEAT);
 }
 
 public void OnMapStart()
 {
-    //Forward To Modules
     GlobalApi_OnMapStart();
 }
 
 public void OnMapEnd()
 {
-    //Forward To Modules
     GlobalApi_OnMapStart();
 }
 
 public void OnConfigsExecuted()
 {
-    //Locked Cvars
     SetConVarInt(FindConVar("sv_hibernate_when_empty"), 0);
     SetConVarInt(FindConVar("sv_disable_motd"), 1);
     SetConVarString(FindConVar("hostname"), g_szHostName, false, false);
@@ -147,59 +113,37 @@ public void OnConfigsExecuted()
 
 public Action Timer_GlobalTimer(Handle timer)
 {
-    //Get Now time
-    int unix_timestamp = GetTime();
-    if(unix_timestamp % 3600 == 0)
-    {
-        char m_szDate[32];
-        FormatTime(m_szDate, 32, "%H", unix_timestamp);
-        OnNowTimeForward(StringToInt(m_szDate));
-        FormatTime(m_szDate, 32, "%Y%m%d", unix_timestamp);
-        int iDate = StringToInt(m_szDate);
-        if(iDate > g_iNowDate)
-        {
-            OnNewDayForward(iDate);
+    GlobalApi_Forward_OnGlobalTimer();
 
-            for(int client = 1; client <= MaxClients; ++client)
-                g_ClientGlobal[client][iDaily] = 0;
-        }
+    for(int client = 1; client <= MaxClients; ++client)
+    {
+        if(!IsClientInGame(client))
+            continue;
+        
+        if(IsFakeClient(client))
+            continue;
+        
+        if(!g_ClientGlobal[client][bLoaded])
+            continue;
+
+        if(g_ClientGlobal[client][iTId] < 1)
+            continue;
+
+        DailySign_OnGlobalTimer(client);
+        Client_OnGlobalTimer(client);
+        Couples_OnGlobalTimer(client);
     }
 
-    //Tracking
-    if(g_GlobalHandle[KV_Local] != INVALID_HANDLE)
-    {
-        for(int client = 1; client <= MaxClients; ++client)
-        {
-            if(!IsClientInGame(client))
-                continue;
-            
-            if(IsFakeClient(client))
-                continue;
-            
-            if(!g_ClientGlobal[client][bLoaded])
-                continue;
-
-            if(g_ClientGlobal[client][iTId] < 1)
-                continue;
-
-            g_ClientGlobal[client][iDaily]++;
-            
-            DailySign_OnGlobalTimer(client);
-            ClientData_OnGlobalTimer(client);
-        }
-
-        KeyValuesToFile(g_GlobalHandle[KV_Local], "addons/sourcemod/data/core.track.kv.txt");
-    }
-
-    OnGlobalTimer();
+    Cache_OnGlobalTimer();
+    Server_OnGlobalTimer();
 
     return Plugin_Continue;
 }
 
 public void OnClientConnected(int client)
 {
-    //初始化Client数据
-    ClientData_OnClientConnected(client);
+    AuthGroup_OnClientConnected(client);
+    Client_OnClientConnected(client);
     Couples_OnClientConnected(client);
     DailySign_OnClientConnected(client);
     Signature_OnClientConnected(client);
@@ -209,66 +153,47 @@ public void OnClientConnected(int client)
 
 public Action OnClientAuthorizedPost(Handle timer, int client)
 {
-    if(!IsClientConnected(client) || IsFakeClient(client))
+    if(!IsClientConnected(client))
         return Plugin_Stop;
 
     if(IsFakeClient(client))
     {
-        OnClientVipChecked(client);
+        GlobalApi_Forward_OnClientVipChecked(client);
         return Plugin_Stop;
     }
 
     char FriendID[32];
     if(!GetClientAuthId(client, AuthId_SteamID64, FriendID, 32, true))
-    {
-        OnClientVipChecked(client);
         return Plugin_Continue;
-    }
 
-    LoadClientDiscuzData(client, FriendID);
-    OnClientVipChecked(client);
+    Cache_LoadClientDiscuzData(client, FriendID);
+    GlobalApi_Forward_OnClientVipChecked(client);
 
     return Plugin_Stop;
 }
 
 public void OnClientPutInServer(int client)
 {
-    if(!IsValidClient(client))
+    if(IsFakeClient(client))
     {
-        GlobalApi_OnClientLoaded(client);
+        Client_Forward_OnClientLoaded(client);
         return;
     }
 
-    GetClientIP(client, g_ClientGlobal[client][szIP], 32);
-
-    char m_szAuth[32], m_szQuery[512];
-    GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-    Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.lasttime, a.number, a.signature, a.signnumber, a.signtime, a.groupid, a.groupname, a.lilyid, a.lilydate, a.active, a.daytime, b.name FROM playertrack_player a LEFT JOIN playertrack_player b ON a.lilyid = b.id WHERE a.steamid = '%s' ORDER BY id ASC LIMIT 1;", m_szAuth);
-    MySQL_Query(false, Database_SQLCallback_GetClientBaseData, m_szQuery, GetClientUserId(client), DBPrio_High);
+    Client_OnClientPutInServer(client);
 }
 
 public void OnClientDisconnect(int client)
 {
-    //玩家还没加入到游戏就断线了
     if(!IsClientInGame(client) || IsFakeClient(client))
         return;
 
-    //检查CP在线情况
+    AuthGroup_OnClientDisconnect(client);
+    Cache_OnClientDisconnect(client);
     Couples_OnClientDisconnect(client);
-
-    if(Signature_Data_Client[client][hListener] != INVALID_HANDLE)
-    {
-        KillTimer(Signature_Data_Client[client][hListener]);
-        Signature_Data_Client[client][hListener] = INVALID_HANDLE;
-    }
-
-    if(DailySign_Data_Client[client][hSignTimer] != INVALID_HANDLE)
-    {
-        KillTimer(DailySign_Data_Client[client][hSignTimer]);
-        DailySign_Data_Client[client][hSignTimer] = INVALID_HANDLE;
-    }
-    
-    ClientData_OnClientDisconnect(client);
+    Signature_OnClientDisconnect(client);
+    DailySign_OnClientDisconnect(client);
+    Client_OnClientDisconnect(client);
 }
 
 public Action OnClientSayCommand(int client, const char[] command, const char[] sArgs)
@@ -298,7 +223,6 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
     else if(strcmp(command, "say_team", false) == 0 || strcmp(command, "say_squad", false) == 0)
     {
         UTIL_SendChatToAdmins(client, sArgs[1]);
-
         return Plugin_Stop;
     }
 
@@ -312,70 +236,6 @@ void UTIL_LogError(const char[] module, const char[] error, any ...)
     LogToFileEx("addons/sourcemod/logs/Core.log", "%s -> %s", module, buffer);
 }
 
-void UTIL_OnServerLoaded()
-{
-    //Cache server advertisment
-    char m_szQuery[512];
-    Format(m_szQuery, 512, "SELECT * FROM playertrack_adv WHERE sid = '%i' OR sid = '0'", g_iServerId);
-    MySQL_Query(false, SQLCallback_GetAdvData, m_szQuery, _, DBPrio_High);
-
-    //Update local data if server was crashed
-    if(g_GlobalHandle[KV_Local] != INVALID_HANDLE)
-        CloseHandle(g_GlobalHandle[KV_Local]);
-
-    g_GlobalHandle[KV_Local] = CreateKeyValues("core_track", "", "");
-
-    FileToKeyValues(g_GlobalHandle[KV_Local], "addons/sourcemod/data/core.track.kv.txt");
-    
-    while(KvGotoFirstSubKey(g_GlobalHandle[KV_Local], true))
-    {
-        char m_szAuthId[32], m_szIp[16];
-        KvGetSectionName(g_GlobalHandle[KV_Local], m_szAuthId, 32);
-
-        int m_iPlayerId = KvGetNum(g_GlobalHandle[KV_Local], "PlayerId", 0);
-        int m_iConnect = KvGetNum(g_GlobalHandle[KV_Local], "Connect", 0);
-        int m_iTrackId = KvGetNum(g_GlobalHandle[KV_Local], "TrackID", 0);
-        KvGetString(g_GlobalHandle[KV_Local], "IP", m_szIp, 16, "127.0.0.1");
-        int m_iLastTime = KvGetNum(g_GlobalHandle[KV_Local], "LastTime", 0);
-        int m_iDaily = KvGetNum(g_GlobalHandle[KV_Local], "DayTime", 0);
-        Format(m_szQuery, 512, "UPDATE playertrack_player AS a, playertrack_analytics AS b SET a.onlines = a.onlines+%d, a.lastip = '%s', a.lasttime = '%d', a.number = a.number+1, a.daytime = '%d', b.duration = '%d' WHERE a.id = '%d' AND b.id = '%d' AND a.steamid = '%s' AND b.playerid = '%d'", m_iConnect, m_szIp, m_iLastTime, m_iDaily, m_iConnect, m_iPlayerId, m_iTrackId, m_szAuthId, m_iPlayerId);
-        Handle data = CreateDataPack();
-        WritePackString(data, m_szQuery);
-        WritePackString(data, m_szAuthId);
-        WritePackCell(data, m_iPlayerId);
-        WritePackCell(data, m_iConnect);
-        WritePackCell(data, m_iTrackId);
-        WritePackString(data, m_szIp);
-        WritePackCell(data, m_iLastTime);
-        ResetPack(data);
-
-        MySQL_Query(false, SQLCallback_SaveTempLog, m_szQuery, data);
-
-        if(KvDeleteThis(g_GlobalHandle[KV_Local]))
-        {
-            char m_szAfter[32];
-            KvGetSectionName(g_GlobalHandle[KV_Local], m_szAfter, 32);
-            if(StrContains(m_szAfter, "STEAM", false) != -1)
-                KvGoBack(g_GlobalHandle[KV_Local]);
-        }
-    }
-
-    KvRewind(g_GlobalHandle[KV_Local]);
-    KeyValuesToFile(g_GlobalHandle[KV_Local], "addons/sourcemod/data/core.track.kv.txt");
-
-    //If lateload
-    for(int client = 1; client <= MaxClients; ++client)
-    {
-        if(IsClientConnected(client))
-        {
-            OnClientConnected(client);
-
-            if(IsClientInGame(client))
-                OnClientPutInServer(client);
-        }
-    }
-}
-
 void UTIL_SendChatToAll(int client, const char[] message)
 {
     for(int target = 1; target <= MaxClients; ++target)
@@ -383,14 +243,13 @@ void UTIL_SendChatToAll(int client, const char[] message)
         if(!IsClientInGame(target) || IsFakeClient(target))
             continue;
 
+        ClientCommand(target, "play buttons/button18.wav");
         PrintToChat(target, "[\x10管理员频道\x01] \x0C%N\x01 :\x07  %s", client, message);
     }
 
     char fmt[256];
     Format(fmt, 256, "[管理员频道] %N\n %s", client, message);
-    GlobalApi_ShowGameText(INVALID_HANDLE, fmt, 10.0, "233 0 0", "-1.0", "0.32");
-
-    EmitSoundToAll("buttons/button18.wav");
+    GlobalApi_ShowGameText(INVALID_HANDLE, fmt, 10.0, "233 0 0", "-1.0", "0.32", 0);
 }
 
 void UTIL_SendChatToAdmins(int client, const char[] message)
@@ -405,4 +264,83 @@ void UTIL_SendChatToAdmins(int client, const char[] message)
 
         PrintToChat(target, "[\x0A发送至管理员\x01] \x05%N\x01 :\x07  %s", client, message);
     }
+}
+
+void UTIL_PrintWelcomeMessage(int client)
+{
+    int timeleft;
+    GetMapTimeLeft(timeleft);
+    if(timeleft < 60)
+        return;
+
+    char szTimeleft[32], szMap[128];
+    Format(szTimeleft, 32, "%d:%02d", timeleft / 60, timeleft % 60);
+    GetCurrentMap(szMap, 128);
+
+    PrintToConsole(client, "-----------------------------------------------------------------------------------------------");
+    PrintToConsole(client, "                                                                                               ");
+    PrintToConsole(client, "                                     欢迎来到[CG]游戏社区                                      ");    
+    PrintToConsole(client, "                                                                                               ");
+    PrintToConsole(client, "当前服务器:  %s   -   Tickrate: %d.0   -   主程序版本: %s", g_szHostName, RoundToNearest(1.0 / GetTickInterval()), PLUGIN_VERSION);
+    PrintToConsole(client, " ");
+    PrintToConsole(client, "论坛地址: https://csgogamers.com  官方QQ群: 107421770  官方YY: 497416");
+    PrintToConsole(client, "当前地图: %s   剩余时间: %s", szMap, szTimeleft);
+    PrintToConsole(client, "                                                                                               ");
+    PrintToConsole(client, "服务器基础命令:");
+    PrintToConsole(client, "核心命令： !cg    [核心菜单]");
+    PrintToConsole(client, "商店相关： !store [打开商店]  !credits  [显示余额]      !inv       [查看库存]");
+    PrintToConsole(client, "地图相关： !rtv   [滚动投票]  !revote   [重新选择]      !nominate  [预定地图]");
+    PrintToConsole(client, "娱乐相关： !music [点歌菜单]  !mapmusic [停止地图音乐]  !dj        [停止点播歌曲]");
+    PrintToConsole(client, "其他命令： !sign  [每日签到]  !hide     [屏蔽足迹霓虹]  !tp/!seeme [第三人称视角]");
+    PrintToConsole(client, "玩家认证： !track [查询认证]  !rz       [申请认证]");
+    PrintToConsole(client, "搞基系统： !cp    [功能菜单]");
+    PrintToConsole(client, "天赋系统： !talent[功能菜单]");
+    PrintToConsole(client, "                                                                                               ");
+    PrintToConsole(client, "-----------------------------------------------------------------------------------------------");        
+    PrintToConsole(client, "                                                                                               ")
+}
+
+void UTIL_TQuery(Handle database, SQLTCallback callback, const char[] query, any data = 0, DBPriority prio = DBPrio_Normal)
+{
+    if(database == INVALID_HANDLE)
+    {
+        if(database == g_dbGames)
+            Database_SQLCallback_ConnectToGames();
+        else if(database == g_dbForum)
+            Database_SQLCallback_ConnectToForum();
+        
+        UTIL_LogError("UTIL_TQuery", "Query To DB[%s] is INVALID_HANDLE -> %s", database == g_dbForum ? "discuz" : "csgo", query);
+        return;
+    }
+
+    SQL_TQuery(database, callback, query, data, prio);
+}
+
+void UTIL_SQLTVoid(Handle database, const char[] query, DBPriority prio = DBPrio_Normal)
+{
+    DataPack data = new DataPack();
+    data.WriteString(query);
+    data.WriteCell(database == g_dbGames ? 0 : 1);
+    data.Reset();
+    UTIL_TQuery(database, Database_SQLCallback_Void, query, data, prio);
+}
+
+bool UTIL_GetEscapeName(int client, char[] buffer, int maxLen)
+{
+    char name[32];
+    GetClientName(client, name, 32);
+    SQL_EscapeString(g_dbGames, name, buffer, maxLen);
+}
+
+int UTIL_CalculatLevelByExp(int exp)
+{
+    int level = 0;
+    int nexts = 1000;
+    while(exp > nexts)
+    {
+        exp -= nexts;
+        level++;
+        nexts = level * 1000;
+    }
+    return level;
 }

@@ -1,5 +1,4 @@
-#include <sdktools_functions>   // for set client name
-#include <sdktools_sound>       // for emit sound to all
+#include <cg_core>
 
 stock void RemoveCharFromName(char[] code, int maxLen)
 {

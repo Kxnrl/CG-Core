@@ -1254,64 +1254,36 @@ void ResetSettings()
 
 public Action OnLogAction(Handle source, Identity ident, int client, int target, const char[] message)
 {
-	if(client < 1 || GetUserAdmin(client) == INVALID_ADMIN_ID || g_hDatabase == INVALID_HANDLE || StrContains(message, "console command") >= 0 || StrContains(message, "sm_chat") >= 0)
+	if(client < 1 || GetUserAdmin(client) == INVALID_ADMIN_ID || g_hDatabase == INVALID_HANDLE || StrContains(message, "console command") >= 0)
 		return Plugin_Continue;
 	
 	char emsg[512], m_szQuery[512], m_sMsg[256], m_szClientauth[32], m_szClientid[128];
 
+    GetClientAuthId(client, AuthId_Steam2, m_szClientauth, 32, true);
+
 	if(target >= 1 && client != target)
 	{
-		char m_szTargetauth[32], m_szTargetid[128], m_szTmp[32], m_szTmp2[128];
-		GetClientAuthId(client, AuthId_Steam2, m_szClientauth, 32, true);
-		GetClientAuthId(target, AuthId_Steam2, m_szTargetauth, 32, true);
-		Format(m_szClientid, 128, "\"%N<%d><%s><>\"", client, GetClientUserId(client), m_szClientauth);
-		Format(m_szTargetid, 128, "\"%N<%d><%s><>\"", target, GetClientUserId(target), m_szTargetauth);
-		Format(m_szTmp2, 128, "%s", m_szTargetid);
-		Format(m_szTmp, 32, "<%d>", GetClientUserId(target));
-		ReplaceString(m_szTargetid, 128, m_szTmp, "");
-		ReplaceString(m_szTargetid, 128, "<>", "");
-		Format(m_sMsg, 256, "%s", message);
+		char m_szTargetid[128], m_szUserId[32], m_szOriginal[128];
+
+        Format(m_szClientid, 128, "\"%L\"", client);
+		Format(m_szTargetid, 128, "\"%L\"", target);
+        Format(m_szOriginal, 128, "\"%L\"", target);
+
+		Format(m_szUserId, 32, "<%d>", GetClientUserId(target));
+        ReplaceString(m_szTargetid, 128, "<>", "");
+        ReplaceString(m_szTargetid, 128, m_szUserId, "");
+
+        strcopy(m_sMsg, 256, message);
+
 		ReplaceString(m_sMsg, 256, m_szClientid, "");
-		ReplaceString(m_sMsg, 256, m_szTmp2, m_szTargetid);
+		ReplaceString(m_sMsg, 256, m_szOriginal, m_szTargetid);
 	}
 	else
 	{
-		GetClientAuthId(client, AuthId_Steam2, m_szClientauth, 32, true);
-		Format(m_szClientid, 128, "\"%N<%d><%s><>\"", client, GetClientUserId(client), m_szClientauth);
+		Format(m_szClientid, 128, "\"%L\"", client);
 		Format(m_sMsg, 256, "%s", message);
 		ReplaceString(m_sMsg, 256, m_szClientid, "自己");
 	}
-
-	ReplaceString(m_sMsg, 256, "slayed", "处死");
-	ReplaceString(m_sMsg, 256, "slapped", "拍打");
-	ReplaceString(m_sMsg, 256, "ignited", "点燃");
-	ReplaceString(m_sMsg, 256, "removed a beacon on", "取消点灯");
-	ReplaceString(m_sMsg, 256, "set a beacon on", "点灯");
-	ReplaceString(m_sMsg, 256, "froze", "冰冻");
-	ReplaceString(m_sMsg, 256, "set a TimeBomb on", "设置时间炸弹");
-	ReplaceString(m_sMsg, 256, "removed a TimeBomb on", "取消时间炸弹");
-	ReplaceString(m_sMsg, 256, "set a FreezeBomb on", "设置火焰炸弹");
-	ReplaceString(m_sMsg, 256, "removed a FireBomb on", "取消火焰炸弹");
-	ReplaceString(m_sMsg, 256, "set a FreezeBomb on", "设置冰冻炸弹");
-	ReplaceString(m_sMsg, 256, "removed a FreezeBomb on", "取消冰冻炸弹");
-	ReplaceString(m_sMsg, 256, "set blind on", "设置致盲");
-	ReplaceString(m_sMsg, 256, "set gravity on", "设置重力");
-	ReplaceString(m_sMsg, 256, "unrenamed", "取消改名");
-	ReplaceString(m_sMsg, 256, "renamed", "改名");
-	ReplaceString(m_sMsg, 256, "undrugged", "取消毒药");
-	ReplaceString(m_sMsg, 256, "drugged", "下毒药");
-	ReplaceString(m_sMsg, 256, "teleported", "传送");
-	ReplaceString(m_sMsg, 256, "triggered sm_say", "管理员频道喊话");
-	ReplaceString(m_sMsg, 256, "triggered sm_msay", "管理员频道喊话");
-	ReplaceString(m_sMsg, 256, "triggered sm_csay", "管理员频道喊话");
-	ReplaceString(m_sMsg, 256, "triggered sm_hsay", "管理员频道喊话");
-	ReplaceString(m_sMsg, 256, "triggered sm_psay", "管理员频道私聊");
-	ReplaceString(m_sMsg, 256, "toggled noclip on", "触发穿墙效果");
-	ReplaceString(m_sMsg, 256, "changed map to", "更换地图");
-	ReplaceString(m_sMsg, 256, "kicked", "踢出");
-	ReplaceString(m_sMsg, 256, "reason", "原因");
-	ReplaceString(m_sMsg, 256, "added ban", "封禁离线玩家"); 
-	ReplaceString(m_sMsg, 256, "respawned", "重生玩家");
 
 	SQL_EscapeString(g_hDatabase, m_sMsg, emsg, 512);
 	Format(m_szQuery, 512, "INSERT INTO `sb_adminlog` VALUES (DEFAULT, (IF((SELECT aid FROM `sb_admins` WHERE authid = '%s')>0,(SELECT aid FROM `sb_admins` WHERE authid = '%s'),-1)),%d,'%s',DEFAULT);", m_szClientauth, m_szClientauth, g_iServerId, emsg);

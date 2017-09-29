@@ -26,6 +26,15 @@ void DailySign_OnClientConnected(int client)
     DailySign_Data_Client[client][hSignTimer] = INVALID_HANDLE;
 }
 
+void DailySign_OnClientDisconnect(int client)
+{
+    if(DailySign_Data_Client[client][hSignTimer] != INVALID_HANDLE)
+    {
+        KillTimer(DailySign_Data_Client[client][hSignTimer]);
+        DailySign_Data_Client[client][hSignTimer] = INVALID_HANDLE;
+    }
+}
+
 void DailySign_OnGlobalTimer(int client)
 {
     if(!DailySign_Data_Client[client][bSigned] && g_ClientGlobal[client][iDaily] >= 900 && DailySign_Data_Client[client][hSignTimer] == INVALID_HANDLE)
@@ -68,7 +77,7 @@ public Action Command_Login(int client, int args)
 
     char m_szQuery[256];
     Format(m_szQuery, 256, "UPDATE playertrack_player SET signnumber = signnumber+1, signtime = '%d' WHERE id = '%d' ", GetTime(), g_ClientGlobal[client][iPId]);
-    MySQL_Query(false, DailySign_SQLCallback_ProcessingSign, m_szQuery, GetClientUserId(client));
+    UTIL_TQuery(g_dbGames, DailySign_SQLCallback_ProcessingSign, m_szQuery, GetClientUserId(client));
 
     return Plugin_Handled;
 }
@@ -77,7 +86,7 @@ public void DailySign_SQLCallback_ProcessingSign(Handle owner, Handle hndl, cons
 {
     int client = GetClientOfUserId(userid);
 
-    if(!IsValidClient(client))
+    if(!client)
         return;
 
     if(hndl == INVALID_HANDLE)

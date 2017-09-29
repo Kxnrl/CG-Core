@@ -3,7 +3,6 @@
 enum Forwards
 {
     //Global
-    Handle:ClientLoaded,
     Handle:VipChecked,
     Handle:APIGetCredits,
     Handle:APISetCredits,
@@ -36,119 +35,21 @@ int GlobalApi_Data_TextHud[MAX_CHANNEL][TextHud];
 
 void GlobalApi_OnAskPluginLoad2()
 {
-    CreateNative("CG_GetServerId",        GlobalApi_Native_GetServerID);
+    CreateNative("CG_GetServerId",              GlobalApi_Native_GetServerID);
 
-    CreateNative("CG_ShowGameText",       GlobalApi_Native_ShowGameText);
-    CreateNative("CG_ShowGameTextAll",    GlobalApi_Native_ShowGameTextAll);
-    CreateNative("CG_ShowNormalMotd",     GlobalApi_Native_ShowNormalMotd);
-    CreateNative("CG_ShowHiddenMotd",     GlobalApi_Native_ShowHiddenMotd);
-    CreateNative("CG_RemoveMotd",         GlobalApi_Native_RemoveMotd);
+    CreateNative("CG_ShowGameText",             GlobalApi_Native_ShowGameText);
+    CreateNative("CG_ShowGameTextAll",          GlobalApi_Native_ShowGameTextAll);
+    CreateNative("CG_ShowGameTextToClient",     GlobalApi_Native_ShowGameTextToClient);
+    CreateNative("CG_ShowNormalMotd",           GlobalApi_Native_ShowNormalMotd);
+    CreateNative("CG_ShowHiddenMotd",           GlobalApi_Native_ShowHiddenMotd);
+    CreateNative("CG_RemoveMotd",               GlobalApi_Native_RemoveMotd);
 
     CreateNative("HookClientVIPChecked",  GlobalApi_Native_HookVipChecked);
-
-    CreateNative("CG_ClientGetOnlines",   GlobalApi_Native_ClientGetOnlines);
-    CreateNative("CG_ClientGetGrowth",    GlobalApi_Native_ClientGetGrowth);
-    CreateNative("CG_ClientGetVitality",  GlobalApi_Native_ClientGetVitality);
-    CreateNative("CG_ClientGetDailyTime", GlobalApi_Native_ClientGetDailyTime);
-    CreateNative("CG_ClientGetLastseen",  GlobalApi_Native_ClientGetLastseen);
-    CreateNative("CG_ClientGetPId",       GlobalApi_Native_ClientGetPID);
-    CreateNative("CG_ClientGetUId",       GlobalApi_Native_ClientGetUID);
-    CreateNative("CG_ClientGetGId",       GlobalApi_Native_ClientGetGID);
-    CreateNative("CG_ClientIsVIP",        GlobalApi_Native_ClientIsVIP);
-    CreateNative("CG_ClientInGroup",      GlobalApi_Native_ClientInGroup);
-    CreateNative("CG_ClientIsRealName",   GlobalApi_Native_ClientIsRealName);
-    CreateNative("CG_ClientSetVIP",       GlobalApi_Native_ClientSetVIP);
-    CreateNative("CG_ClientGetForumName", GlobalApi_Native_ClientGetForumName);
-    CreateNative("CG_ClientGetGroupName", GlobalApi_Native_ClientGetGroupName);
-    CreateNative("CG_ClientGetSignature", GlobalApi_Native_ClientGetSingature);
 }
 
 public int GlobalApi_Native_GetServerID(Handle plugin, int numParams)
 {
     return g_iServerId;
-}
-
-public int GlobalApi_Native_ClientGetOnlines(Handle plugin, int numParams)
-{
-    return g_ClientGlobal[GetNativeCell(1)][iOnline];
-}
-
-public int GlobalApi_Native_ClientGetGrowth(Handle plugin, int numParams)
-{
-    return g_ClientGlobal[GetNativeCell(1)][iGrowth];
-}
-
-public int GlobalApi_Native_ClientGetVitality(Handle plugin, int numParams)
-{
-    return g_ClientGlobal[GetNativeCell(1)][iVitality];
-}
-
-public int GlobalApi_Native_ClientGetDailyTime(Handle plugin, int numParams)
-{
-    return g_ClientGlobal[GetNativeCell(1)][iDaily];
-}
-
-public int GlobalApi_Native_ClientGetLastseen(Handle plugin, int numParams)
-{
-    return g_ClientGlobal[GetNativeCell(1)][iLastseen];
-}
-
-public int GlobalApi_Native_ClientGetPID(Handle plugin, int numParams)
-{
-    return g_ClientGlobal[GetNativeCell(1)][iPId];
-}
-
-public int GlobalApi_Native_ClientGetUID(Handle plugin, int numParams)
-{
-    return g_ClientGlobal[GetNativeCell(1)][iUId];
-}
-
-public int GlobalApi_Native_ClientGetGID(Handle plugin, int numParams)
-{
-    return g_ClientGlobal[GetNativeCell(1)][iGId];
-}
-
-public int GlobalApi_Native_ClientIsVIP(Handle plugin, int numParams)
-{
-    return g_ClientGlobal[GetNativeCell(1)][bVip];
-}
-
-public int GlobalApi_Native_ClientInGroup(Handle plugin, int numParams)
-{
-    return g_ClientGlobal[GetNativeCell(1)][bInGroup];
-}
-
-public int GlobalApi_Native_ClientIsRealName(Handle plugin, int numParams)
-{
-    return g_ClientGlobal[GetNativeCell(1)][bRealName];
-}
-
-public int GlobalApi_Native_ClientSetVIP(Handle plugin, int numParams)
-{
-    int client = GetNativeCell(1);
-
-    if(!g_ClientGlobal[client][bLoaded])
-        return;
-
-    g_ClientGlobal[client][bVip] = true;
-}
-
-public int GlobalApi_Native_ClientGetForumName(Handle plugin, int numParams)
-{
-    if(SetNativeString(2, g_ClientGlobal[GetNativeCell(1)][szForumName], GetNativeCell(3)) != SP_ERROR_NONE)
-        ThrowNativeError(SP_ERROR_NATIVE, "Can not return Player Forum name.");
-}
-
-public int GlobalApi_Native_ClientGetGroupName(Handle plugin, int numParams)
-{
-    if(SetNativeString(2, g_ClientGlobal[GetNativeCell(1)][szGroupName], GetNativeCell(3)) != SP_ERROR_NONE)
-        ThrowNativeError(SP_ERROR_NATIVE, "Can not return Player Group Name.");
-}
-
-public int GlobalApi_Native_ClientGetSingature(Handle plugin, int numParams)
-{
-    if(SetNativeString(2, g_ClientGlobal[GetNativeCell(1)][szSignature], GetNativeCell(3)) != SP_ERROR_NONE)
-        ThrowNativeError(SP_ERROR_NATIVE, "Can not return Player Singature.");
 }
 
 public int GlobalApi_Native_HookVipChecked(Handle plugin, int numParams)
@@ -224,7 +125,7 @@ public int GlobalApi_Native_ShowGameText(Handle plugin, int numParams)
     if(GetArraySize(array_client) < 1)
         return false;
 
-    return GlobalApi_ShowGameText(array_client, message, StringToFloat(holdtime), color, szX, szY);
+    return GlobalApi_ShowGameText(array_client, message, StringToFloat(holdtime), color, szX, szY, 0);
 }
 
 public int GlobalApi_Native_ShowGameTextAll(Handle plugin, int numParams)
@@ -240,10 +141,26 @@ public int GlobalApi_Native_ShowGameTextAll(Handle plugin, int numParams)
     )
         return false;
 
-    return GlobalApi_ShowGameText(INVALID_HANDLE, message, StringToFloat(holdtime), color, szX, szY);
+    return GlobalApi_ShowGameText(INVALID_HANDLE, message, StringToFloat(holdtime), color, szX, szY, 0);
 }
 
-bool GlobalApi_ShowGameText(Handle array_client, const char[] message, const float holdtime, const char[] color, const char[] x, const char[] y)
+public int GlobalApi_Native_ShowGameTextToClient(Handle plugin, int numParams)
+{
+    char color[32], message[1024], holdtime[16], szX[16], szY[16];
+    if
+    (
+        GetNativeString(1, message, 1024) != SP_ERROR_NONE ||
+        GetNativeString(2, holdtime,  16) != SP_ERROR_NONE ||
+        GetNativeString(3, color,     32) != SP_ERROR_NONE ||
+        GetNativeString(4, szX,       16) != SP_ERROR_NONE ||
+        GetNativeString(5, szY,       16) != SP_ERROR_NONE
+    )
+        return false;
+
+    return GlobalApi_ShowGameText(INVALID_HANDLE, message, StringToFloat(holdtime), color, szX, szY, GetNativeCell(6));
+}
+
+bool GlobalApi_ShowGameText(Handle array_client, const char[] message, const float holdtime, const char[] color, const char[] x, const char[] y, const int client)
 {
     int channel = GlobalApi_GetFreelyChannel(x, y);
 
@@ -273,17 +190,22 @@ bool GlobalApi_ShowGameText(Handle array_client, const char[] message, const flo
 
     channel += 5;
 
-    if(array_client != INVALID_HANDLE)
+    if(array_client == INVALID_HANDLE)
+    {
+        if(client == 0)
+        {
+            for(int i = 1; i <= MaxClients; ++i)
+                if(IsClientInGame(i) && !IsFakeClient(i))
+                    ShowHudText(i, channel, message);
+        }
+        else
+            ShowHudText(client, channel, message);
+    }
+    else
     {
         int arraysize = GetArraySize(array_client);
         for(int index = 0; index < arraysize; ++index)
             ShowHudText(GetArrayCell(array_client, index), channel, message);
-    }
-    else
-    {
-        for(int client = 1; client <= MaxClients; ++client)
-            if(IsClientInGame(client) && !IsFakeClient(client))
-                ShowHudText(client, channel, message);
     }
 
     return true;
@@ -292,9 +214,9 @@ bool GlobalApi_ShowGameText(Handle array_client, const char[] message, const flo
 void GlobalApi_OnPluginStart()
 {
     //Global
-    GlobalApi_Forwards[APISetCredits] = CreateGlobalForward("CG_APIStoreSetCredits", ET_Event, Param_Cell, Param_Cell, Param_String, Param_Cell);
-    GlobalApi_Forwards[APIGetCredits] = CreateGlobalForward("CG_APIStoreGetCredits", ET_Event, Param_Cell);
-    GlobalApi_Forwards[ClientLoaded]  = CreateGlobalForward("CG_OnClientLoaded",     ET_Ignore, Param_Cell);
+    GlobalApi_Forwards[APISetCredits] = CreateGlobalForward("CG_APIStoreSetCredits", ET_Event,  Param_Cell, Param_Cell, Param_String, Param_Cell);
+    GlobalApi_Forwards[APIGetCredits] = CreateGlobalForward("CG_APIStoreGetCredits", ET_Event,  Param_Cell);
+    
     GlobalApi_Forwards[OnNewDay]      = CreateGlobalForward("CG_OnNewDay",           ET_Ignore, Param_Cell);
     GlobalApi_Forwards[OnNowTime]     = CreateGlobalForward("CG_OnNowTime",          ET_Ignore, Param_Cell);
     GlobalApi_Forwards[GlobalTimer]   = CreateGlobalForward("CG_OnGlobalTimer",      ET_Ignore);
@@ -349,33 +271,7 @@ void GlobalApi_OnPluginStart()
         UTIL_LogError("GlobalApi_OnPluginStart", "Hook Event \"player_changename\" Failed");
 }
 
-void GlobalApi_OnClientLoaded(int client)
-{
-    if(IsFakeClient(client))
-    {
-        //Call Forward
-        Call_StartForward(GlobalApi_Forwards[ClientLoaded]);
-        Call_PushCell(client);
-        Call_Finish();
-        return;
-    }
-
-    //Check join game.
-    CreateTimer(45.0, Timer_CheckJoinGame, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
-
-    //Format Name
-    ReCheckClientName(client);
-
-    //Colsole print
-    PrintWelcomeMessage(client);
-
-    //Call Forward
-    Call_StartForward(GlobalApi_Forwards[ClientLoaded]);
-    Call_PushCell(client);
-    Call_Finish();
-}
-
-void OnClientVipChecked(int client)
+void GlobalApi_Forward_OnClientVipChecked(int client)
 {
     //Call Forward
     Call_StartForward(GlobalApi_Forwards[VipChecked]);
@@ -383,7 +279,7 @@ void OnClientVipChecked(int client)
     Call_Finish();
 }
 
-bool OnAPIStoreSetCredits(int client, int credits, const char[] reason, bool immed)
+bool GlobalApi_Forward_OnAPIStoreSetCredits(int client, int credits, const char[] reason, bool immed)
 {
     bool result;
 
@@ -398,7 +294,7 @@ bool OnAPIStoreSetCredits(int client, int credits, const char[] reason, bool imm
     return result;
 }
 
-int OnAPIStoreGetCredits(int client) 
+int GlobalApi_Forward_OnAPIStoreGetCredits(int client) 
 {
     int result;
 
@@ -411,9 +307,9 @@ int OnAPIStoreGetCredits(int client)
 }
 
 
-void OnNewDayForward(int iDate)
+void GlobalApi_Forward_OnNewDay(int date)
 {
-    g_iNowDate = iDate;
+    g_iNowDate = date;
 
     //Call Forward
     Call_StartForward(GlobalApi_Forwards[OnNewDay]);
@@ -421,7 +317,7 @@ void OnNewDayForward(int iDate)
     Call_Finish();
 }
 
-void OnNowTimeForward(int oclock)
+void GlobalApi_Forward_OnNowTime(int oclock)
 {
     //Call Forward
     Call_StartForward(GlobalApi_Forwards[OnNowTime]);
@@ -429,7 +325,7 @@ void OnNowTimeForward(int oclock)
     Call_Finish();
 }
 
-void OnGlobalTimer()
+void GlobalApi_Forward_OnGlobalTimer()
 {
     //Call Forward
     Call_StartForward(GlobalApi_Forwards[GlobalTimer]);
@@ -526,8 +422,6 @@ public Action Event_PlayerName(Event event, const char[] name, bool dontBroadcas
     Call_PushString(newname);
     Call_Finish();
 
-    RequestFrame(Frame_CheckClientName, client);
-
     SetEventBroadcast(event, true);
 
     return Plugin_Changed;
@@ -550,9 +444,10 @@ bool GlobalApi_UrlToWebInterface(int client, int width, int height, const char[]
         return false;
 
     char m_szQuery[512], m_szEscape[256];
-    SQL_EscapeString(Database_DBHandle_Games, url, m_szEscape, 256);
+    SQL_EscapeString(g_dbGames, url, m_szEscape, 256);
     Format(m_szQuery, 512, "INSERT INTO `playertrack_webinterface` (`playerid`, `show`, `width`, `height`, `url`) VALUES (%d, %b, %d, %d, '%s') ON DUPLICATE KEY UPDATE `url` = VALUES(`url`), `show`=%b, `width`=%d, `height`=%d", g_ClientGlobal[client][iPId], show, width, height, m_szEscape, show, width, height);
-    return MySQL_Query(false, GlobalApi_SQLCallback_WebInterface, m_szQuery, client | (view_as<int>(show) << 7), DBPrio_High);
+    UTIL_TQuery(g_dbGames, GlobalApi_SQLCallback_WebInterface, m_szQuery, client | (view_as<int>(show) << 7), DBPrio_High);
+    return true;
 }
 
 void GlobalApi_ShowMOTDPanelEx(int client, bool show = true)

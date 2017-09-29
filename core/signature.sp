@@ -4,7 +4,6 @@ enum Signature
     Handle:hListener,
     String:szNewSignature[256],
 }
-
 int Signature_Data_Client[MAXPLAYERS+1][Signature];
 
 void Signature_OnPluginStart()
@@ -19,6 +18,15 @@ void Signature_OnClientConnected(int client)
     Signature_Data_Client[client][szNewSignature][0] = '\0';
 }
 
+void Signature_OnClientDisconnect(int client)
+{
+    if(Signature_Data_Client[client][hListener] != INVALID_HANDLE)
+    {
+        KillTimer(Signature_Data_Client[client][hListener]);
+        Signature_Data_Client[client][hListener] = INVALID_HANDLE;
+    }
+}
+
 public Action Command_Signature(int client, int args)
 {
     if(StrContains(g_ClientGlobal[client][szSignature], "该玩家未设置签名") != -1)
@@ -28,7 +36,7 @@ public Action Command_Signature(int client, int args)
         return Plugin_Handled;
     }
 
-    if(OnAPIStoreGetCredits(client) < 500)
+    if(GlobalApi_Forward_OnAPIStoreGetCredits(client) < 500)
     {
         PrintToChat(client, "[\x0CCG\x01]   \x04信用点不足,不能设置签名");
         return Plugin_Handled;
@@ -123,7 +131,7 @@ public int MenuHandler_Listener(Handle menu, MenuAction action, int client, int 
         }
         else if(StrEqual(info, "ok"))
         {
-            if(!OnAPIStoreSetCredits(client, -500, "设置签名", true))
+            if(!GlobalApi_Forward_OnAPIStoreSetCredits(client, -500, "设置签名", true))
             {
                 PrintToChat(client, "[\x0CCG\x01]   \x07信用点不足,不能设置签名");
                 return;
@@ -131,13 +139,9 @@ public int MenuHandler_Listener(Handle menu, MenuAction action, int client, int 
 
             char auth[32], eSignature[512], m_szQuery[1024];
             GetClientAuthId(client, AuthId_Steam2, auth, 32, true);
-            SQL_EscapeString(Database_DBHandle_Games, Signature_Data_Client[client][szNewSignature], eSignature, 512);
+            SQL_EscapeString(g_dbGames, Signature_Data_Client[client][szNewSignature], eSignature, 512);
             Format(m_szQuery, 512, "UPDATE `playertrack_player` SET signature = '%s' WHERE id = '%d' and steamid = '%s'", eSignature, g_ClientGlobal[client][iPId], auth);
-            Handle data = CreateDataPack();
-            WritePackString(data, m_szQuery);
-            WritePackCell(data, 0);
-            ResetPack(data);
-            MySQL_Query(false, Database_SQLCallback_SaveDatabase, m_szQuery, data);
+            UTIL_SQLTVoid(g_dbGames, m_szQuery);
             PrintToChat(client, "[\x0CCG\x01]   \x04已成功设置您的签名,花费了\x10500\x04信用点");
             strcopy(g_ClientGlobal[client][szSignature], 256, Signature_Data_Client[client][szNewSignature]);
             ReplaceString(Signature_Data_Client[client][szNewSignature], 512, "{白}",    "\x01");

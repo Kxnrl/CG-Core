@@ -1,8 +1,6 @@
-#include <maoling>
 #include <socket>
 #include <cg_core>
 #include <store>
-#include <chat-processor>
 #include <clientprefs>
 
 #define REQUIRE_PLUGIN
@@ -133,13 +131,13 @@ public Action Command_PbCSC(int client, int args)
     {
         g_bPbCSC[client] = false;
         SetClientCookie(client, g_hCookie, "false");
-        tPrintToChat(client, "[\x0CCG\x01]   \x04您已打开全服聊天功能");
+        PrintToChat(client, "[\x0CCG\x01]   \x04您已打开全服聊天功能");
     }
     else
     {
         g_bPbCSC[client] = true;
         SetClientCookie(client, g_hCookie, "true");
-        tPrintToChat(client, "[\x0CCG\x01]   \x04您已屏蔽全服聊天功能");
+        PrintToChat(client, "[\x0CCG\x01]   \x04您已屏蔽全服聊天功能");
     }
     return Plugin_Handled;
 }
@@ -149,7 +147,7 @@ void ChatClientDisable(int client)
     if(!IsClientInGame(client))
         return;
     
-    tPrintToChat(client, "[\x0CCG\x01]   \x04您已关闭全服聊天功能,你所发送的内容无法被其它服务器的玩家收到");
+    PrintToChat(client, "[\x0CCG\x01]   \x04您已关闭全服聊天功能,你所发送的内容无法被其它服务器的玩家收到");
 }
 
 public void CP_OnChatMessagePost(int client, ArrayList recipients, const char[] flagstring, const char[] formatstring, const char[] name, const char[] message, bool processcolors, bool removecolors)
@@ -416,11 +414,12 @@ public bool UpdateMessageToDiscuz(int client, const char[] message)
         return false;
     }
 
-    char m_szName[64];
+    char m_szName[64], m_szEscN[128];
     CG_ClientGetForumName(client, m_szName, 64);
+    SQL_EscapeString(database, m_szName, m_szEscN, 128);
     
     char m_szQuery[1024];
-    Format(m_szQuery, 1024, "INSERT INTO `dz_plugin_ahome_laba` (`username`, `tousername`, `level`, `lid`, `dateline`, `content`, `color`, `url`) VALUES ('%s', '', 'game', 0, '%d', '%s', '', '')", m_szName, GetTime(), EscapeString);
+    Format(m_szQuery, 1024, "INSERT INTO `dz_plugin_ahome_laba` (`username`, `tousername`, `level`, `lid`, `dateline`, `content`, `color`, `url`) VALUES ('%s', '', 'game', 0, '%d', '%s', '', '')", m_szEscN, GetTime(), EscapeString);
     CG_DatabaseSaveForum(m_szQuery);
     
     return true;
