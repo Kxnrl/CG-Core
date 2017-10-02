@@ -8,7 +8,6 @@ ArrayList g_aBlackGroups[2];
 ArrayList g_aBlockClient;
 
 int g_iSpamTag[MAXPLAYERS+1];
-int g_iCheckTk[MAXPLAYERS+1];
 char g_szClantag[MAXPLAYERS+1][32];
 
 public Plugin myinfo =
@@ -64,18 +63,11 @@ public void OnClientCommandKeyValues_Post(int client, KeyValues kv)
     char szCommmand[32];
     if(KvGetSectionName(kv, szCommmand, 32) && StrEqual(szCommmand, "ClanTagChanged", false))
     {
-        int tick = GetGameTickCount();
-
-        if(tick == g_iCheckTk[client])
-            return;
-
-        g_iCheckTk[client] = tick;
-
         char tag[32], name[128];
         KvGetString(kv, "tag", tag, 32);
         KvGetString(kv, "name", name, 128);
 
-        UTIL_LogProcess("OnClientCommandKeyValues_Post", "tick[%d] -> \"%L\" -> %s -> %s", tick, client, tag, name);
+        //UTIL_LogProcess("OnClientCommandKeyValues_Post", "tick[%d] -> \"%L\" -> %s -> %s", tick, client, tag, name);
 
         if(strcmp(tag, g_szClantag[client]) == 0)
             return;
