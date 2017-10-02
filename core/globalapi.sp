@@ -347,9 +347,13 @@ public void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
 
 public void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 {
+    int client = GetClientOfUserId(GetEventInt(event, "userid"));
+    
     Call_StartForward(GlobalApi_Forwards[player_spawn]);
-    Call_PushCell(GetClientOfUserId(GetEventInt(event, "userid")));
+    Call_PushCell(client);
     Call_Finish();
+    
+    HUD_OnClientSpawn(client);
 }
 
 public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)

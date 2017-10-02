@@ -2,7 +2,7 @@
 
 #pragma newdecls required //let`s go! new syntax!!!
 
-#define PLUGIN_VERSION " 10.0.480 - 2017/09/29 07:43 "
+#define PLUGIN_VERSION " 10.0.482 - 2017/10/02 08:24 "
 
 enum Clients
 {
@@ -44,6 +44,7 @@ Handle g_dbGames;
 #include "core/dailysign.sp"
 #include "core/database.sp"
 #include "core/globalapi.sp"
+#include "core/hud.sp"
 #include "core/menucmds.sp"
 #include "core/signature.sp"
 #include "core/server.sp"
@@ -71,6 +72,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     Couples_OnAskPluginLoad2();
     Database_OnAskPluginLoad2();
     GlobalApi_OnAskPluginLoad2();
+    HUD_OnAskPluginLoad2();
 
     RegPluginLibrary("csgogamers");
 
@@ -89,6 +91,7 @@ public void OnPluginStart()
     MenuCmds_OnPluginStart();
     Signature_OnPluginStart();
     Server_OnPluginStart();
+    HUD_OnPluginStart();
     
     CreateTimer(1.0, Timer_GlobalTimer, _, TIMER_REPEAT);
 }
@@ -123,6 +126,8 @@ public Action Timer_GlobalTimer(Handle timer)
         if(IsFakeClient(client))
             continue;
         
+        HUD_OnGlobalTimer(client);
+        
         if(!g_ClientGlobal[client][bLoaded])
             continue;
 
@@ -147,6 +152,7 @@ public void OnClientConnected(int client)
     Couples_OnClientConnected(client);
     DailySign_OnClientConnected(client);
     Signature_OnClientConnected(client);
+    HUD_OnClientConnected(client);
 
     CreateTimer(0.1, OnClientAuthorizedPost, client, TIMER_REPEAT);
 }

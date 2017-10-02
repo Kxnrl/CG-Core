@@ -1,6 +1,4 @@
-#if !defined _CG_CORE_INCLUDED
 #define _CG_CORE_INCLUDED
-#endif
 
 public SharedPlugin __pl_core = 
 {
@@ -420,8 +418,19 @@ native int CG_CouplesGetPartnerPlayerId(int client);
  * @param client        The Index of client.
  * @param start         The TimeStamp of start.
  * @param end           The TimeStamp of end.
+ * @param callback      The Callback.
  */
-native int CG_ClientGetTermOnline(int client, int start, int end);
+native void CG_ClientGetTermOnline(int client, int start, int end, OnGetClientTermOnline callback);
+
+/*
+ * Callback for HookClientVIPChecked.
+ *
+ * @param client        The Index of client.
+ * @param start         The TimeStamp of start.
+ * @param end           The TimeStamp of end.
+ * @param onlines       The Time of online.
+ */
+typedef OnGetClientTermOnline = function void (int client, int start, int end, int onlines);
 
 /*
  * Retrieves a client`s wedding date.
@@ -528,3 +537,19 @@ native int CG_AuthGroupGetLevel(int client);
  * @param client        The Index of client.
 */
 native int CG_AuthGroupGetExpired(int client);
+
+/*
+ * Format client`s tag of HUD.
+ *
+ * @param client        The Index of client.
+ * @param buffer        The Buffer to store tag.
+ */
+native void CG_HUDFormatClientTag(int client, const char[] buffer);
+
+/*
+ * Format client`s message of HUD.
+ *
+ * @param client        The Index of client.
+ * @param buffer        The Buffer to store message.
+ */
+native void CG_HUDFormatClientMsg(int client, const char[] buffer);

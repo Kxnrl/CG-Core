@@ -37,7 +37,7 @@ void DailySign_OnClientDisconnect(int client)
 
 void DailySign_OnGlobalTimer(int client)
 {
-    if(!DailySign_Data_Client[client][bSigned] && g_ClientGlobal[client][iDaily] >= 900 && DailySign_Data_Client[client][hSignTimer] == INVALID_HANDLE)
+    if(!DailySign_Data_Client[client][bSigned] && g_ClientGlobal[client][iDaily] >= 1800 && DailySign_Data_Client[client][hSignTimer] == INVALID_HANDLE)
     {
         PrintToChat(client, "[\x0CCG\x01]   \x04你现在可以签到了,按Y输入\x07!sign\x04来签到!");
         DailySign_Data_Client[client][hSignTimer] = CreateTimer(30.0, Timer_NotifySign, client, TIMER_REPEAT);
@@ -47,7 +47,7 @@ void DailySign_OnGlobalTimer(int client)
 public Action Timer_NotifySign(Handle timer, int client)
 {
     DailySign_Data_Client[client][hSignTimer] = INVALID_HANDLE;
-    if(IsValidClient(client) && g_ClientGlobal[client][bLoaded] && !DailySign_Data_Client[client][bSigned] && g_ClientGlobal[client][iDaily] >= 900)
+    if(IsValidClient(client) && g_ClientGlobal[client][bLoaded] && !DailySign_Data_Client[client][bSigned] && g_ClientGlobal[client][iDaily] >= 1800)
         PrintToChat(client, "[\x0CCG\x01]   \x04你现在可以签到了,按Y输入\x07!sign\x04来签到!");
     return Plugin_Stop;
 }
@@ -67,9 +67,12 @@ public Action Command_Login(int client, int args)
         return Plugin_Handled;
     }
 
-    if(g_ClientGlobal[client][iDaily] < 900) 
+    if(g_ClientGlobal[client][iDaily] < 1800) 
     {
-        PrintToChat(client, "[\x0CCG\x01]   你还需要在线\x04%d\x01秒才能签到!", 900 - g_ClientGlobal[client][iDaily]);
+        int rem = 1800 - g_ClientGlobal[client][iDaily];
+        int min = rem/60;
+        int sec = rem%60;
+        PrintToChat(client, "[\x0CCG\x01]   你还需要在线\x04%02d分钟%02d秒\x01才能签到!", min, sec);
         return Plugin_Handled;
     }
 

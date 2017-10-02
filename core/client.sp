@@ -22,8 +22,9 @@ void Client_OnClientConnected(int client)
     g_ClientGlobal[client][bRealName]       = false;
     g_ClientGlobal[client][szIP][0]         = '\0';
     g_ClientGlobal[client][szGroupName][0]  = '\0';
-    g_ClientGlobal[client][szForumName][0]  = '\0';
     g_ClientGlobal[client][szSignature][0]  = '\0';
+    
+    strcopy(g_ClientGlobal[client][szForumName], 32, "未注册");
 }
 
 void Client_OnClientPutInServer(int client)

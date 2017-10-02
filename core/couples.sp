@@ -217,7 +217,7 @@ void Couples_InitializeCouplesData(int client, int CP_PlayerId, int CP_WeddingDa
     {
         Couples_Client_Data[client][iPartnerIndex] = -2;
         Couples_Client_Data[client][iPartnerPlayerId] = 0;
-        strcopy(Couples_Client_Data[client][szPartnerName], 32, "你是单身狗");
+        strcopy(Couples_Client_Data[client][szPartnerName], 32, "单身狗");
         return;
     }
     

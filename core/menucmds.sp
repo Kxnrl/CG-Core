@@ -21,6 +21,7 @@ void MenuCmds_OnPluginStart()
     Handle menu = CreateMenu(MenuHandler_CGMainMenu);
     SetMenuTitleEx(menu, "[CG]  主菜单");
     SetMenuExitButton(menu, true);
+    AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "00", "打开活动菜单[CG②周年]");
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "01", "打开商店菜单[购买皮肤/名字颜色/翅膀等道具]");
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "02", "打开天赋菜单[选择/分配你的天赋]");
     AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "03", "打开CP菜单[CP搞基(?)等功能]");
@@ -161,6 +162,7 @@ public int MenuHandler_CGMainMenu(Handle menu, MenuAction action, int client, in
 
         switch(StringToInt(info))
         {
+            case  0: FakeClientCommand(client, "sm_hd");
             case  1: FakeClientCommand(client, "sm_store");
             case  2: FakeClientCommand(client, "sm_talent");
             case  3: Command_Couples(client, 0);

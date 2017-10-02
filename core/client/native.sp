@@ -119,7 +119,7 @@ public int Client_Native_ClientGetTermOnline(Handle plugin, int numParams)
         return;
     
     DataPack pack = new DataPack();
-    pack.WriteCell(client);
+    pack.WriteCell(GetClientUserId(client));
     pack.WriteCell(start);
     pack.WriteCell(end);
     pack.WriteFunction(callback);
@@ -137,6 +137,7 @@ void Client_Forward_OnClientLoaded(int client)
     {
         //Colsole print
         UTIL_PrintWelcomeMessage(client);
+        HUD_OnClientLoaded(client);
     }
 
     //Call Forward
