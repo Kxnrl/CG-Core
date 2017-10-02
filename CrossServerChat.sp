@@ -279,7 +279,9 @@ public Action Command_PubMessage(int client, int args)
     PrepareString(message, 512);
     GetServerTag(m_szServerTag, 32);
 
-    Format(m_szFinalMsg, 1024, "[\x02小\x04喇\x0C叭\x01] [\x0E%s\x01]  \x04%N\x01 :   \x07%s", m_szServerTag, client, message);
+    char name[32];
+    GetClientName(client, name, 32);
+    Format(m_szFinalMsg, 1024, "[\x02小\x04喇\x0C叭\x01] [\x0E%s\x01]  \x04%s\x01 :   \x07%s", m_szServerTag, name, message);
 
     if(!UpdateMessageToDiscuz(client, message))
         return Plugin_Handled;
@@ -447,7 +449,9 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 
         GetServerTag(m_szServerTag, 32);
         
-        Format(m_szFinalMsg, 1024, "[\x02小\x04喇\x0C叭\x01] [\x0E%s\x01]  \x04%N\x01 :   \x07%s", m_szServerTag, client, message);
+        char name[32];
+        GetClientName(client, name, 32);
+        Format(m_szFinalMsg, 1024, "[\x02小\x04喇\x0C叭\x01] [\x0E%s\x01]  \x04%s\x01 :   \x07%s", m_szServerTag, name, message);
         
         if(!UpdateMessageToDiscuz(client, message))
             return Plugin_Stop;
