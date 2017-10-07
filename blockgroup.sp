@@ -1,6 +1,7 @@
 #include <steamworks>
 #include <sourcebans>
 #include <sourcecomms>
+#include <sdktools>
 
 #pragma newdecls required
 
@@ -15,7 +16,7 @@ public Plugin myinfo =
 	name		= "[CG] - Block Bad Steam Group",
 	author		= "Kyle",
 	description = "",
-	version		= "1.0",
+	version		= "1.1",
 	url			= "http://steamcommunity.com/id/_xQy_/"
 };
 
@@ -114,6 +115,30 @@ public void OnClientPutInServer(int client)
     
     for(int index = 1; index < number; ++index)
         SteamWorks_GetUserGroupStatus(client, g_aBlackGroups[0].Get(index));
+    
+    RequestFrame(OnClientName, client);
+}
+
+public void CG_OnClientName(int client, const char[] oldname, const char[] newname)
+{
+    RequestFrame(OnClientName, client);
+}
+
+void OnClientName(int client)
+{
+    char name[32];
+    GetClientName(client, name, 32);
+    if(StrContains(name, "farmskin", false) != -1 || StrContains(name, "cs.money", false) != -1 || StrContains(name, "C5GAME", false) != -1 || StrContains(name, "IGXE", false) != -1 || StrContains(name, "frskin", false) != -1)
+    {
+        LogMessage("rename \"%L\"", client);
+        ReplaceString(name, 32, "farmskins.com", "-我是sb", false);
+        ReplaceString(name, 32, "farmskins", "-我是sb", false);
+        ReplaceString(name, 32, "cs.money", "-我是sb", false);
+        ReplaceString(name, 32, "C5GAME", "-我是sb", false);
+        ReplaceString(name, 32, "IGXE", "-我是sb", false);
+        ReplaceString(name, 32, "frskin", "-我是sb", false);
+        SetClientName(client, name);
+    }
 }
 
 public int SteamWorks_OnClientGroupStatus(int authid, int groupid, bool isMember, bool isOfficer)
