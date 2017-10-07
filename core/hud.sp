@@ -87,7 +87,7 @@ void HUD_UpdateClientSpecTarget(int client)
  
     int target = GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
     
-    if(HUD_iLastTarget[client] == target)
+    if(HUD_iLastTarget[client] == target || !IsValidClient(target))
         return;
 
     HUD_iLastTarget[client] = target;
