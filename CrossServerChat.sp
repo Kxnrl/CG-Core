@@ -548,10 +548,12 @@ void GetServerTag(char[] m_szServerTag, int maxLen)
         case 12: strcopy(m_szServerTag, maxLen, "死亡滑翔①");
         case 13: strcopy(m_szServerTag, maxLen, "死斗练枪①");
         case 14: strcopy(m_szServerTag, maxLen, "死亡练枪①");
-        case 15: strcopy(m_szServerTag, maxLen, "KreedZ①");
-        case 16: strcopy(m_szServerTag, maxLen, "KreedZ②");
+        case 15: strcopy(m_szServerTag, maxLen, "KZ新手服①");
+        case 16: strcopy(m_szServerTag, maxLen, "KZ进阶服②");
         case 17: strcopy(m_szServerTag, maxLen, "满十比赛①");
         case 18: strcopy(m_szServerTag, maxLen, "回防对抗①");
+        case 19: strcopy(m_szServerTag, maxLen, "KZ大佬服③");
+        case 20: strcopy(m_szServerTag, maxLen, "KZ比赛服④");
         case 99: strcopy(m_szServerTag, maxLen, "测试调试①");
         default: strcopy(m_szServerTag, maxLen, "论坛");
     }
