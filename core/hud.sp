@@ -94,8 +94,9 @@ void HUD_UpdateClientSpecTarget(int client)
 
     char message[512];
 
-    FormatEx(message, 512, "%s%N%s\n论坛: %s\n认证: %s\n伴侣: %s\n签名: %s", HUD_szTag[target], target, HUD_szMsg[target], g_ClientGlobal[target][szForumName], g_ClientGlobal[target][szGroupName], Couples_Client_Data[target][szPartnerName], HUD_szSignature[target]);
-
+    //FormatEx(message, 512, "%s%N%s\n论坛: %s\n认证: %s\n伴侣: %s\n签名: %s", HUD_szTag[target], target, HUD_szMsg[target], g_ClientGlobal[target][szForumName], g_ClientGlobal[target][szGroupName], Couples_Client_Data[target][szPartnerName], HUD_szSignature[target]);
+    FormatEx(message, 512, "%s%N%s\n论坛: %s\n认证: %s\n伴侣: CP系统已下线\n签名: %s", HUD_szTag[target], target, HUD_szMsg[target], g_ClientGlobal[target][szForumName], g_ClientGlobal[target][szGroupName], HUD_szSignature[target]);
+    
     SetHudTextParamsEx(0.01, 0.35, 200.0, {255,130,171,255}, {255,165,0,255}, 0, 10.0, 5.0, 5.0);
     ShowSyncHudText(client, HUD_hSync, message);
 }

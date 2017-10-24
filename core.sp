@@ -2,7 +2,7 @@
 
 #pragma newdecls required //let`s go! new syntax!!!
 
-#define PLUGIN_VERSION " 10.0.482 - 2017/10/07 09:50 "
+#define PLUGIN_VERSION " 10.0.484 - 2017/10/22 09:47 "
 
 enum Clients
 {

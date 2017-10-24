@@ -32,6 +32,8 @@ void Client_OnClientPutInServer(int client)
     GetClientIP(client, g_ClientGlobal[client][szIP], 32);
 
     Client_LoadBaseData(client);
+
+    QueryClientConVar(client, "cl_disablehtmlmotd", view_as<ConVarQueryFinished>(OnGetClientCVAR), client);
 }
 
 void Client_OnClientDisconnect(int client)
@@ -57,4 +59,10 @@ void Client_OnGlobalTimer(int client)
     g_ClientGlobal[client][iConnectTime]++;
 
     Cache_UpdateClientData(client, g_ClientGlobal[client][iPId], g_ClientGlobal[client][iConnectTime], g_ClientGlobal[client][iTId], g_ClientGlobal[client][iDaily]);
+}
+
+public void OnGetClientCVAR(QueryCookie cookie, int client, ConVarQueryResult result, char[] cvarName, char[] cvarValue)
+{
+    if(StringToInt(cvarValue) > 0)
+        KickClient(client, "请在控制台中输入:\ncl_disablehtmlmotd 0\n以免影响您的游戏体验!");
 }

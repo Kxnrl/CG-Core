@@ -64,7 +64,6 @@ public int GlobalApi_Native_ShowNormalMotd(Handle plugin, int numParams)
     if(!IsValidClient(client))
         return false;
 
-    QueryClientConVar(client, "cl_disablehtmlmotd", view_as<ConVarQueryFinished>(OnGetClientCVAR), client);
     int width = GetNativeCell(2)-12;
     int height = GetNativeCell(3)-80;
     char m_szUrl[192];
@@ -84,8 +83,6 @@ public int GlobalApi_Native_ShowHiddenMotd(Handle plugin, int numParams)
 
     if(!IsValidClient(client))
         return false;
-
-    QueryClientConVar(client, "cl_disablehtmlmotd", view_as<ConVarQueryFinished>(OnGetClientCVAR), client);
 
     char m_szUrl[192];
     if(GetNativeString(2, m_szUrl, 192) != SP_ERROR_NONE)
@@ -507,10 +504,4 @@ public Action Timer_ResetChannel(Handle timer, int channel)
     GlobalApi_Data_TextHud[channel][szPosY][0] = '\0';
 
     return Plugin_Stop;
-}
-
-public void OnGetClientCVAR(QueryCookie cookie, int client, ConVarQueryResult result, char[] cvarName, char[] cvarValue)
-{
-    if(StringToInt(cvarValue) > 0)
-        PrintToChat(client, " 请在控制台中输入:   \x04cl_disablehtmlmotd 0");
 }

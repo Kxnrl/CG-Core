@@ -25,6 +25,12 @@ enum Couples_Ranking
     String:szTarget_Name[32]
 }
 
+///////////////////////////////////
+//                               //
+//          Global Config        //
+//                               //
+bool Couples_Enabled = false;
+
 int Couples_Data_Client_ProposeTargetUserId[MAXPLAYERS+1];
 int Couples_Data_Client_ProposeSelectUserId[MAXPLAYERS+1];
 int Couples_Data_Client_ProposeSelectedTime[MAXPLAYERS+1];
@@ -208,6 +214,9 @@ void Couples_OnClientDisconnect(int client)
 
 void Couples_InitializeCouplesData(int client, int CP_PlayerId, int CP_WeddingDate, int CP_Exp, int CP_Together, const char[] CP_PartnerName)
 {
+    if(!Couples_Enabled)
+        return;
+    
     Couples_Client_Data[client][iWeddingDate]     = CP_WeddingDate;
     Couples_Client_Data[client][iPartnerPlayerId] = CP_PlayerId;
     Couples_Client_Data[client][iCPExp]           = CP_Exp;
@@ -220,7 +229,7 @@ void Couples_InitializeCouplesData(int client, int CP_PlayerId, int CP_WeddingDa
         strcopy(Couples_Client_Data[client][szPartnerName], 32, "单身狗");
         return;
     }
-    
+
     Couples_Client_Data[client][iCPLvl] = UTIL_CalculatLevelByExp(CP_Exp);
 
     strcopy(Couples_Client_Data[client][szPartnerName], 32, CP_PartnerName);
@@ -246,17 +255,27 @@ void Couples_DisplayMainMenu(int client)
 
     char date[64];
     FormatTime(date, 64, "%Y.%m.%d", Couples_Client_Data[client][iWeddingDate]);
+    
+    if(Couples_Enabled)
+    {
+        if(Couples_Client_Data[client][iPartnerPlayerId])
+            SetMenuTitleEx(menu, "[CP]  主菜单 \n \n对象: %s\n日期: %s\n持久: %d天\n等级: Lv.%d(%dXP)\n共枕: %dh%dm", Couples_Client_Data[client][szPartnerName], date, (GetTime()-Couples_Client_Data[client][iWeddingDate])/86400, Couples_Client_Data[client][iCPLvl], Couples_Client_Data[client][iCPExp]+Couples_Client_Data[client][iCPEarnExp], (Couples_Client_Data[client][iTogether]+Couples_Client_Data[client][iTogetherPlay])/3600, ((Couples_Client_Data[client][iTogether]+Couples_Client_Data[client][iTogetherPlay])%3600)/60);
+        else
+            SetMenuTitleEx(menu, "[CP]  主菜单 \n \n对象: %s", Couples_Client_Data[client][szPartnerName]);
 
-    if(Couples_Client_Data[client][iPartnerPlayerId])
-        SetMenuTitleEx(menu, "[CP]  主菜单 \n \n对象: %s\n日期: %s\n持久: %d天\n等级: Lv.%d(%dXP)\n共枕: %dh%dm", Couples_Client_Data[client][szPartnerName], date, (GetTime()-Couples_Client_Data[client][iWeddingDate])/86400, Couples_Client_Data[client][iCPLvl], Couples_Client_Data[client][iCPExp]+Couples_Client_Data[client][iCPEarnExp], (Couples_Client_Data[client][iTogether]+Couples_Client_Data[client][iTogetherPlay])/3600, ((Couples_Client_Data[client][iTogether]+Couples_Client_Data[client][iTogetherPlay])%3600)/60);
+        AddMenuItemEx(menu, Couples_Client_Data[client][iPartnerPlayerId] == 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "receive", "求婚列表");
+        AddMenuItemEx(menu, Couples_Client_Data[client][iPartnerPlayerId] == 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "propose", "发起求婚");
+        AddMenuItemEx(menu, Couples_Client_Data[client][iPartnerPlayerId] != 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "divorce", "发起离婚");
+        AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "ranking", "登记列表");
+        AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "aboutcp", "功能介绍");
+    }
     else
-        SetMenuTitleEx(menu, "[CP]  主菜单 \n \n对象: %s", Couples_Client_Data[client][szPartnerName]);
-
-    AddMenuItemEx(menu, Couples_Client_Data[client][iPartnerPlayerId] == 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "receive", "求婚列表");
-    AddMenuItemEx(menu, Couples_Client_Data[client][iPartnerPlayerId] == 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "propose", "发起求婚");
-    AddMenuItemEx(menu, Couples_Client_Data[client][iPartnerPlayerId] != 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "divorce", "发起离婚");
-    AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "ranking", "登记列表");
-    AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "aboutcp", "功能介绍");
+    {
+        SetMenuTitleEx(menu, "[CP]  主菜单 \n \n对象: 单身狗");
+        AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "CP系统已经下线.");
+        AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "也许永远都不会在恢复了.");
+        AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "愿你安好.");
+    }
 
     DisplayMenu(menu, client, 20);
 }
