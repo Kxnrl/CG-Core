@@ -2,6 +2,7 @@
 #include <sourcebans>
 #include <sourcecomms>
 #include <sdktools>
+#include <cg_core>
 
 #pragma newdecls required
 
@@ -107,7 +108,7 @@ void UTIL_PreBanClientByTag(int client)
     g_iSpamTag[client] = -1;
 }
 
-public void OnClientPutInServer(int client)
+public void CG_OnClientLoaded(int client)
 {
     g_iSpamTag[client] = 0;
 
@@ -115,7 +116,7 @@ public void OnClientPutInServer(int client)
     
     for(int index = 1; index < number; ++index)
         SteamWorks_GetUserGroupStatus(client, g_aBlackGroups[0].Get(index));
-    
+
     RequestFrame(OnClientName, client);
 }
 
@@ -128,17 +129,32 @@ void OnClientName(int client)
 {
     char name[32];
     GetClientName(client, name, 32);
-    if(StrContains(name, "farmskin", false) != -1 || StrContains(name, "cs.money", false) != -1 || StrContains(name, "C5GAME", false) != -1 || StrContains(name, "IGXE", false) != -1 || StrContains(name, "frskin", false) != -1)
+    if( StrContains(name, "farmskin", false) != -1 || 
+        StrContains(name, "cs.money", false) != -1 || 
+        StrContains(name, "C5GAME", false) != -1 || 
+        StrContains(name, "IGXE", false) != -1 || 
+        StrContains(name, "frskin", false) != -1 ||
+        StrContains(name, "hellcase", false) != -1 ||
+        StrContains(name, "CSGO188", false) != -1 ||
+        StrContains(name, "CSGOReaper", false) != -1 ||
+        StrContains(name, "CSGOBestpot", false) != -1
+       )
     {
-        LogMessage("rename \"%L\"", client);
-        ReplaceString(name, 32, "farmskins.com", "-我是sb", false);
-        ReplaceString(name, 32, "farmskins", "-我是sb", false);
-        ReplaceString(name, 32, "cs.money", "-我是sb", false);
-        ReplaceString(name, 32, "C5GAME", "-我是sb", false);
-        ReplaceString(name, 32, "IGXE", "-我是sb", false);
-        ReplaceString(name, 32, "frskin", "-我是sb", false);
+        FormatEx(name, 32, "我是傻逼[#%06d]", CG_ClientGetPId(client));
+        LogMessage("rename \"%L\" to %s", client, name);
         SetClientName(client, name);
     }
+    else Client_CheckLongName(name, client);
+}
+
+void Client_CheckLongName(char[] name, int client)
+{
+    if(strlen(name) < 24)
+        return;
+
+    name[24] = '\0';
+
+    SetClientName(client, name);
 }
 
 public int SteamWorks_OnClientGroupStatus(int authid, int groupid, bool isMember, bool isOfficer)
@@ -242,12 +258,12 @@ public void OnClientSayCommand_Post(int client, const char[] command, const char
 void CheckClientCompetitive(int client)
 {
     UTIL_LogProcess("CheckClientCompetitive", "Client invite others to competitive -> \"%L\"", client);
-    
+
     for(int admin = 1; admin <= MaxClients; admin++)
         if(IsClientInGame(admin))
             if(CheckCommandAccess(admin, "sm_ban", ADMFLAG_BAN, false))
                 UTIL_LogProcess("CheckClientCompetitive", "Client invite others to competitive -> \"%L\" -> admin -> \"%L\"", client, admin);
-            
+
     SourceComms_SetClientMute(client, true, 0, true, "CAT: 在服务器里面打广告/拉人");
     SourceComms_SetClientGag(client, true, 0, true, "CAT: 在服务器里面打广告/拉人");
 }
