@@ -6,7 +6,7 @@ CREATE TABLE `playertrack_adv` (
   `Trans` varchar(256) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `HUD` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB AUTO_INCREMENT=84 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 CREATE TABLE `playertrack_analytics` (
@@ -19,7 +19,7 @@ CREATE TABLE `playertrack_analytics` (
   `duration` int(11) NOT NULL DEFAULT '-1',
   `ip` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'unknown',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3403837 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 CREATE TABLE `playertrack_authgroup` (
@@ -42,7 +42,7 @@ CREATE TABLE `playertrack_couples` (
   `together` int(11) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`Id`),
   UNIQUE KEY `P` (`source_id`,`target_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=190 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 
 
 CREATE TABLE `playertrack_csclog` (
@@ -54,7 +54,7 @@ CREATE TABLE `playertrack_csclog` (
   `date` int(11) NOT NULL DEFAULT '0',
   `message` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1516178 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 CREATE TABLE `playertrack_deathmodel` (
@@ -90,7 +90,7 @@ CREATE TABLE `playertrack_player` (
   `daytime` smallint(6) unsigned DEFAULT '0',
   PRIMARY KEY (`steamid`),
   UNIQUE KEY `KEY_2` (`id`,`steamid`)
-) ENGINE=InnoDB AUTO_INCREMENT=344408 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 CREATE TABLE `playertrack_server` (
@@ -98,7 +98,7 @@ CREATE TABLE `playertrack_server` (
   `servername` varchar(64) DEFAULT NULL,
   `serverip` varchar(32) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=138 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 
 
 CREATE TABLE `playertrack_webinterface` (
