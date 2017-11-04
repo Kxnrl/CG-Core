@@ -1,3 +1,7 @@
+#if defined _CG_CORE_INCLUDED
+    #endinput
+#endif
+
 #define _CG_CORE_INCLUDED
 
 public SharedPlugin __pl_core = 

@@ -1,5 +1,3 @@
-#include <cg_core>
-
 stock void FriendIDtoSteamID(const char[] szSteam64, char[] szSteam2, int iLen)
 {
     char[] szBase = "76561197960265728";
