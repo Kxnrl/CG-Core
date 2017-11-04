@@ -6,7 +6,7 @@ FTP_PSWD=$4
 
 git fetch --unshallow
 COUNT=$(git rev-list --count HEAD)
-VERSION="$COUNT - `date +%y/%m/%d ％H:％M:％S`"
+VERSION="$COUNT - `date +%y/%m/%d %H:%M:%S`"
 FILE=$COUNT-$5-$6.zip
 
 wget "http://www.sourcemod.net/latest.php?version=$1&os=linux" -q -O sourcemod.tar.gz
