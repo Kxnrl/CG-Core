@@ -7,6 +7,7 @@ FTP_PSWD=$4
 git fetch --unshallow
 COUNT=$(git rev-list --count HEAD)
 FILE=$COUNT-$5-$6.zip
+DATE=$(date +"%Y/%m/%d %H:%M:%S")
 
 wget "http://www.sourcemod.net/latest.php?version=$1&os=linux" -q -O sourcemod.tar.gz
 tar -xzf sourcemod.tar.gz
@@ -16,7 +17,7 @@ chmod +x addons/sourcemod/scripting/spcomp
 for file in core.sp
 do
   sed -i "s/<commit_num>/$COUNT/g" $file > output.txt
-  sed -i "s/<commit_date>/$(date +"%Y/%m/%d %H:%M:%S")/g" $file > output.txt
+  sed -i "s/<commit_date>/$DATE/g" $file > output.txt
   rm output.txt
 done
 
@@ -24,8 +25,8 @@ if [ ! -d "addons/sourcemod/scripting/core" ]; then
   mkdir addons/sourcemod/scripting/core
 fi
 
+cp -r core/* addons/sourcemod/scripting/core
 cp include/* addons/sourcemod/scripting/include
-cp core/* addons/sourcemod/scripting/core
 cp core.sp addons/sourcemod/scripting
 
 addons/sourcemod/scripting/spcomp -E -v0 $file
