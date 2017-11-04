@@ -6,7 +6,7 @@ FTP_PSWD=$4
 
 git fetch --unshallow
 COUNT=$(git rev-list --count HEAD)
-VERSION="$COUNT - `date +%y/%m/%d %H:%M:%S`"
+DATE=date -u +"%Y/%m/%d %H:%M:%S"
 FILE=$COUNT-$5-$6.zip
 
 wget "http://www.sourcemod.net/latest.php?version=$1&os=linux" -q -O sourcemod.tar.gz
@@ -16,7 +16,8 @@ chmod +x addons/sourcemod/scripting/spcomp
 
 for file in core.sp
 do
-  sed -i "s/<commits>/$VERSION/g" $file > output.txt
+  sed -i "s/<commit_num>/$COUNT/g" $file > output.txt
+  sed -i "s/<commit_date>/$DATE/g" $file > output.txt
   rm output.txt
 done
 
