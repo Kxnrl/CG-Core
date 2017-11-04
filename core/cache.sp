@@ -20,6 +20,9 @@ void Cache_OnPluginStart()
 
 void Cache_OnGlobalTimer()
 {
+    if(kv_ClientTrackingDataCache == INVALID_HANDLE)
+        return;
+
     kv_ClientTrackingDataCache.ExportToFile("addons/sourcemod/data/core.track.kv.txt");
 }
 
