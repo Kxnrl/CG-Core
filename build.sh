@@ -16,8 +16,8 @@ chmod +x addons/sourcemod/scripting/spcomp
 
 for file in core.sp
 do
-  sed -i "s/<commit_num>/$COUNT/g" $file > output.txt
-  sed -i "s/<commit_date>/$DATE/g" $file > output.txt
+  sed -i "s%<commit_num>%$COUNT%g" $file > output.txt
+  sed -i "s%<commit_date>%$DATE%g" $file > output.txt
   rm output.txt
 done
 
