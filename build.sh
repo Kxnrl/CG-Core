@@ -29,7 +29,7 @@ cp -r core/* addons/sourcemod/scripting/core
 cp include/* addons/sourcemod/scripting/include
 cp core.sp addons/sourcemod/scripting
 
-addons/sourcemod/scripting/spcomp -E -v0 $file
+addons/sourcemod/scripting/spcomp -E -v0 addons/sourcemod/scripting/core.sp
 
 if [ ! -f "core.smx" ]; then
     echo "Compile core failed!"
