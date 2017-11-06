@@ -8,7 +8,11 @@ public SharedPlugin __pl_core =
 {
 	name = "csgogamers",
 	file = "core.smx",
-	required = 1,
+#if defined REQUIRE_PLUGIN
+	required = 1
+#else
+	required = 0
+#endif
 };
 
 /*
