@@ -16,14 +16,10 @@ chmod +x addons/sourcemod/scripting/spcomp
 
 for file in core.sp
 do
-  sed -i "s%<commit_num>%$COUNT%g" $file > output.txt
-  sed -i "s%<commit_date>%$DATE%g" $file > output.txt
-  rm output.txt
+    sed -i "s%<commit_num>%$COUNT%g" $file > output.txt
+    sed -i "s%<commit_date>%$DATE%g" $file > output.txt
+    rm output.txt
 done
-
-if [ ! -d "addons/sourcemod/scripting/core" ]; then
-  mkdir addons/sourcemod/scripting/core
-fi
 
 cp -r core/* addons/sourcemod/scripting/core
 cp include/* addons/sourcemod/scripting/include
@@ -39,3 +35,4 @@ fi
 zip -9rq $FILE core.smx core.sp core include LICENSE
 
 lftp -c "open -u $FTP_USER,$FTP_PSWD $FTP_HOST; put -O Core/$1/ $FILE"
+lftp -c "open -u $FTP_USER,$FTP_PSWD $FTP_HOST; put -O Core/Raw/ core.smx"
