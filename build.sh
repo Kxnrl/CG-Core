@@ -21,11 +21,12 @@ do
     rm output.txt
 done
 
-cp -r core/* addons/sourcemod/scripting/core
+mkdir addons/sourcemod/scripting/core
+cp -r core/* addons/sourcemod/scripting
 cp include/* addons/sourcemod/scripting/include
 cp core.sp addons/sourcemod/scripting
 
-addons/sourcemod/scripting/spcomp -E -v0 addons/sourcemod/scripting/core.sp
+addons/sourcemod/scripting/spcomp -E -v0 addons/sourcemod/scripting/core.sp >nul
 
 if [ ! -f "core.smx" ]; then
     echo "Compile core failed!"
@@ -35,4 +36,7 @@ fi
 zip -9rq $FILE core.smx core.sp core include LICENSE
 
 lftp -c "open -u $FTP_USER,$FTP_PSWD $FTP_HOST; put -O Core/$1/ $FILE"
-lftp -c "open -u $FTP_USER,$FTP_PSWD $FTP_HOST; put -O Core/Raw/ core.smx"
+
+if [ "$1" = "1.8" ]; then
+    lftp -c "open -u $FTP_USER,$FTP_PSWD $FTP_HOST; put -O Core/Raw/ core.smx"
+fi
