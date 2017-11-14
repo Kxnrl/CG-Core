@@ -1,5 +1,6 @@
 #include <kylestock>
 
+#pragma semicolon 1
 #pragma newdecls required //let`s go! new syntax!!!
 
 #define PLUGIN_VERSION " 10.1.<commit_num> - <commit_date> "
