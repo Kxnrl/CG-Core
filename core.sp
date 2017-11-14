@@ -2,7 +2,7 @@
 
 #pragma newdecls required //let`s go! new syntax!!!
 
-#define PLUGIN_VERSION " 10.0.<commit_num> - <commit_date> "
+#define PLUGIN_VERSION " 10.1.<commit_num> - <commit_date> "
 
 enum Clients
 {

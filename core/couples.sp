@@ -29,6 +29,7 @@ enum Couples_Ranking
 //                               //
 //          Global Config        //
 //                               //
+///////////////////////////////////
 bool Couples_Enabled = false;
 
 int Couples_Data_Client_ProposeTargetUserId[MAXPLAYERS+1];

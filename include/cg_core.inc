@@ -207,6 +207,16 @@ native void CG_DatabaseSaveForum(const char[] QueryString);
 native int CG_GetServerId();
 
 /*
+ * Retrieve Variables via KEY.
+ *
+ * @param key           The key of variable.
+ * @param buffer        The Buffer to store variable.
+ * @param maxLen        The length of string buffer.
+ * @return              True on success, false otherwise.
+ */
+native bool CG_GetVariable(const char[] key, char[] buffer, int maxLen);
+
+/*
  * Display a game_text HUD to clients.
  *
  * @param message       The message to display.                 ("Kyle is fucking handsome" etc.)

@@ -33,9 +33,12 @@ enum TextHud
 int GlobalApi_Forwards[Forwards];
 int GlobalApi_Data_TextHud[MAX_CHANNEL][TextHud];
 
+StringMap g_smVariables;
+
 void GlobalApi_OnAskPluginLoad2()
 {
     CreateNative("CG_GetServerId",              GlobalApi_Native_GetServerID);
+    CreateNative("CG_GetVariable",              GlobalApi_Native_GetVariable)
 
     CreateNative("CG_ShowGameText",             GlobalApi_Native_ShowGameText);
     CreateNative("CG_ShowGameTextAll",          GlobalApi_Native_ShowGameTextAll);
@@ -50,6 +53,26 @@ void GlobalApi_OnAskPluginLoad2()
 public int GlobalApi_Native_GetServerID(Handle plugin, int numParams)
 {
     return g_iServerId;
+}
+
+public int GlobalApi_Native_GetVariable(Handle plugin, int numParams)
+{
+    char _key[32], _var[128];
+
+    if(GetNativeString(1, _key, 32) != SP_ERROR_NONE)
+    {
+        UTIL_LogError("GlobalApi_Native_GetVariable", "Get Native String failed!");
+        ThrowNativeError(SP_ERROR_NATIVE, "Can not get key on 'GlobalApi_Native_GetVariable'.");
+        return false;
+    }
+    
+    if(!g_smVariables.GetString(_key, _var, 128))
+        return false;
+    
+    if(SetNativeString(2, _var, GetNativeCell(3)) != SP_ERROR_NONE)
+        ThrowNativeError(SP_ERROR_NATIVE, "Can not return var on 'GlobalApi_Native_GetVariable'.");
+    
+    return true;
 }
 
 public int GlobalApi_Native_HookVipChecked(Handle plugin, int numParams)
@@ -436,6 +459,47 @@ void GlobalApi_OnMapStart()
         GlobalApi_Data_TextHud[channel][hTimer] = INVALID_HANDLE;
         GlobalApi_Data_TextHud[channel][szPosX][0] = '\0';
         GlobalApi_Data_TextHud[channel][szPosY][0] = '\0';
+    }
+    
+    GlobalApi_QueryVariables();
+}
+
+void GlobalApi_QueryVariables()
+{
+    if(g_dbGames == INVALID_HANDLE)
+        return;
+    
+    if(g_smVariables == INVALID_HANDLE)
+        g_smVariables = new StringMap();
+
+    UTIL_TQuery(g_dbGames, GlobalApi_Variables, "SELECT * FROM playertrack_variables");
+}
+
+public void GlobalApi_Variables(Handle owner, Handle hndl, const char[] error, int data)
+{
+    if(hndl == INVALID_HANDLE)
+    {
+        UTIL_LogError("GlobalApi_Variables", "GlobalApi_Variables -> ERROR:%s", error);
+        return;
+    }
+    
+    g_smVariables.Clear();
+    
+    char type[32], _key[32], _var[128];
+    while(SQL_FetchRow(hndl))
+    {
+        SQL_FetchString(hndl, 1, type,  32);
+        SQL_FetchString(hndl, 1, _key,  32);
+        SQL_FetchString(hndl, 1, _var, 128);
+        
+        g_smVariables.SetString(_key, _var, true);
+
+        if(strcmp(type, "cvar") == 0)
+        {
+            ConVar cvar = FindConVar(_key);
+            if(cvar != null)
+                cvar.SetString(_var, true, false);
+        }
     }
 }
 

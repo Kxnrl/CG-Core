@@ -109,3 +109,13 @@ CREATE TABLE `playertrack_webinterface` (
   `url` varchar(256) NOT NULL DEFAULT 'https://csgogamers.com/',
   PRIMARY KEY (`playerid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE `playertrack_variables` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `type` varchar(32) NOT NULL DEFAULT 'var',
+  `key` varchar(32) NOT NULL DEFAULT 'INVALID_KEY',
+  `var` varchar(128) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `k` (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
