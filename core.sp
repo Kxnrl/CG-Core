@@ -302,7 +302,7 @@ void UTIL_PrintWelcomeMessage(int client)
     PrintToConsole(client, "天赋系统： !talent[功能菜单]");
     PrintToConsole(client, "                                                                                               ");
     PrintToConsole(client, "-----------------------------------------------------------------------------------------------");        
-    PrintToConsole(client, "                                                                                               ")
+    PrintToConsole(client, "                                                                                               ");
 }
 
 void UTIL_TQuery(Handle database, SQLTCallback callback, const char[] query, any data = 0, DBPriority prio = DBPrio_Normal)

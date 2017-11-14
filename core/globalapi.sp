@@ -38,7 +38,7 @@ StringMap g_smVariables;
 void GlobalApi_OnAskPluginLoad2()
 {
     CreateNative("CG_GetServerId",              GlobalApi_Native_GetServerID);
-    CreateNative("CG_GetVariable",              GlobalApi_Native_GetVariable)
+    CreateNative("CG_GetVariable",              GlobalApi_Native_GetVariable);
 
     CreateNative("CG_ShowGameText",             GlobalApi_Native_ShowGameText);
     CreateNative("CG_ShowGameTextAll",          GlobalApi_Native_ShowGameTextAll);
@@ -434,7 +434,7 @@ public void Event_WeaponFire(Event event, const char[] name, bool dontBroadcast)
 
 public Action Event_PlayerName(Event event, const char[] name, bool dontBroadcast)
 {
-    int client = GetClientOfUserId(GetEventInt(event, "userid"))
+    int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
     Call_StartForward(GlobalApi_Forwards[player_name]);
     Call_PushCell(client);

@@ -316,7 +316,7 @@ void Couples_DisplaySeleteMenu(int client)
         return;
     }
 
-    Handle menu = CreateMenu(MenuHandler_CouplesSelectMenu)
+    Handle menu = CreateMenu(MenuHandler_CouplesSelectMenu);
 
     char m_szId[8];
     for(int target = 1; target <= MaxClients; ++target)
