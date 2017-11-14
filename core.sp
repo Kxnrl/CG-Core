@@ -108,8 +108,6 @@ public void OnMapEnd()
 
 public void OnConfigsExecuted()
 {
-    SetConVarInt(FindConVar("sv_hibernate_when_empty"), 0);
-    SetConVarInt(FindConVar("sv_disable_motd"), 1);
     SetConVarString(FindConVar("hostname"), g_szHostName, false, false);
     SetConVarString(FindConVar("rcon_password"), g_szRconPwd, false, false);
 }
