@@ -2,9 +2,12 @@ Handle Server_Forwards_OnServerLoaded;
 
 void Server_OnAskPluginLoad2()
 {
+    //Force load server
+    SetConVarInt(FindConVar("sv_hibernate_when_empty"), 0);
+    
     //Random Rcon password
     FormatEx(g_szRconPwd, 32, "%d", GetRandomInt(10000000, 99999999));
-    SetConVarString(FindConVar("rcon_password"), g_szRconPwd); 
+    SetConVarString(FindConVar("rcon_password"), g_szRconPwd);
 }
 
 void Server_OnPluginStart()
