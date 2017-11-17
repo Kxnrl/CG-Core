@@ -139,7 +139,7 @@ void Client_Forward_OnClientLoaded(int client)
         UTIL_PrintWelcomeMessage(client);
         HUD_OnClientLoaded(client);
     }
-    else if(g_ClientGlobal[client][iPId] <= 0)
+    else if(g_ClientGlobal[client][iPId] <= 0 && !IsClientSourceTV(client))
         UTIL_LogError("Client_Forward_OnClientLoaded", "Load \"%L\" failed: PID = %d", client, g_ClientGlobal[client][iPId]);
 
     //Call Forward
