@@ -262,7 +262,7 @@ native bool CG_ShowGameTextToClient(const char[] message, const char[] holdtime,
  * @param height        The height of client`s resolution.
  * @param url           The url to open.
  */
-native bool CG_ShowNormalMotd(int client, int width, int height, char[] url);
+native bool CG_ShowNormalMotd(int client, int width, int height, const char[] url);
 
 /*
  * Display a hidden motd panel to client.
@@ -270,7 +270,7 @@ native bool CG_ShowNormalMotd(int client, int width, int height, char[] url);
  * @param client        The Index of client.
  * @param url           The url to open.
  */
-native bool CG_ShowHiddenMotd(int client, char[] url);
+native bool CG_ShowHiddenMotd(int client, const char[] url);
 
 /*
  * Remove motd panel from a client.
