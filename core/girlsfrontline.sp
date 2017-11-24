@@ -258,7 +258,7 @@ void GrilsFL_UpdateClient(int client, const char[] weapon = "INVALID_WEAPON")
         strcopy(GFL_Client_Data[client][szWeapon], 32, weapon);
         char upper[32];
         UpperString(weapon, upper, 32);
-        PrintToChat("[\x0CCG\x01] ^ \x0EGFL\x01   你已选择[\x04%s\x01]为你的#$%^%#?", upper);
+        PrintToChat(client, "[\x0CCG\x01] ^ \x0EGFL\x01   你已选择[\x04%s\x01]为你的#$%^%#?", upper);
         return;
     }
 
