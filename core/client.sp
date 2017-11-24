@@ -51,6 +51,8 @@ void Client_OnClientDisconnect(int client)
     GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);    
     Format(m_szQuery, 512, "UPDATE playertrack_player AS a, playertrack_analytics AS b SET a.name = '%s', a.onlines = a.onlines+%d, a.lasttime = '%d', a.number = a.number+1, a.daytime = '%d', b.duration = '%d' WHERE a.id = '%d' AND b.id = '%d' AND a.steamid = '%s' AND b.playerid = '%d'", m_szName, g_ClientGlobal[client][iConnectTime], GetTime(), g_ClientGlobal[client][iDaily], g_ClientGlobal[client][iConnectTime], g_ClientGlobal[client][iPId], g_ClientGlobal[client][iTId], m_szAuth, g_ClientGlobal[client][iPId]);
     UTIL_SQLTVoid(g_dbGames, m_szQuery, DBPrio_High);
+
+    g_ClientGlobal[client][bLoaded] = false;
 }
 
 void Client_OnGlobalTimer(int client)

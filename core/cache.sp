@@ -74,6 +74,9 @@ void Cache_OnServerLoaded()
 
 void Cache_UpdateClientData(int client, int pid, int ctime, int tid, int daily)
 {
+    if(kv_ClientTrackingDataCache == INVALID_HANDLE)
+        return;
+
     char m_szAuth[32];
     GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
 
@@ -179,6 +182,9 @@ public void Cache_SQLCallback_OfficalGroup(Handle owner, Handle hndl, const char
 
 void Cache_OnClientDisconnect(int client)
 {
+    if(kv_ClientTrackingDataCache == INVALID_HANDLE)
+        return;
+
     char m_szAuth[32];
     GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
     
