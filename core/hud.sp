@@ -92,11 +92,24 @@ void HUD_UpdateClientSpecTarget(int client)
 
     HUD_iLastTarget[client] = target;
 
-    char message[512];
+    char grils[32], message[512];
+    UpperString(GFL_Client_Data[client][szWeapon], grils, 32);
+    FormatEx(message, 512, "%s%N%s\n论坛: %s\n认证: %s\n伴侣: %s\n枪娘: %s\n签名: %s", HUD_szTag[target], target, HUD_szMsg[target], g_ClientGlobal[target][szForumName], g_ClientGlobal[target][szGroupName], Couples_Client_Data[target][szPartnerName], grils, HUD_szSignature[target]);
 
-    //FormatEx(message, 512, "%s%N%s\n论坛: %s\n认证: %s\n伴侣: %s\n签名: %s", HUD_szTag[target], target, HUD_szMsg[target], g_ClientGlobal[target][szForumName], g_ClientGlobal[target][szGroupName], Couples_Client_Data[target][szPartnerName], HUD_szSignature[target]);
-    FormatEx(message, 512, "%s%N%s\n论坛: %s\n认证: %s\n伴侣: CP系统已下线\n签名: %s", HUD_szTag[target], target, HUD_szMsg[target], g_ClientGlobal[target][szForumName], g_ClientGlobal[target][szGroupName], HUD_szSignature[target]);
-    
     SetHudTextParamsEx(0.01, 0.35, 200.0, {255,130,171,255}, {255,165,0,255}, 0, 10.0, 5.0, 5.0);
     ShowSyncHudText(client, HUD_hSync, message);
+}
+
+void UpperString(const char[] input, char[] output, int size)
+{
+    size--;
+
+    int x = 0;
+    while(input[x] != '\0' && x < size)
+    {
+        output[x] = CharToUpper(input[x]);
+        x++;
+    }
+
+    output[x] = '\0';
 }

@@ -19,7 +19,8 @@ enum Forwards
     Handle:player_team,
     Handle:player_jump,
     Handle:weapon_fire,
-    Handle:player_name
+    Handle:player_name,
+    Handle:item_equip
 }
 
 enum TextHud
@@ -253,6 +254,8 @@ void GlobalApi_OnPluginStart()
     GlobalApi_Forwards[player_jump]   = CreateGlobalForward("CG_OnClientJump",       ET_Ignore, Param_Cell);
     GlobalApi_Forwards[weapon_fire]   = CreateGlobalForward("CG_OnClientFire",       ET_Ignore, Param_Cell, Param_String);
     GlobalApi_Forwards[player_name]   = CreateGlobalForward("CG_OnClientName",       ET_Ignore, Param_Cell, Param_String, Param_String);
+    GlobalApi_Forwards[item_equip]    = CreateGlobalForward("CG_OnClientItemEquip",  ET_Ignore, Param_Cell, Param_String);
+    
 
     //Hook 回合开始
     if(!HookEventEx("round_start", Event_RoundStart, EventHookMode_Post))
@@ -289,6 +292,10 @@ void GlobalApi_OnPluginStart()
     //Hook 玩家改名
     if(!HookEventEx("player_changename", Event_PlayerName, EventHookMode_Pre))
         UTIL_LogError("GlobalApi_OnPluginStart", "Hook Event \"player_changename\" Failed");
+    
+    //Hook 物品装备
+    if(!HookEventEx("item_equip", Event_ItemEquip, EventHookMode_Post))
+        UTIL_LogError("GlobalApi_OnPluginStart", "Hook Event \"item_equip\" Failed");
 }
 
 void GlobalApi_Forward_OnClientVipChecked(int client)
@@ -356,6 +363,8 @@ public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 {
     Call_StartForward(GlobalApi_Forwards[round_start]);
     Call_Finish();
+    
+    GirlsFL_OnRoundStart();
 }
 
 public void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
@@ -363,6 +372,8 @@ public void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
     Call_StartForward(GlobalApi_Forwards[round_end]);
     Call_PushCell(GetEventInt(event, "winner"));
     Call_Finish();
+    
+    GirlsFL_OnRoundEnd();
 }
 
 public void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast)
@@ -378,26 +389,36 @@ public void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast
 
 public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
-    Call_StartForward(GlobalApi_Forwards[player_death]);
-    Call_PushCell(GetClientOfUserId(GetEventInt(event, "userid")));
-    Call_PushCell(GetClientOfUserId(GetEventInt(event, "attacker")));
-    Call_PushCell(GetClientOfUserId(GetEventInt(event, "assister")));
-    Call_PushCell(GetEventBool(event, "headshot"));
+    int victim = GetClientOfUserId(GetEventInt(event, "userid"));
+    int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+    bool headshot = GetEventBool(event, "headshot");
     char weapon[32];
     GetEventString(event, "weapon", weapon, 32, "");
+    GirlsFL_OnPlayerDeath(victim, attacker, headshot, weapon);
+    
+    Call_StartForward(GlobalApi_Forwards[player_death]);
+    Call_PushCell(victim);
+    Call_PushCell(attacker);
+    Call_PushCell(GetClientOfUserId(GetEventInt(event, "assister")));
+    Call_PushCell(headshot);
     Call_PushString(weapon);
     Call_Finish();
 }
 
 public void Event_PlayerHurts(Event event, const char[] name, bool dontBroadcast)
 {
-    Call_StartForward(GlobalApi_Forwards[player_hurt]);
-    Call_PushCell(GetClientOfUserId(GetEventInt(event, "userid")));
-    Call_PushCell(GetClientOfUserId(GetEventInt(event, "attacker")));
-    Call_PushCell(GetEventInt(event, "dmg_health"));
-    Call_PushCell(GetEventInt(event, "hitgroup"));
+    int victim = GetClientOfUserId(GetEventInt(event, "userid"));
+    int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+    int damage = GetEventInt(event, "dmg_health");
     char weapon[32];
     GetEventString(event, "weapon", weapon, 32, "");
+    GirlsFL_OnPlayerHurts(victim, attacker, damage, weapon);
+    
+    Call_StartForward(GlobalApi_Forwards[player_hurt]);
+    Call_PushCell(victim);
+    Call_PushCell(attacker);
+    Call_PushCell(damage);
+    Call_PushCell(GetEventInt(event, "hitgroup"));
     Call_PushString(weapon);
     Call_Finish();
 }
@@ -449,6 +470,19 @@ public Action Event_PlayerName(Event event, const char[] name, bool dontBroadcas
     SetEventBroadcast(event, true);
 
     return Plugin_Changed;
+}
+
+public void Event_ItemEquip(Event event, const char[] name, bool dontBroadcast)
+{
+    int client = GetClientOfUserId(GetEventInt(event, "userid"));
+    char weapon[32];
+    GetEventString(event, "item", weapon, 32, "");
+    GirlsFL_OnItemEquip(client, weapon);
+    
+    Call_StartForward(GlobalApi_Forwards[item_equip]);
+    Call_PushCell(client);
+    Call_PushString(weapon);
+    Call_Finish();
 }
 
 void GlobalApi_OnMapStart()

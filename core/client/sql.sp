@@ -1,8 +1,8 @@
 void Client_LoadBaseData(int client)
 {
-    char m_szAuth[32], m_szQuery[512];
+    char m_szAuth[32], m_szQuery[1024];
     GetClientAuthId(client, AuthId_Steam2, m_szAuth, 32, true);
-    Format(m_szQuery, 512, "SELECT a.id, a.onlines, a.lasttime, a.number, a.signature, a.signnumber, a.signtime, a.active, a.daytime, b.index, b.name, b.exp, b.date, b.expired, c.date, c.exp, c.together, d.id, d.name FROM playertrack_player a LEFT JOIN playertrack_authgroup b ON a.id = b.pid  LEFT JOIN playertrack_couples c ON (a.id = c.source_id OR a.id = c.target_id) LEFT JOIN  playertrack_player d ON d.id=(IF(a.id=c.source_id, c.target_id, c.source_id)) WHERE a.steamid = '%s' ORDER BY a.id ASC LIMIT 1;", m_szAuth);
+    Format(m_szQuery, 1024, "SELECT a.id, a.onlines, a.lasttime, a.number, a.signature, a.signnumber, a.signtime, a.active, a.daytime, b.index, b.name, b.exp, b.date, b.expired, c.date, c.exp, c.together, c.luv, d.id, d.name, e.weapon, e.useTimes, e.kills, e.deaths, e.bloodied, e.headshots, e.damage, e.tendresse FROM playertrack_player a LEFT JOIN playertrack_authgroup b ON a.id = b.pid  LEFT JOIN playertrack_couples c ON (a.id = c.source_id OR a.id = c.target_id) LEFT JOIN  playertrack_player d ON d.id=(IF(a.id=c.source_id, c.target_id, c.source_id)) LEFT JOIN playertrack_gungirls e ON a.id = e.pid WHERE a.steamid = '%s' ORDER BY a.id ASC LIMIT 1;", m_szAuth);
     UTIL_TQuery(g_dbGames, Client_SQLCallback_GetClientBaseData, m_szQuery, GetClientUserId(client), DBPrio_High);
 }
 
@@ -30,7 +30,8 @@ public void Client_SQLCallback_GetClientBaseData(Handle owner, Handle hndl, cons
     {
         // 0.id,         1.onlines,       2.lasttime,     3.number,       4.signature,    5.signnumber,   6.signtime,
         // 7.active,     8.daytime,       9.index,       10.groupname,   11.exp,         12.date         13.expired,
-        //13.cpdate,    14.cpexp,        15.together,    16.id,          17.name
+        //14.cpdate,    15.cpexp,        16.together,    17.luv,         18.id,          19.name         20.weapon
+        //21.useTimes   22.kills,        23.deaths,      24.bloodied,    25.headshots,   26.damage,      27.tendresse
         g_ClientGlobal[client][iPId]      = SQL_FetchInt(hndl, 0);
         g_ClientGlobal[client][iOnline]   = SQL_FetchInt(hndl, 1);
         g_ClientGlobal[client][iLastseen] = SQL_FetchInt(hndl, 2);
@@ -50,12 +51,19 @@ public void Client_SQLCallback_GetClientBaseData(Handle owner, Handle hndl, cons
         DailySign_InitializeSignData(client, SQL_FetchInt(hndl,  5), SQL_FetchInt(hndl,  6));
 
         char cpname[32];
-        if(!SQL_IsFieldNull(hndl, 18))
-            SQL_FetchString(hndl, 18, cpname, 32);
+        if(!SQL_IsFieldNull(hndl, 19))
+            SQL_FetchString(hndl, 19, cpname, 32);
         else
             strcopy(cpname, 32, "单身狗");
-        Couples_InitializeCouplesData(client, SQL_IsFieldNull(hndl, 17) ? -2 : SQL_FetchInt(hndl, 17), SQL_IsFieldNull(hndl, 14) ? 0 : SQL_FetchInt(hndl, 14), SQL_IsFieldNull(hndl, 15) ? 0 : SQL_FetchInt(hndl, 15), SQL_IsFieldNull(hndl, 16) ? 0 : SQL_FetchInt(hndl, 16), cpname);
+        Couples_InitializeCouplesData(client, SQL_IsFieldNull(hndl, 18) ? -2 : SQL_FetchInt(hndl, 18), SQL_IsFieldNull(hndl, 14) ? 0 : SQL_FetchInt(hndl, 14), SQL_IsFieldNull(hndl, 15) ? 0 : SQL_FetchInt(hndl, 15), SQL_IsFieldNull(hndl, 16) ? 0 : SQL_FetchInt(hndl, 16), SQL_IsFieldNull(hndl, 17) ? 0 : SQL_FetchInt(hndl, 17), cpname);
 
+        char weapon[32];
+        if(!SQL_IsFieldNull(hndl, 20))
+            SQL_FetchString(hndl, 20, weapon,  32);
+        else
+            strcopy(weapon, 32, "INVALID_WEAPON");
+        GirlsFL_InitializeGFLData(client, weapon, SQL_IsFieldNull(hndl, 21) ? 0 : SQL_FetchInt(hndl, 21), SQL_IsFieldNull(hndl, 22) ? 0 : SQL_FetchInt(hndl, 22), SQL_IsFieldNull(hndl, 23) ? 0 : SQL_FetchInt(hndl, 23), SQL_IsFieldNull(hndl, 24) ? 0 : SQL_FetchInt(hndl, 24), SQL_IsFieldNull(hndl, 25) ? 0 : SQL_FetchInt(hndl, 25), SQL_IsFieldNull(hndl, 26) ? 0 : SQL_FetchInt(hndl, 26), SQL_IsFieldNull(hndl, 27) ? 0 : SQL_FetchInt(hndl, 27));
+        
         g_ClientGlobal[client][bLoaded] = true;
 
         Client_Forward_OnClientLoaded(client);

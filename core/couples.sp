@@ -1,6 +1,3 @@
-// table playertrack_couples
-// filed cpid, source_id, target_id, date, exp, together
-
 enum Couples
 {
     iPartnerIndex,
@@ -11,6 +8,7 @@ enum Couples
     iCPEarnExp,
     iTogether,
     iTogetherPlay,
+    iLuv,
     String:szPartnerName[32]
 }
 enum Couples_Ranking
@@ -30,8 +28,6 @@ enum Couples_Ranking
 //          Global Config        //
 //                               //
 ///////////////////////////////////
-bool Couples_Enabled = false;
-
 int Couples_Data_Client_ProposeTargetUserId[MAXPLAYERS+1];
 int Couples_Data_Client_ProposeSelectUserId[MAXPLAYERS+1];
 int Couples_Data_Client_ProposeSelectedTime[MAXPLAYERS+1];
@@ -190,6 +186,7 @@ void Couples_OnClientConnected(int client)
     Couples_Client_Data[client][iCPEarnExp]       =   0;
     Couples_Client_Data[client][iTogether]        =   0;
     Couples_Client_Data[client][iTogetherPlay]    =   0;
+    Couples_Client_Data[client][iLuv]             =   0;
     Couples_Client_Data[client][szPartnerName][0] ='\0';
 }
 
@@ -213,15 +210,13 @@ void Couples_OnClientDisconnect(int client)
     Couples_Client_Data[target][iPartnerIndex] = -1;
 }
 
-void Couples_InitializeCouplesData(int client, int CP_PlayerId, int CP_WeddingDate, int CP_Exp, int CP_Together, const char[] CP_PartnerName)
+void Couples_InitializeCouplesData(int client, int CP_PlayerId, int CP_WeddingDate, int CP_Exp, int CP_Together, int CP_Luv, const char[] CP_PartnerName)
 {
-    if(!Couples_Enabled)
-        return;
-    
     Couples_Client_Data[client][iWeddingDate]     = CP_WeddingDate;
     Couples_Client_Data[client][iPartnerPlayerId] = CP_PlayerId;
     Couples_Client_Data[client][iCPExp]           = CP_Exp;
     Couples_Client_Data[client][iTogether]        = CP_Together;
+    Couples_Client_Data[client][iLuv]             = CP_Luv;
 
     if(CP_PlayerId < 1)
     {
@@ -257,26 +252,18 @@ void Couples_DisplayMainMenu(int client)
     char date[64];
     FormatTime(date, 64, "%Y.%m.%d", Couples_Client_Data[client][iWeddingDate]);
     
-    if(Couples_Enabled)
-    {
-        if(Couples_Client_Data[client][iPartnerPlayerId])
-            SetMenuTitleEx(menu, "[CP]  主菜单 \n \n对象: %s\n日期: %s\n持久: %d天\n等级: Lv.%d(%dXP)\n共枕: %dh%dm", Couples_Client_Data[client][szPartnerName], date, (GetTime()-Couples_Client_Data[client][iWeddingDate])/86400, Couples_Client_Data[client][iCPLvl], Couples_Client_Data[client][iCPExp]+Couples_Client_Data[client][iCPEarnExp], (Couples_Client_Data[client][iTogether]+Couples_Client_Data[client][iTogetherPlay])/3600, ((Couples_Client_Data[client][iTogether]+Couples_Client_Data[client][iTogetherPlay])%3600)/60);
-        else
-            SetMenuTitleEx(menu, "[CP]  主菜单 \n \n对象: %s", Couples_Client_Data[client][szPartnerName]);
+    // todo: 好感度设定 -> table filed: goodwill -> modify: earn lose set
 
-        AddMenuItemEx(menu, Couples_Client_Data[client][iPartnerPlayerId] == 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "receive", "求婚列表");
-        AddMenuItemEx(menu, Couples_Client_Data[client][iPartnerPlayerId] == 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "propose", "发起求婚");
-        AddMenuItemEx(menu, Couples_Client_Data[client][iPartnerPlayerId] != 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "divorce", "发起离婚");
-        AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "ranking", "登记列表");
-        AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "aboutcp", "功能介绍");
-    }
+    if(Couples_Client_Data[client][iPartnerPlayerId])
+        SetMenuTitleEx(menu, "[CP]  主菜单 \n \n对象: %s\n日期: %s\n持久: %d天\n等级: Lv.%d(%dXP)\n共枕: %dh%dm\n好感: %d", Couples_Client_Data[client][szPartnerName], date, (GetTime()-Couples_Client_Data[client][iWeddingDate])/86400, Couples_Client_Data[client][iCPLvl], Couples_Client_Data[client][iCPExp]+Couples_Client_Data[client][iCPEarnExp], (Couples_Client_Data[client][iTogether]+Couples_Client_Data[client][iTogetherPlay])/3600, ((Couples_Client_Data[client][iTogether]+Couples_Client_Data[client][iTogetherPlay])%3600)/60, Couples_Client_Data[client][iLuv]);
     else
-    {
-        SetMenuTitleEx(menu, "[CP]  主菜单 \n \n对象: 单身狗");
-        AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "CP系统已经下线.");
-        AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "也许永远都不会在恢复了.");
-        AddMenuItemEx(menu, ITEMDRAW_DISABLED, "", "愿你安好.");
-    }
+        SetMenuTitleEx(menu, "[CP]  主菜单 \n \n对象: %s", Couples_Client_Data[client][szPartnerName]);
+
+    AddMenuItemEx(menu, Couples_Client_Data[client][iPartnerPlayerId] == 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "receive", "求婚列表");
+    AddMenuItemEx(menu, Couples_Client_Data[client][iPartnerPlayerId] == 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "propose", "发起求婚");
+    AddMenuItemEx(menu, Couples_Client_Data[client][iPartnerPlayerId] != 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED, "divorce", "发起离婚");
+    AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "ranking", "登记列表");
+    AddMenuItemEx(menu, ITEMDRAW_DEFAULT, "aboutcp", "功能介绍");
 
     DisplayMenu(menu, client, 20);
 }
@@ -490,24 +477,6 @@ public int MenuHandler_CouplesConfirmMenu(Menu menu, MenuAction action, int targ
 
 void Couples_GetMarried(int source, int target)
 {
-    //her -> target
-    //if(g_ClientGlobal[target][iPId] == 167606 && g_ClientGlobal[source][iPId] != 1)
-    //{
-    //    char cmd_callbacl[128];
-    //    ServerCommandEx(cmd_callbacl, 128 , "sm_ban #%d 0 \"CAT: 你想干嘛?\"", GetClientUserId(source));
-    //    UTIL_LogError("Couples_GetMarried", "Auto ban %s permanent: %s", g_ClientGlobal[source][szGamesName], cmd_callbacl);
-    //    return;
-    //}
-
-    //her -> source
-    //if(g_ClientGlobal[source][iPId] == 167606 && g_ClientGlobal[target][iPId] != 1)
-    //{
-    //    PrintToChat(source, "[\x0CCG\x01]   系统错误 \x02CP#33");
-    //    PrintToChat(target, "[\x0CCG\x01]   系统错误 \x02CP#33");
-    //    Couples_DisplayMainMenu(source);
-    //    return;
-    //}
-
     DataPack m_hPack = new DataPack();
     m_hPack.WriteCell(GetClientUserId(source));
     m_hPack.WriteCell(GetClientUserId(target));
@@ -643,14 +612,10 @@ public int MenuHandler_CouplesDivorceMenu(Menu menu, MenuAction action, int clie
                 return;
             }
             
-            int credits = (180-((GetTime()-Couples_Client_Data[client][iWeddingDate])/86400))*500*-1;
+            int credits = (90-((GetTime()-Couples_Client_Data[client][iWeddingDate])/86400))*500*-1;
 
             if(credits > 0)
-            {
-                PrintToChat(client, "[\x0CCG\x01]   发生未知错误");
-                Couples_DisplayMainMenu(client);
-                return;
-            }
+                credits = 0;
 
             if(!GlobalApi_Forward_OnAPIStoreSetCredits(client, credits, "离婚手续费", true))
             {
@@ -799,6 +764,7 @@ void Couples_DisplayCPsDetails(int client, int index)
     DrawPanelTextEx(panel, "排名:  No.%d", data[iCouplesRank]);
     DrawPanelTextEx(panel, "等级:  Lv.%d", UTIL_CalculatLevelByExp(data[iCouplesExp]));
     DrawPanelTextEx(panel, "共枕:  %dh%dm", data[iCouplesTogether]/3600, (data[iCouplesTogether]%3600)/60);
+    DrawPanelTextEx(panel, "好感:  %d", Couples_Client_Data[client][iLuv]);
     DrawPanelTextEx(panel, " ");
     DrawPanelTextEx(panel, " ");
 

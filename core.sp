@@ -3,7 +3,7 @@
 #pragma semicolon 1
 #pragma newdecls required //let`s go! new syntax!!!
 
-#define PLUGIN_VERSION " 10.1.<commit_num> - <commit_date> "
+#define PLUGIN_VERSION " 10.2.<commit_num> - <commit_date> "
 
 enum Clients
 {
@@ -44,6 +44,7 @@ Handle g_dbGames;
 #include "core/couples.sp"
 #include "core/dailysign.sp"
 #include "core/database.sp"
+#include "core/girlsfrontline.sp" // Girls Frontline
 #include "core/globalapi.sp"
 #include "core/hud.sp"
 #include "core/menucmds.sp"
@@ -55,11 +56,11 @@ Handle g_dbGames;
 //////////////////////////////
 public Plugin myinfo = 
 {
-    name        = "CSGOGAMERS.COM - Core",
-    author      = "Kyle",
+    name        = "CSGOGAMERS.COM - Core [Girls Frontline Edition]",
+    author      = "~Kyle feat. UMP45~",
     description = "Player Tracker System",
     version     = PLUGIN_VERSION,
-    url         = "http://steamcommunity.com/id/_xQy_/"
+    url         = "https://ump45.moe"
 };
 
 //////////////////////////////
@@ -72,6 +73,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     Server_OnAskPluginLoad2();
     Couples_OnAskPluginLoad2();
     Database_OnAskPluginLoad2();
+    GirlsFL_OnAskPluginLoad2();
     GlobalApi_OnAskPluginLoad2();
     HUD_OnAskPluginLoad2();
 
@@ -88,6 +90,7 @@ public void OnPluginStart()
     Client_OnPluginStart();
     Database_OnPluginStart();
     DailySign_OnPluginStart();
+    GirlsFL_OnPluginStart();
     GlobalApi_OnPluginStart();
     MenuCmds_OnPluginStart();
     Signature_OnPluginStart();
@@ -151,6 +154,7 @@ public void OnClientConnected(int client)
     Couples_OnClientConnected(client);
     DailySign_OnClientConnected(client);
     Signature_OnClientConnected(client);
+    GirlsFL_OnClientConnected(client);
     HUD_OnClientConnected(client);
 
     CreateTimer(0.1, OnClientAuthorizedPost, client, TIMER_REPEAT);
