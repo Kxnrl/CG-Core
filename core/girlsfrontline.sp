@@ -253,7 +253,7 @@ void GrilsFL_UpdateClient(int client, const char[] weapon = "INVALID_WEAPON")
         }
         
         char m_szQuery[128];
-        FormatEx(m_szQuery, 128, "REPLACE INTO playertrack_gungirls VALUES (%d, '%s', 0, 0, 0, 0);", g_ClientGlobal[client][iPId], weapon);
+        FormatEx(m_szQuery, 128, "REPLACE INTO playertrack_gungirls VALUES (%d, '%s', 0, 0, 0, 0, 0, 0, 0);", g_ClientGlobal[client][iPId], weapon);
         UTIL_SQLTVoid(g_dbGames, m_szQuery);
         strcopy(GFL_Client_Data[client][szWeapon], 32, weapon);
         char upper[32];
