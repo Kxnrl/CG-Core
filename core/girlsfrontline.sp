@@ -252,8 +252,8 @@ void GrilsFL_UpdateClient(int client, const char[] weapon = "INVALID_WEAPON")
             return;
         }
         
-        char m_szQuery[128];
-        FormatEx(m_szQuery, 128, "REPLACE INTO playertrack_gungirls VALUES (%d, '%s', 0, 0, 0, 0, 0, 0, 0);", g_ClientGlobal[client][iPId], weapon);
+        char m_szQuery[256];
+        FormatEx(m_szQuery, 256, "REPLACE INTO playertrack_gungirls VALUES (%d, '%s', 0, 0, 0, 0, 0, 0, 0);", g_ClientGlobal[client][iPId], weapon);
         UTIL_SQLTVoid(g_dbGames, m_szQuery);
         strcopy(GFL_Client_Data[client][szWeapon], 32, weapon);
         char upper[32];
@@ -265,10 +265,10 @@ void GrilsFL_UpdateClient(int client, const char[] weapon = "INVALID_WEAPON")
     if(!GFL_Client_Round[client][bUsed])
         return;
 
-    char m_szQuery[128];
-    FormatEx(m_szQuery, 128, "UPDATE playertrack_gungirls SET kills=kills+%d, death=death+%d, bloodied=bloodied+%d, headshots=headshots+%d, damage=damage+%d useTimes=useTimes+1 WHERE pid=%d", GFL_Client_Round[client][iRK], GFL_Client_Round[client][iRD], GFL_Client_Round[client][iRB], GFL_Client_Round[client][iRHS], GFL_Client_Round[client][iRDMG], g_ClientGlobal[client][iPId]);
+    char m_szQuery[256];
+    FormatEx(m_szQuery, 256, "UPDATE playertrack_gungirls SET kills=kills+%d, death=death+%d, bloodied=bloodied+%d, headshots=headshots+%d, damage=damage+%d useTimes=useTimes+1 WHERE pid=%d", GFL_Client_Round[client][iRK], GFL_Client_Round[client][iRD], GFL_Client_Round[client][iRB], GFL_Client_Round[client][iRHS], GFL_Client_Round[client][iRDMG], g_ClientGlobal[client][iPId]);
     UTIL_SQLTVoid(g_dbGames, m_szQuery);
-    
+
     GFL_Client_Data[client][iUseTimes]++;
     GFL_Client_Data[client][iKills]  += GFL_Client_Round[client][iRK];
     GFL_Client_Data[client][iDeaths] += GFL_Client_Round[client][iRD];
