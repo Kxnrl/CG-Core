@@ -266,7 +266,7 @@ void GrilsFL_UpdateClient(int client, const char[] weapon = "INVALID_WEAPON")
         return;
 
     char m_szQuery[256];
-    FormatEx(m_szQuery, 256, "UPDATE playertrack_gungirls SET kills=kills+%d, death=death+%d, bloodied=bloodied+%d, headshots=headshots+%d, damage=damage+%d, useTimes=useTimes+1 WHERE pid=%d", GFL_Client_Round[client][iRK], GFL_Client_Round[client][iRD], GFL_Client_Round[client][iRB], GFL_Client_Round[client][iRHS], GFL_Client_Round[client][iRDMG], g_ClientGlobal[client][iPId]);
+    FormatEx(m_szQuery, 256, "UPDATE playertrack_gungirls SET kills=kills+%d, deaths=deaths+%d, bloodied=bloodied+%d, headshots=headshots+%d, damage=damage+%d, useTimes=useTimes+1 WHERE pid=%d", GFL_Client_Round[client][iRK], GFL_Client_Round[client][iRD], GFL_Client_Round[client][iRB], GFL_Client_Round[client][iRHS], GFL_Client_Round[client][iRDMG], g_ClientGlobal[client][iPId]);
     UTIL_SQLTVoid(g_dbGames, m_szQuery);
 
     GFL_Client_Data[client][iUseTimes]++;
