@@ -77,7 +77,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     GlobalApi_OnAskPluginLoad2();
     HUD_OnAskPluginLoad2();
 
-    RegPluginLibrary("csgogamers");
+    RegPluginLibrary("core");
 
     return APLRes_Success;
 }

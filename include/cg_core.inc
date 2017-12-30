@@ -6,7 +6,7 @@
 
 public SharedPlugin __pl_core = 
 {
-	name = "csgogamers",
+	name = "core",
 	file = "core.smx",
 #if defined REQUIRE_PLUGIN
 	required = 1
