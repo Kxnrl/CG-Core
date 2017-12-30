@@ -420,7 +420,7 @@ public void Event_PlayerHurts(Event event, const char[] name, bool dontBroadcast
     Call_PushCell(damage);
     Call_PushCell(GetEventInt(event, "hitgroup"));
     Call_PushString(weapon);
-    Call_PushCell(GetEventInt(event, "dmg_health"));
+    Call_PushCell(GetEventInt(event, "health"));
     Call_Finish();
 }
 

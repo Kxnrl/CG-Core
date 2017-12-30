@@ -104,7 +104,7 @@ forward void CG_OnClientDeath(int client, int attacker, int assister, bool heads
  * @param damage        The Damage done to health.
  * @param hitgroup      The Hitgroup that was damaged.
  * @param weapon        The weapon name attacker used.
- * @param health        The damage done to health
+ * @param health        The remaning health.
  */
 forward void  CG_OnClientHurted(int client, int attacker, int damage, int hitgroup, const char[] weapon, int health);
 
