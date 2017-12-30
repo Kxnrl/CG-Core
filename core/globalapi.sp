@@ -249,7 +249,7 @@ void GlobalApi_OnPluginStart()
     GlobalApi_Forwards[round_end]     = CreateGlobalForward("CG_OnRoundEnd",         ET_Ignore, Param_Cell);
     GlobalApi_Forwards[player_spawn]  = CreateGlobalForward("CG_OnClientSpawn",      ET_Ignore, Param_Cell);
     GlobalApi_Forwards[player_death]  = CreateGlobalForward("CG_OnClientDeath",      ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_String);
-    GlobalApi_Forwards[player_hurt]   = CreateGlobalForward("CG_OnClientHurted",     ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_String, Param_Cell);
+    GlobalApi_Forwards[player_hurt]   = CreateGlobalForward("CG_OnClientHurted",     ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_String);
     GlobalApi_Forwards[player_team]   = CreateGlobalForward("CG_OnClientTeam",       ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
     GlobalApi_Forwards[player_jump]   = CreateGlobalForward("CG_OnClientJump",       ET_Ignore, Param_Cell);
     GlobalApi_Forwards[weapon_fire]   = CreateGlobalForward("CG_OnClientFire",       ET_Ignore, Param_Cell, Param_String);
@@ -418,9 +418,9 @@ public void Event_PlayerHurts(Event event, const char[] name, bool dontBroadcast
     Call_PushCell(victim);
     Call_PushCell(attacker);
     Call_PushCell(damage);
+    Call_PushCell(GetEventInt(event, "health"));
     Call_PushCell(GetEventInt(event, "hitgroup"));
     Call_PushString(weapon);
-    Call_PushCell(GetEventInt(event, "health"));
     Call_Finish();
 }
 
