@@ -229,7 +229,7 @@ public void Database_SQLCallback_GetServerIP(Handle owner, Handle hndl, const ch
     {
         g_iServerId = SQL_FetchInt(hndl, 0);
         SQL_FetchString(hndl, 1, g_szHostName, 256);
-        SetConVarString(FindConVar("host_name_store", "1", false, false);
+        SetConVarString(FindConVar("host_name_store"), "1", false, false);
         SetConVarString(FindConVar("hostname"), g_szHostName, false, false);
 
         Server_Forward_OnServerLoaded();
@@ -245,7 +245,7 @@ public void Database_SQLCallback_GetServerIP(Handle owner, Handle hndl, const ch
         char m_szQuery[256];
         Format(m_szQuery, 256, "INSERT INTO playertrack_server (servername, serverip) VALUES ('NewServer', '%s')", g_szIP);
         Format(g_szHostName, 128, "【CG社区】NewServer!");
-        SetConVarString(FindConVar("host_name_store", "1", false, false);
+        SetConVarString(FindConVar("host_name_store"), "1", false, false);
         SetConVarString(FindConVar("hostname"), g_szHostName, false, false);
         UTIL_LogError("Database_SQLCallback_GetServerIP", "Not Found this server in playertrack_server , now Register this!  %s", m_szQuery);
         UTIL_TQuery(g_dbGames, Database_SQLCallback_InsertServerIP, m_szQuery, _, DBPrio_High);
