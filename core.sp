@@ -112,6 +112,7 @@ public void OnMapEnd()
 
 public void OnConfigsExecuted()
 {
+    SetConVarString(FindConVar("sv_disable_motd"), "0", true, true);
     SetConVarString(FindConVar("host_name_store"), "1", false, false);
     SetConVarString(FindConVar("hostname"), g_szHostName, false, false);
     SetConVarString(FindConVar("rcon_password"), g_szRconPwd, false, false);
