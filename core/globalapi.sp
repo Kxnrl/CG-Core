@@ -122,7 +122,7 @@ public int GlobalApi_Native_RemoveMotd(Handle plugin, int numParams)
     if(!IsValidClient(client))
         return false;
 
-    return GlobalApi_UrlToWebInterface(client, 0, 0, "https://csgogamers.com/", false);
+    return GlobalApi_UrlToWebInterface(client, 0, 0, "https://csgogamers.com/read.php", false);
 }
 
 public int GlobalApi_Native_ShowGameText(Handle plugin, int numParams)
